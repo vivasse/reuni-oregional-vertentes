@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Monitor Vertentes · Núcleo Vertentes</title>
 
-<!-- Google Font: Montserrat (300, 400, 500, 600, 700, 800) -->
+<!-- Google Font: Montserrat -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap" rel="stylesheet">
 
 <!-- SheetJS (XLSX) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -18,600 +18,314 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
 <style>
-:root {
-  --font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  
-  /* Paleta Limpa e Executiva */
-  --bg: #f8fafc;
-  --card: #ffffff;
-  --card-subtle: #f1f5f9;
-  --tx: #0f172a;
-  --mut: #64748b;
-  --mut-light: #94a3b8;
-  --bd: #e2e8f0;
-  --navy: #1e293b;
-  --navy-accent: #334155;
-  --in: #ffffff;
-  
-  /* Cores de Status Refinadas */
-  --gb: #dcfce7; --gf: #166534;
-  --yb: #fef9c3; --yf: #854d0e;
-  --rb: #fee2e2; --rf: #991b1b;
-  --nb: #f1f5f9; --nf: #64748b;
-  --bar: #38bdf8;
-  --primary: #2563eb;
-
-  /* Sombras Sutis */
-  --sh: 0 1px 3px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.03);
-  --sh-card: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
-  --sh-hover: 0 6px 16px -2px rgba(15, 23, 42, 0.08), 0 2px 6px -2px rgba(15, 23, 42, 0.04);
-  
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-
-  color-scheme: light;
-  box-sizing: border-box;
-  padding-top: env(safe-area-inset-top, 0px);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --font-family:'Montserrat',system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --bg:#eef1f7;
+  --card:#ffffff;
+  --tx:#18202e;
+  --mut:#6a7588;
+  --bd:#e3e8f0;
+  --in:#f6f8fc;
+  --hd:#16213e;
+  --ac:#4f46e5;
+  --ac2:#06b6d4;
+  --sh:0 1px 2px rgba(20,30,60,.05),0 8px 24px rgba(20,30,60,.06);
+  --g:#10b981;--gb:#d9f5ea;--gf:#046a4a;
+  --y:#f59e0b;--yb:#fdf0cf;--yf:#8a5a00;
+  --r:#ef4444;--rb:#fde0e0;--rf:#a31d1d;
+  --n:#9aa3b2;--nb:#eceff4;--nf:#5f6878;
 }
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #0b0f19;
-    --card: #111827;
-    --card-subtle: #1e293b;
-    --tx: #f8fafc;
-    --mut: #94a3b8;
-    --mut-light: #64748b;
-    --bd: #1e293b;
-    --navy: #0f172a;
-    --navy-accent: #1e293b;
-    --in: #111827;
-    --gb: #064e3b; --gf: #bbf7d0;
-    --yb: #713f12; --yf: #fef08a;
-    --rb: #7f1d1d; --rf: #fecaca;
-    --nb: #1e293b; --nf: #94a3b8;
-    --bar: #0284c7;
-    --sh: 0 1px 3px rgba(0, 0, 0, 0.4);
-    --sh-card: 0 1px 3px rgba(0, 0, 0, 0.4);
-    --sh-hover: 0 8px 24px rgba(0, 0, 0, 0.5);
-    color-scheme: dark;
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0d1117;--card:#161b24;--tx:#e8ecf3;--mut:#94a0b4;--bd:#262e3b;--in:#1d2430;--hd:#0b1020;
+    --sh:0 8px 24px rgba(0,0,0,.35);
+    --gb:#12392d;--gf:#7ae0b5;--yb:#40340f;--yf:#fbd36b;--rb:#431a1c;--rf:#ff9f9f;--nb:#262c37;--nf:#aab2c0;
   }
 }
-
-:root[data-theme="dark"] {
-  --bg: #0b0f19;
-  --card: #111827;
-  --card-subtle: #1e293b;
-  --tx: #f8fafc;
-  --mut: #94a3b8;
-  --mut-light: #64748b;
-  --bd: #1e293b;
-  --navy: #0f172a;
-  --navy-accent: #1e293b;
-  --in: #111827;
-  --gb: #064e3b; --gf: #bbf7d0;
-  --yb: #713f12; --yf: #fef08a;
-  --rb: #7f1d1d; --rf: #fecaca;
-  --nb: #1e293b; --nf: #94a3b8;
-  --bar: #0284c7;
-  --sh: 0 1px 3px rgba(0, 0, 0, 0.4);
-  --sh-card: 0 1px 3px rgba(0, 0, 0, 0.4);
-  --sh-hover: 0 8px 24px rgba(0, 0, 0, 0.5);
-  color-scheme: dark;
+:root[data-theme="dark"]{
+  --bg:#0d1117;--card:#161b24;--tx:#e8ecf3;--mut:#94a0b4;--bd:#262e3b;--in:#1d2430;--hd:#0b1020;
+  --sh:0 8px 24px rgba(0,0,0,.35);
+  --gb:#12392d;--gf:#7ae0b5;--yb:#40340f;--yf:#fbd36b;--rb:#431a1c;--rf:#ff9f9f;--nb:#262c37;--nf:#aab2c0;
 }
-
-* { box-sizing: border-box; }
-html, body { margin: 0; }
-
-body {
-  background: var(--bg);
-  color: var(--tx);
-  font-family: var(--font-family);
-  font-size: 13.5px;
-  line-height: 1.5;
-  letter-spacing: -0.01em;
-  -webkit-font-smoothing: antialiased;
-  padding: 0 16px 60px;
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:radial-gradient(900px 420px at 8% -8%,rgba(79,70,229,.10),transparent 70%),var(--bg);
+  color:var(--tx);
+  font:14px/1.45 var(--font-family);
+  padding:0;
+  -webkit-font-smoothing:antialiased;
 }
+.w{max-width:1240px;margin:0 auto}
+header{margin:0 -14px;padding:26px 14px 64px;background:linear-gradient(120deg,var(--hd),#312e81 60%,#0e7490);color:#fff}
+header .i{max-width:1360px;margin:0 auto;display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+h1{margin:0;font-size:24px;font-weight:700;letter-spacing:-.02em}
+header p{margin:4px 0 0;opacity:.75;font-size:13px}
+#st{font-size:12px;opacity:.9;background:var(--card);color:var(--tx);padding:5px 12px;border-radius:99px;box-shadow:0 0 0 1px var(--bd);display:inline-flex;align-items:center;gap:6px}
+.card{background:var(--card);border:0;border-radius:18px;padding:18px;margin-top:16px;box-shadow:0 0 0 1px var(--bd),0 16px 36px -22px rgba(20,30,60,.28)}
+.app{max-width:none;margin:0;gap:0;align-items:stretch;min-height:100vh;display:flex}
+main{flex:1;min-width:0;padding:26px 32px 56px;max-width:1480px;margin:0 auto}
+h2{margin:0 0 12px;font-size:11.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--mut);font-weight:700}
+h2.ttl{display:flex;align-items:center;gap:10px;font-size:19px;letter-spacing:-.01em;text-transform:none;color:var(--tx)}
+h2.ttl .ic{width:22px;height:22px;color:var(--ac)}
+textarea,input,select{background:var(--in);color:var(--tx);border:1px solid var(--bd);border-radius:10px;padding:8px 10px;font:inherit}
+textarea{width:100%;height:70px;margin-top:10px;resize:vertical}
+.row{display:flex;flex-wrap:wrap;gap:12px;align-items:end;margin-bottom:12px}
+.row label{display:flex;flex-direction:column;font-size:11px;color:var(--mut);gap:4px;font-weight:600}
+.row input[type=number]{width:96px}
+button{background:linear-gradient(120deg,var(--ac),#7c3aed);color:#fff;border:0;border-radius:11px;padding:10px 18px;font:inherit;font-weight:700;cursor:pointer;transition:filter .15s}
+button:hover{filter:brightness(1.08)}
+#dz{border:2px dashed var(--bd);border-radius:16px;padding:22px;text-align:center;cursor:pointer;color:var(--mut)}
+#dz.on{border-color:var(--ac);background:var(--in)}
+.chip{display:inline-block;padding:3px 10px 3px 8px;border-radius:99px;font-size:11px;font-weight:600;white-space:nowrap}
+.chip::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:currentColor;margin-right:6px;opacity:.85;vertical-align:1px}
+.g{background:var(--gb);color:var(--gf)}.y{background:var(--yb);color:var(--yf)}.r{background:var(--rb);color:var(--rf)}.n{background:var(--nb);color:var(--nf)}.m{background:#047857;color:#fff}
+.gt{color:var(--gf)}.rt{color:var(--rf)}.yt{color:var(--yf)}
+.tw{overflow:auto;max-height:74vh;border-radius:14px;border:0;box-shadow:0 0 0 1px var(--bd)}
+table{border-collapse:separate;border-spacing:0;width:100%;min-width:1080px}
+th{position:sticky;top:0;z-index:2;background:var(--card);color:var(--mut);font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:10px 8px;text-align:left;border-bottom:1px solid var(--bd)}
+td{padding:9px 8px;border-bottom:1px solid var(--bd);vertical-align:middle;font-size:13px}
+tbody tr:last-child td{border-bottom:0}
+tr:hover td{background:var(--in)}
+td small{display:block;color:var(--mut);font-size:11px;margin-top:2px}
+td.k{color:var(--mut);width:34px}td.nm{font-weight:700;min-width:150px}
+.pb{height:6px;border-radius:9px;background:var(--nb);overflow:hidden;margin:5px 0 4px;min-width:90px}
+.pb i{display:block;height:100%;border-radius:9px;background:linear-gradient(90deg,var(--ac),var(--ac2))}
+.pb i.m{background:linear-gradient(90deg,#10b981,#34d399)}
+.pc{font-weight:800;font-size:14px}
+.kp{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.kp>div{background:var(--card);border:0;border-radius:14px;padding:16px 14px 14px;position:relative;overflow:hidden;box-shadow:0 0 0 1px var(--bd)}
+.kp>div::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,var(--ac),var(--ac2))}
+.kp small{display:block;color:var(--mut);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.kp b{display:block;font-size:24px;margin-top:4px;letter-spacing:-.02em}
+.kp span{font-size:11px;color:var(--mut)}
+.two{display:grid;grid-template-columns:1fr;gap:16px}
+.bds{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:14px}
+.bd1{background:var(--in);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:14px;box-shadow:inset 0 0 0 1px var(--bd)}
+.bd1 .hd{display:flex;align-items:center;justify-content:space-between}
+.tt2{display:flex;align-items:center;gap:8px;font-weight:700}.tt2 .ic{color:var(--ac);width:17px;height:17px}
+.lk{background:none;color:var(--ac);padding:2px 8px;font-size:12px;font-weight:700;border-radius:8px;border:0;cursor:pointer}
+.lk:hover{background:var(--card)}
+.dn{width:116px;height:116px;border-radius:50%;margin:0 auto;position:relative;display:flex;align-items:center;justify-content:center;flex:none}
+.dn::after{content:"";position:absolute;inset:17px;background:var(--in);border-radius:50%}
+.card .dn::after{background:var(--card)}.bd1 .dn::after{background:var(--in)}
+.dn span{position:relative;z-index:1;font-size:24px;font-weight:800;line-height:1;text-align:center}
+.dn small{display:block;font-size:10px;font-weight:600;color:var(--mut);margin-top:3px}
+.dl{display:flex;flex-direction:column;gap:3px}
+.dl>div{display:flex;justify-content:space-between;align-items:center;padding:4px 8px;border-radius:9px;cursor:pointer;font-size:13px}
+.dl>div:hover{background:var(--card)}
+.rowb{display:flex;align-items:center;gap:28px;flex-wrap:wrap}.rowb .dl{min-width:220px;max-width:420px}
+.gl{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px 32px}
+.gl .it{display:grid;grid-template-columns:1fr auto;gap:2px 10px;font-size:13px}
+.gl .it b{font-weight:700}
+.gl .bar{grid-column:1/-1;height:8px;border-radius:9px;background:var(--nb);overflow:hidden}
+.gl .bar i{display:block;height:100%;background:linear-gradient(90deg,#f59e0b,#ef4444)}
+#empty{text-align:center;color:var(--mut);padding:30px}
+button.ghost{background:var(--in);color:var(--tx);border:1px solid var(--bd)}
+#cnt{font-size:12px;color:var(--mut);align-self:center}
+.lgd{font-size:12px;color:var(--mut);margin:0 0 14px;line-height:2.1}
+.lgd b{color:var(--tx)}
+.cb{display:flex;align-items:center;gap:7px;padding:3px 0;cursor:pointer}
+.cb input{accent-color:var(--ac);width:15px;height:15px}
+.cb em{font-style:normal;font-size:11px;color:var(--mut)}
+#pop{position:fixed;z-index:50;background:var(--card);border:1px solid var(--bd);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.28);padding:8px 12px;min-width:200px;max-height:60vh;overflow:auto}
+.cb.all{border-bottom:1px solid var(--bd);margin-bottom:4px;padding-bottom:7px}
+.fb{background:none;border:1px solid var(--bd);color:var(--mut);padding:0 5px;margin-left:5px;font-size:10px;border-radius:5px;line-height:16px;font-weight:400;cursor:pointer}
+.fb.on{background:var(--ac);color:#fff;border-color:var(--ac)}
 
-.w {
-  max-width: 1100px;
-  margin: 0 auto;
+/* Sidebar Executiva */
+aside{
+  width:262px;min-height:100vh;top:0;margin:0;border:0;border-radius:0;box-shadow:none;
+  padding:22px 14px;display:flex;flex-direction:column;gap:18px;overflow:auto;
+  background:linear-gradient(185deg,#16213e 0%,#1e1b4b 62%,#0e4155 130%);color:#fff;
+  flex:none;position:sticky;
 }
-
-/* Header Superior */
-.top-nav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 0 12px;
-  border-bottom: 1px solid var(--bd);
-  margin-bottom: 16px;
-  flex-wrap: wrap;
-  gap: 12px;
+.brand{display:flex;align-items:center;gap:12px;padding:0 6px}
+.brand b{display:block;font-size:17px;letter-spacing:-.01em}
+.brand small{opacity:.65;font-size:12px}
+.lg0{width:38px;height:38px;border-radius:11px;margin:0;background:rgba(255,255,255,.12);display:inline-flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.16)}
+.lg0 .ic{width:20px;height:20px}
+#nav{display:flex;flex-direction:column;gap:3px}
+aside .nv{
+  display:flex;align-items:center;justify-content:flex-start;gap:11px;width:100%;
+  background:none;color:rgba(255,255,255,.78);padding:11px 12px;border-radius:11px;
+  font-weight:600;font-size:13.5px;text-align:left;position:relative;border:0;cursor:pointer;
+  transition:background .15s,color .15s;
 }
-
-.top-brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+aside .nv .lb{flex:1;min-width:0}
+aside .nv .ic{color:rgba(255,255,255,.55);transition:color .15s}
+aside .nv:hover{background:rgba(255,255,255,.08);color:#fff}
+aside .nv:hover .ic{color:#fff}
+aside .nv.on{background:rgba(255,255,255,.14);color:#fff}
+aside .nv.on .ic{color:#67e8f9}
+aside .nv.on::before{
+  content:"";position:absolute;left:0;top:24%;bottom:24%;width:3px;border-radius:3px;
+  background:linear-gradient(#67e8f9,#818cf8);
 }
-
-.brand-badge {
-  width: 32px;
-  height: 32px;
-  background: var(--navy);
-  color: #fff;
-  border-radius: var(--radius-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 13px;
+aside .nv.sub{
+  padding:9px 12px 9px 30px;font-weight:500;font-size:13px;margin-left:10px;
+  width:calc(100% - 10px);border-radius:9px;
 }
+aside .nv.sub .ic{width:16px;height:16px}
+aside .sep{height:1px;background:rgba(255,255,255,.12);margin:6px 8px}
+aside .car,aside .car .ic{color:rgba(255,255,255,.55);display:flex;transition:transform .2s}
+aside .car.cl{transform:rotate(-90deg)}
+.bw{display:flex;gap:4px}
+.bg{font-size:11px;font-weight:800;min-width:20px;text-align:center;padding:1px 6px;border-radius:99px}
+.dsc{color:var(--mut);margin:-4px 0 14px;font-size:13px}
+#icnt{font-size:12px;color:var(--mut);align-self:center}
+.top{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:4px}
+.top h1{font-size:26px;color:var(--tx);display:block}
+.top p{margin:3px 0 0;color:var(--mut);font-size:13px;max-width:70ch}
+.ic{width:18px;height:18px;flex:none;vertical-align:middle}
 
-.brand-text h1 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  color: var(--tx);
+.aside-footer{margin-top:auto;padding-top:14px;border-top:1px solid rgba(255,255,255,.12)}
+.btn-theme{
+  background:rgba(255,255,255,.08);color:rgba(255,255,255,.85);border:1px solid rgba(255,255,255,.14);
+  width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:9px 12px;
+  font-size:12px;font-weight:600;border-radius:10px;cursor:pointer;transition:background .15s;
 }
+.btn-theme:hover{background:rgba(255,255,255,.16);color:#fff}
 
-.brand-text span {
-  font-size: 11px;
-  color: var(--mut);
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.top-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.pill {
-  background: var(--card);
-  border: 1px solid var(--bd);
-  border-radius: 99px;
-  padding: 5px 12px;
-  font-size: 11.5px;
-  font-weight: 500;
-  color: var(--mut);
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.pill.sync-ok {
-  border-color: color-mix(in srgb, #10b981 40%, var(--bd));
-  color: #10b981;
-}
-
-.pill.sync-local {
-  border-color: var(--bd);
-  color: var(--mut);
-}
-
-.btn-icon {
-  background: var(--card);
-  border: 1px solid var(--bd);
-  color: var(--tx);
-  border-radius: var(--radius-md);
-  padding: 6px 10px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  transition: all 0.15s;
-}
-
-.btn-icon:hover {
-  background: var(--card-subtle);
-  border-color: var(--mut-light);
-}
-
-/* Cards */
-.card {
-  background: var(--card);
-  border: 1px solid var(--bd);
-  border-radius: var(--radius-lg);
-  padding: 20px;
-  margin-top: 16px;
-  box-shadow: var(--sh-card);
-}
-
-h2 {
-  margin: 0 0 12px;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--mut);
-}
-
-/* Dropzone & Importação */
-#dz {
-  border: 2px dashed var(--bd);
-  border-radius: var(--radius-md);
-  padding: 28px 20px;
-  text-align: center;
-  cursor: pointer;
-  color: var(--mut);
-  font-weight: 500;
-  font-size: 13px;
-  background: var(--card-subtle);
-  transition: all 0.2s;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
-
-#dz svg {
-  color: var(--mut);
-  opacity: 0.7;
-}
-
-#dz:hover, #dz.on {
-  border-color: var(--primary);
-  background: color-mix(in srgb, var(--primary) 5%, var(--card));
-  color: var(--tx);
-}
-
-#dz:hover svg, #dz.on svg {
-  color: var(--primary);
-  opacity: 1;
-}
-
-textarea, input, select {
-  background: var(--in);
-  color: var(--tx);
-  border: 1px solid var(--bd);
-  border-radius: var(--radius-md);
-  padding: 8px 12px;
-  font-family: inherit;
-  font-size: 13px;
-  outline: none;
-  transition: border-color 0.15s;
-}
-
-textarea:focus, input:focus, select:focus {
-  border-color: var(--primary);
-}
-
-textarea {
-  width: 100%;
-  height: 64px;
-  margin-top: 10px;
-  resize: vertical;
-  font-family: monospace;
-  font-size: 11.5px;
-}
-
-.row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  align-items: flex-end;
-  margin-top: 14px;
-}
-
-.row label {
-  display: flex;
-  flex-direction: column;
-  font-size: 11.5px;
-  font-weight: 600;
-  color: var(--mut);
-  gap: 4px;
-}
-
-.row input { width: 100px; }
-
-button.btn-primary {
-  background: var(--navy);
-  color: #fff;
-  border: 0;
-  border-radius: var(--radius-md);
-  padding: 9px 18px;
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-button.btn-primary:hover {
-  background: var(--navy-accent);
-}
-
-#st {
-  font-size: 12px;
-  color: var(--mut);
-  margin-top: 10px;
-  font-weight: 500;
-}
-
-#st.err { color: var(--rf); font-weight: 600; }
-
-/* Status Badges */
-.g { background: var(--gb); color: var(--gf); }
-.y { background: var(--yb); color: var(--yf); }
-.r { background: var(--rb); color: var(--rf); }
-.n { background: var(--nb); color: var(--nf); }
-
-/* Métricas KPIs Superiores */
-.kpis-top {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 12px;
-}
-
-.kpi-box {
-  background: var(--card-subtle);
-  border: 1px solid var(--bd);
-  border-radius: var(--radius-md);
-  padding: 14px 16px;
-}
-
-.kpi-box span {
-  display: block;
-  font-size: 11.5px;
-  color: var(--mut);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  margin-bottom: 4px;
-}
-
-.kpi-box strong {
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--tx);
-  letter-spacing: -0.02em;
-  font-variant-numeric: tabular-nums;
-}
-
-/* Matriz de Resumo */
-.sum {
-  display: grid;
-  grid-template-columns: minmax(140px, 1.4fr) repeat(4, 1fr);
-  gap: 6px;
-  align-items: center;
-}
-
-.sum .h {
-  font-size: 11px;
-  font-weight: 700;
-  text-align: center;
-  padding: 8px 4px;
-  border-radius: var(--radius-sm);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.sum .c {
-  font-size: 17px;
-  font-weight: 700;
-  text-align: center;
-  padding: 8px 0;
-  border-radius: var(--radius-sm);
-  font-variant-numeric: tabular-nums;
-}
-
-.sum .z {
-  color: var(--mut-light);
-  background: var(--card-subtle);
-}
-
-.sum .l {
-  font-weight: 600;
-  font-size: 13px;
-  color: var(--tx);
-}
-
-.sum .t {
-  grid-column: 1 / -1;
-  font-size: 11.5px;
-  color: var(--mut);
-  margin: -2px 0 10px;
-  line-height: 1.4;
-}
-
-/* Tabela de Empresas Juniores */
-.tw {
-  overflow-x: auto;
-  border: 1px solid var(--bd);
-  border-radius: var(--radius-md);
-  margin-top: 10px;
-}
-
-table {
-  border-collapse: collapse;
-  width: 100%;
-  min-width: 720px;
-  text-align: center;
-}
-
-th {
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #fff;
-  background: var(--navy);
-  padding: 10px 8px;
-  position: sticky;
-  top: 0;
-  border-bottom: 1px solid var(--bd);
-}
-
-th:nth-child(2) { text-align: left; padding-left: 14px; }
-
-td {
-  padding: 8px 8px;
-  font-size: 12px;
-  font-weight: 600;
-  border-bottom: 1px solid var(--bd);
-}
-
-tr:last-child td { border-bottom: none; }
-tbody tr:hover { background: var(--card-subtle); }
-
-td.nm {
-  text-align: left;
-  font-weight: 600;
-  font-size: 13px;
-  padding-left: 14px;
-  color: var(--tx);
-}
-
-td.k {
-  color: var(--mut);
-  font-weight: 500;
-  font-size: 11.5px;
-}
-
-td span.badge {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 99px;
-  font-size: 11px;
-  font-weight: 600;
-}
-
-.bar {
-  position: relative;
-  min-width: 80px;
-  font-weight: 600;
-  font-size: 11.5px;
-}
-
-.bar i {
-  position: absolute;
-  left: 0;
-  top: 4px;
-  bottom: 4px;
-  background: var(--bar);
-  opacity: 0.35;
-  border-radius: 4px;
-}
-
-.bar b {
-  position: relative;
-  z-index: 1;
-}
-
-#q {
-  width: 100%;
-  margin-bottom: 8px;
-  padding: 10px 14px;
-}
-
-@media (max-width: 680px) {
-  body { padding: 0 10px 40px; }
-  .card { padding: 14px; }
-  .sum { grid-template-columns: minmax(100px, 1fr) repeat(4, 1fr); gap: 4px; }
-  .sum .c { font-size: 15px; }
+@media(max-width:900px){
+  .app{flex-direction:column}
+  aside{width:100%;height:auto;position:sticky;top:0;z-index:30;padding:10px 12px;gap:8px}
+  .brand small{display:none}.brand b{font-size:15px}
+  #nav{flex-direction:row;overflow-x:auto}
+  aside .nv{width:auto;white-space:nowrap}
+  aside .sep{width:1px;height:auto;margin:4px}
+  aside .nv.sub{margin-left:0;width:auto;padding:11px 12px}
+  aside .nv.on::before{left:12px;right:12px;top:auto;bottom:0;width:auto;height:3px}
+  main{padding:16px 12px 44px}
+  .aside-footer{display:none}
 }
 </style>
 </head>
 <body>
 
-<div class="w">
-  <!-- Top Navigation Bar -->
-  <header class="top-nav">
-    <div class="top-brand">
-      <div class="brand-badge">NV</div>
-      <div class="brand-text">
-        <h1>Monitor Vertentes</h1>
-        <span>Núcleo Vertentes · Painel de Desempenho</span>
+<div class="app">
+  <aside>
+    <div class="brand">
+      <span class="lg0">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/>
+        </svg>
+      </span>
+      <div>
+        <b>Monitor</b>
+        <small>Núcleo Vertentes</small>
       </div>
     </div>
-    <div class="top-actions">
-      <span class="pill" id="syncStatus">Conectando...</span>
-      <button class="btn-icon" id="btnThemeToggle" title="Alternar tema claro/escuro">🌓</button>
-    </div>
-  </header>
-
-  <!-- Card 1: Atualização e Upload de Dados -->
-  <div class="card">
-    <h2>1 · Atualização de Dados</h2>
-    <div id="dz">
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-        <polyline points="17 8 12 3 7 8"></polyline>
-        <line x1="12" y1="3" x2="12" y2="15"></line>
-      </svg>
-      <div>Arraste o arquivo de alimentação (.xlsx, .xls ou .csv) ou clique para selecionar</div>
-    </div>
-    <input type="file" id="fi" accept=".xlsx,.xls,.csv" hidden>
     
-    <textarea id="ta" placeholder="…ou cole aqui a planilha copiada do Excel (incluindo o cabeçalho iniciado por ID)"></textarea>
+    <div id="nav"></div>
+    
+    <div class="aside-footer">
+      <button id="btnTheme" class="btn-theme">
+        <span id="themeIco">☀️</span> Alternar Tema
+      </button>
+    </div>
+  </aside>
 
-    <div class="row">
-      <label>Mês de corte
-        <select id="mes"></select>
-      </label>
-      <label>Meses tracking Colab
-        <input type="number" id="trk" value="6" min="1" max="12">
-      </label>
-      <label>CSAT mín. sem meta
-        <input type="number" id="cmin" value="3.5" step="0.1">
-      </label>
-      <button class="btn-primary" id="go">Atualizar Indicadores</button>
+  <main>
+    <div class="top">
+      <div>
+        <h1 id="pt">DADOS DAS EJ'S</h1>
+        <p id="ps"></p>
+      </div>
+      <span id="st" hidden></span>
     </div>
 
-    <div id="st">Nenhum dado carregado ainda.</div>
-  </div>
+    <div id="empty" class="card">Carregando dados…</div>
 
-  <!-- Card 2: Resultados e Dashboard -->
-  <div id="out" hidden>
-    <div class="card">
-      <h2>Visão Geral do Núcleo</h2>
-      <div class="kpis-top" id="top"></div>
-    </div>
+    <div id="out" hidden>
+      <div class="card">
+        <h2>Planilha por EJ · ordem alfabética</h2>
+        <div class="row">
+          <label>Mês de corte<select id="mes"></select></label>
+          <label>Meses tracking Colab<input type="number" id="trk" value="6" min="1" max="12"></label>
+          <label>CSAT mín. sem meta<input type="number" id="cmin" value="3.5" step="0.1"></label>
+          <label style="flex:1;min-width:150px">Buscar EJ<input id="q" placeholder="Digite o nome…" style="width:100%"></label>
+        </div>
+        <div class="lgd">
+          <b>Tags das metas</b> &nbsp;
+          <span class="chip n">Zerado</span> sem nada · 
+          <span class="chip r">Vermelho</span> alguma movimentação · 
+          <span class="chip y">Amarelo</span> muito perto do verde · 
+          <span class="chip g">Verde</span> meta do mês escalonada batida · 
+          <span class="chip m">Meta batida</span> 100% da meta
+        </div>
+        <div class="row" style="margin:12px 0">
+          <button class="ghost" id="clr">Mostrar todas</button>
+          <span id="cnt"></span>
+          <span style="font-size:12px;color:var(--mut)">· use o ▾ no título das colunas para filtrar</span>
+        </div>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>EJ</th>
+                <th>Cl.<button class="fb" data-k="cl" title="Filtrar">▾</button></th>
+                <th>Faturamento</th>
+                <th>% da meta anual<button class="fb" data-k="fa" title="Filtrar">▾</button></th>
+                <th>Gap p/ meta anual</th>
+                <th>Esperado até o mês</th>
+                <th>ECM<button class="fb" data-k="ecm" title="Filtrar">▾</button></th>
+                <th>CSAT<button class="fb" data-k="cs" title="Filtrar">▾</button></th>
+                <th>Colaborativo<button class="fb" data-k="co" title="Filtrar">▾</button></th>
+                <th>Cluster (projeção)<button class="fb" data-k="cu" title="Filtrar">▾</button></th>
+              </tr>
+            </thead>
+            <tbody id="tb"></tbody>
+          </table>
+        </div>
+      </div>
 
-    <div class="card">
-      <h2>Resumo · Número de EJs por Situação</h2>
-      <div class="sum" id="sum"></div>
-    </div>
+      <div class="card">
+        <h2>Dashboard · visão geral do núcleo</h2>
+        <div class="kp" id="top"></div>
+      </div>
 
-    <div class="card">
-      <h2>Desempenho por Empresa Júnior (Ranking % Meta Anual)</h2>
-      <input id="q" placeholder="Buscar Empresa Júnior por nome…">
-      <div class="tw">
-        <table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>EJ</th>
-              <th>CL.</th>
-              <th>FATURAMENTO</th>
-              <th>% DA META</th>
-              <th>ECM</th>
-              <th>CSAT</th>
-              <th>COLAB</th>
-              <th>CLUSTER</th>
-            </tr>
-          </thead>
-          <tbody id="tb"></tbody>
-        </table>
+      <div class="two">
+        <div class="card">
+          <h2>Situação das EJs por indicador · clique para filtrar</h2>
+          <div id="sum" class="bds"></div>
+        </div>
+        <div class="card">
+          <h2>Maiores gaps para a meta anual</h2>
+          <div class="gl" id="gl"></div>
+        </div>
       </div>
     </div>
-  </div>
+
+    <div id="ind" hidden></div>
+
+    <section class="card" id="upd" hidden>
+      <h2>Atualizar dados</h2>
+      <div id="dz" style="margin-top:12px">
+        <svg class="ic" style="width:26px;height:26px;display:block;margin:0 auto 6px;color:var(--ac)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 16V4"/><path d="M7 9l5-5 5 5"/><path d="M5 20h14"/>
+        </svg>
+        Arraste aqui o arquivo da ALIMENTAÇÃO (.xlsx ou .csv) ou clique para escolher
+      </div>
+      <input type="file" id="fi" accept=".xlsx,.xls,.csv" hidden>
+      <textarea id="ta" placeholder="…ou cole aqui a planilha copiada do Excel (inclua a linha de cabeçalho que começa com ID)"></textarea>
+      <div class="row" style="margin:10px 0 0">
+        <button id="go">Atualizar</button>
+      </div>
+      <div id="msg" style="font-size:12px;color:var(--mut);margin-top:8px"></div>
+    </section>
+  </main>
 </div>
 
+<div id="pop" hidden></div>
+
 <script>
-// ==========================================
-// CONFIGURAÇÃO DO FIREBASE (NÚCLEO VERTENTES)
-// ==========================================
-const FIREBASE_CONFIG = {
+// Configuração Oficial do Firebase
+const firebaseConfig = {
   apiKey: "AIzaSyAUGdZc3VA0XFZlDaG4uTfA5MXH0hTntT4",
   authDomain: "roadmap-76391.firebaseapp.com",
   projectId: "roadmap-76391",
@@ -621,11 +335,8 @@ const FIREBASE_CONFIG = {
   measurementId: "G-X1CKHQKT27"
 };
 
-let db = null;
-const $ = s => document.getElementById(s);
-const KEY = 'vert_raw_v1';
+const $ = s => document.getElementById(s), KEY = 'vert_raw_v1';
 const MN = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-
 MN.forEach((m, i) => {
   const o = document.createElement('option');
   o.value = i + 1;
@@ -647,52 +358,55 @@ function num(v) {
   return isNaN(n) ? 0 : n;
 }
 
+const R = n => 'R$ ' + Math.round(n).toLocaleString('pt-BR');
+const RC = n => {
+  const a = Math.abs(n);
+  return a >= 1e6 ? 'R$ ' + (n / 1e6).toLocaleString('pt-BR', { maximumFractionDigits: 2 }) + ' mi' :
+         a >= 1e3 ? 'R$ ' + (n / 1e3).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + ' mil' : R(n);
+};
+const N1 = n => n.toLocaleString('pt-BR', { maximumFractionDigits: 2 });
 const LOW = [1, 12000000.01, 24000000.01, 61000000.01, 130000000.01];
 
 function calc(rows, P) {
   const hi = rows.findIndex(r => String(r[0]).trim().toUpperCase() === 'ID');
   if (hi < 0) throw new Error('Não encontrei a linha de cabeçalho (primeira coluna "ID").');
   const out = [];
-
   for (const r of rows.slice(hi + 1)) {
     if (!(num(r[0]) > 0)) continue;
     const g = i => num(r[i - 1]);
-    const fat = g(29), meta = g(20), mem = g(90), colab = g(94), cm = g(95), cl = g(10);
+    const fat = g(29), meta = g(20), mem = g(90), colab = g(94), cm = g(95), cl = g(10), esp = meta / 12 * P.mes;
     
-    // Faturamento
     let fa;
-    if (fat <= 0) fa = ['Zerada', 'n'];
-    else if (fat >= meta) fa = ['Meta batida', 'g'];
-    else if (fat >= meta / 12 * P.mes) fa = ['Em dia', 'g'];
-    else if (fat >= meta / 12 * (P.mes - 1)) fa = ['Atrasada', 'y'];
-    else fa = ['Muito atrasada', 'r'];
+    if (fat <= 0) fa = ['Zerado', 'n'];
+    else if (fat >= meta) fa = ['Meta batida', 'm'];
+    else if (fat >= esp) fa = ['Verde', 'g'];
+    else if (fat >= meta / 12 * (P.mes - 1)) fa = ['Amarelo', 'y'];
+    else fa = ['Vermelho', 'r'];
 
-    // ECM
+    const eng = g(74), ealvo = Math.round(g(22) / 100 * mem);
     let ecm;
     if (mem === 0) ecm = ['Sem membros', 'n'];
-    else ecm = g(74) >= Math.round(g(22) / 100 * mem) ? ['Batida', 'g'] : ['Não batida', 'r'];
+    else ecm = eng >= ealvo ? ['Batida', 'g'] : ['Não batida', 'r'];
 
-    // CSAT
+    const nota = g(13), calvo = g(25) || P.cmin;
     let cs;
     if (g(55) === 0) cs = ['Sem CSAT', 'n'];
     else {
-      const ok = g(25) === 0 ? g(13) > P.cmin : g(13) >= g(25);
+      const ok = g(25) === 0 ? nota > P.cmin : nota >= g(25);
       cs = ok ? ['Batido', 'g'] : ['Baixo', 'r'];
     }
 
-    // Colaborativo
+    const cesp = cm / 12 * P.trk;
     let co;
-    if (colab <= 0) co = ['Zerada', 'n'];
-    else if (cm === 0 || colab >= cm) co = ['Meta batida', 'g'];
-    else co = colab > cm / 12 * P.trk ? ['No ritmo', 'g'] : ['Abaixo do ritmo', 'y'];
+    if (colab <= 0) co = ['Zerado', 'n'];
+    else if (cm === 0 || colab >= cm) co = ['Meta batida', 'm'];
+    else co = colab > cesp ? ['Verde', 'g'] : colab >= cm / 12 * (P.trk - 1) ? ['Amarelo', 'y'] : ['Vermelho', 'r'];
 
-    // Cluster Projeção
-    let cu;
+    let cu, idx = 0;
     if (cl < 1 || cl > 5) cu = ['Sem cluster', 'n'];
     else {
-      const cz = g(55) === 0 ? P.cmin : (g(96) >= 80 ? (g(97) === 0 ? 1 : g(97)) : 1);
-      const pi = g(76);
-      const idx = fat * cz * (1 + g(75) / 100) * (1 + (fat ? colab / fat : 0)) * 100;
+      const cz = g(55) === 0 ? P.cmin : (g(96) >= 80 ? (g(97) === 0 ? 1 : g(97)) : 1), pi = g(76);
+      idx = fat * cz * (1 + g(75) / 100) * (1 + (fat ? colab / fat : 0)) * 100;
       let b = idx >= (cl === 5 ? 1e10 : LOW[cl]) ? 'SOBE' : idx >= LOW[cl - 1] ? 'PERMANECE' : 'CAI';
       if (cl === 1 && b === 'CAI') b = 'PERMANECE';
       else if (cl === 3 && b === 'SOBE' && pi === 0) b = 'PERMANECE';
@@ -700,98 +414,412 @@ function calc(rows, P) {
       cu = b === 'SOBE' ? ['Sobe', 'g'] : b === 'PERMANECE' ? ['Mantém', 'g'] : ['Cai', 'r'];
     }
 
-    out.push({ nome: String(r[1]).trim(), cl, fat, meta, pct: meta ? fat / meta : 0, fa, ecm, cs, co, cu });
+    out.push({
+      nome: String(r[1]).trim(), cl, fat, meta, esp,
+      pct: meta ? fat / meta : 0, fa, ecm, eng, ealvo, mem,
+      cs, nota, calvo, ctr: g(55), ecmP: g(22), coleta: g(96),
+      co, colab, cm, cesp, cu, idx
+    });
   }
-
   if (!out.length) throw new Error('Nenhuma EJ encontrada abaixo do cabeçalho.');
-  return out.sort((a, b) => b.pct - a.pct);
+  return out.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' }));
 }
 
+const TAGS5 = [['Meta batida', 'm'], ['Verde', 'g'], ['Amarelo', 'y'], ['Vermelho', 'r'], ['Zerado', 'n']];
 const SUMR = [
-  ['Faturamento', 'fa', [['Meta batida', 'Em dia'], ['Atrasada'], ['Muito atrasada'], ['Zerada']], 'Bom = meta anual batida ou em dia com o mês · Atenção = atrasada até 1 mês · Ruim = atrasada há mais de 1 mês'],
-  ['ECM', 'ecm', [['Batida'], [], ['Não batida'], ['Sem membros']], 'Bom = membros engajados ≥ meta da EJ · Cinza = EJ sem membros'],
-  ['CSAT', 'cs', [['Batido'], [], ['Baixo'], ['Sem CSAT']], 'Bom = nota ≥ meta · coleta abaixo de 80% já vem com nota 1 · Cinza = sem contratos finalizados'],
-  ['Colaborativo', 'co', [['Meta batida', 'No ritmo'], ['Abaixo do ritmo'], [], ['Zerada']], 'Bom = meta batida ou acima do esperado até o mês · Atenção = faturou, mas abaixo do esperado'],
-  ['Cluster (projeção)', 'cu', [['Sobe', 'Mantém'], [], ['Cai'], ['Sem cluster']], 'Bom = projeta subir ou manter · Ruim = projeta cair · Cinza = sem cluster definido']
+  ['Faturamento', 'fa', TAGS5, 'Escalonado pela meta anual até o mês de corte'],
+  ['ECM', 'ecm', [['Batida', 'g'], ['Não batida', 'r'], ['Sem membros', 'n']], 'Engajados ≥ meta da EJ'],
+  ['CSAT', 'cs', [['Batido', 'g'], ['Baixo', 'r'], ['Sem CSAT', 'n']], 'Coleta < 80% já vem com nota 1'],
+  ['Colaborativo', 'co', TAGS5, 'Escalonado pelos meses de tracking'],
+  ['Cluster (projeção)', 'cu', [['Sobe', 'g'], ['Mantém', 'g'], ['Cai', 'r'], ['Sem cluster', 'n']], 'Projeção de mudança de cluster']
 ];
 
-const fmt = n => 'R$ ' + Math.round(n).toLocaleString('pt-BR');
+const cc = (k, s) => {
+  const g = SUMR.find(x => x[1] === k), t = g && g[2].find(x => x[0] === s);
+  return t ? t[1] : 'n';
+};
+const ch = a => `<span class="chip ${a[1]}">${a[0]}</span>`;
+
 let D = [];
+
+function row(d) {
+  const gap = d.meta - d.fat, eg = d.fat - d.esp;
+  const gc = d.meta <= 0 ? '<small>sem meta</small>' :
+             gap <= 0 ? `<b class="gt">+${RC(-gap)}</b><small>acima da meta</small>` :
+             `<b class="rt">${RC(gap)}</b><small>faltam p/ a meta</small>`;
+  const ec = d.meta <= 0 ? '–' :
+             `<b class="${eg >= 0 ? 'gt' : 'rt'}">${eg >= 0 ? '+' : '−'}${RC(Math.abs(eg))}</b><small>esperado ${RC(d.esp)}</small>`;
+  const cg = d.cm > 0 ?
+             `${RC(d.colab)} de ${RC(d.cm)} · ` + (d.colab >= d.cm ? 'meta batida' : 'faltam ' + RC(d.cm - d.colab) + ' · esperado ' + RC(d.cesp)) :
+             `${RC(d.colab)} · sem meta`;
+  const cuS = d.cl < 1 || d.cl > 5 ? '' :
+              `<small>C${d.cl} · índice ${RC(d.idx)}${d.cl < 5 && d.idx < LOW[d.cl] ? ' · faltam ' + RC(LOW[d.cl] - d.idx) + ' p/ subir' : ''}</small>`;
+
+  return `<tr>
+    <td class="k">${D.indexOf(d) + 1}</td>
+    <td class="nm">${esc(d.nome)}</td>
+    <td class="k">${d.cl > 0 ? 'C' + d.cl : '–'}</td>
+    <td><b>${R(d.fat)}</b><small>meta ${R(d.meta)}</small></td>
+    <td><span class="pc">${Math.round(d.pct * 100)}%</span> ${ch(d.fa)}<div class="pb"><i class="${d.pct >= 1 ? 'm' : ''}" style="width:${Math.min(100, d.pct * 100)}%"></i></div></td>
+    <td>${gc}</td>
+    <td>${ec}</td>
+    <td>${ch(d.ecm)}<small>${d.mem ? d.eng + ' / ' + d.ealvo + ' engajados' : 'sem membros'}</small></td>
+    <td>${ch(d.cs)}<small>${d.ctr ? 'nota ' + N1(d.nota) + ' · meta ' + N1(d.calvo) : 'sem contratos'}</small></td>
+    <td>${ch(d.co)}<small>${cg}</small></td>
+    <td>${ch(d.cu)}${cuS}</td>
+  </tr>`;
+}
+
+let FL = {};
+const cls = d => d.cl >= 1 && d.cl <= 5 ? 'C' + d.cl : 'Sem cluster';
+const sel = (k, v) => FL[k] ? FL[k].has(v) : true;
+const okF = d => SUMR.every(x => sel(x[1], d[x[1]][0])) && sel('cl', cls(d));
 
 function render() {
   const f = $('q').value.trim().toLowerCase();
-  const v = D.filter(d => d.nome.toLowerCase().includes(f));
-  $('tb').innerHTML = v.map((d, i) => `<tr>
-    <td class="k">${D.indexOf(d) + 1}</td>
-    <td class="nm">${esc(d.nome)}</td>
-    <td class="k">C${d.cl}</td>
-    <td><span class="badge ${d.fa[1]}">${d.fa[0]}</span></td>
-    <td class="bar"><i style="width:${Math.min(100, d.pct * 100)}%"></i><b>${Math.round(d.pct * 100)}%</b></td>
-    ${['ecm','cs','co','cu'].map(k => `<td><span class="badge ${d[k][1]}">${d[k][0]}</span></td>`).join('')}
-  </tr>`).join('');
+  const v = D.filter(d => d.nome.toLowerCase().includes(f) && okF(d));
+  $('tb').innerHTML = v.map(row).join('') || '<tr><td colspan="11" style="text-align:center;color:var(--mut);padding:26px">Nenhuma EJ com esses filtros.</td></tr>';
+  $('cnt').textContent = v.length + ' de ' + D.length + ' EJs';
 }
 
-function show(name, t) {
-  const tf = D.reduce((a, d) => a + d.fat, 0);
-  const tm = D.reduce((a, d) => a + d.meta, 0);
-  const pct = tm ? Math.round(tf / tm * 100) : 0;
+const OPTS = {};
+SUMR.forEach(x => OPTS[x[1]] = x[2].map(t => t[0]).filter((v, i, a) => a.indexOf(v) === i));
+OPTS.cl = ['C1', 'C2', 'C3', 'C4', 'C5', 'Sem cluster'];
 
-  $('top').innerHTML = `
-    <div class="kpi-box"><span>Faturamento do Núcleo</span><strong>${fmt(tf)}</strong></div>
-    <div class="kpi-box"><span>Soma das Metas</span><strong>${fmt(tm)}</strong></div>
-    <div class="kpi-box"><span>Atingimento da Meta</span><strong style="color:${pct >= 100 ? '#10b981' : 'var(--tx)'}">${pct}%</strong></div>
-    <div class="kpi-box"><span>Total de EJs</span><strong>${D.length}</strong></div>
-  `;
+const val = (d, k) => k === 'cl' ? cls(d) : d[k][0];
 
-  let h = '<div></div>' + ['Bom', 'Atenção', 'Ruim', 'Sem ativ.'].map((x, i) => `<div class="h ${'gyrn'[i]}">${x}</div>`).join('');
-  for (const [lab, k, gr, tx] of SUMR) {
-    h += `<div class="l">${lab}</div>`;
-    gr.forEach((w, i) => {
-      h += w.length ? `<div class="c ${'gyrn'[i]}">${D.filter(d => w.includes(d[k][0])).length}</div>` : '<div class="c z">–</div>';
-    });
-    h += `<div class="t">${tx}</div>`;
-  }
-  
-  $('sum').innerHTML = h;
-  $('out').hidden = false;
+function mark() {
+  document.querySelectorAll('.fb').forEach(b => {
+    const k = b.dataset.k;
+    b.classList.toggle('on', !!FL[k] && FL[k].size < OPTS[k].length);
+  });
+}
+
+let PK = null;
+function closePop() { $('pop').hidden = true; PK = null; }
+function openPop(b) {
+  const k = b.dataset.k;
+  if (PK === k) { closePop(); return; }
+  PK = k;
+  const cur = FL[k] || new Set(OPTS[k]);
+  $('pop').innerHTML = `<label class="cb all"><input type="checkbox" data-s="*" ${cur.size === OPTS[k].length ? 'checked' : ''}><b>(Selecionar tudo)</b></label>` +
+    OPTS[k].map(v => `<label class="cb"><input type="checkbox" data-s="${v}" ${cur.has(v) ? 'checked' : ''}><span class="chip ${cc(k, v)}">${v}</span><em>${D.filter(d => val(d, k) === v).length}</em></label>`).join('');
+  $('pop').hidden = false;
+  const r = b.getBoundingClientRect();
+  $('pop').style.top = r.bottom + 4 + 'px';
+  $('pop').style.left = Math.max(8, Math.min(r.left, innerWidth - $('pop').offsetWidth - 8)) + 'px';
+}
+
+$('pop').onchange = e => {
+  const all = [...$('pop').querySelectorAll('input')];
+  if (e.target.dataset.s === '*') all.forEach(i => i.checked = e.target.checked);
+  const it = all.filter(i => i.dataset.s !== '*');
+  all[0].checked = it.every(i => i.checked);
+  FL[PK] = new Set(it.filter(i => i.checked).map(i => i.dataset.s));
+  mark();
+  refresh();
+};
+
+document.addEventListener('click', e => {
+  const b = e.target.closest('.fb');
+  if (b) openPop(b);
+  else if (PK && !e.target.closest('#pop')) closePop();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closePop(); });
+window.addEventListener('scroll', e => { if (PK && !(e.target.closest && e.target.closest('#pop'))) closePop(); }, true);
+
+$('clr').onclick = () => { FL = {}; $('q').value = ''; closePop(); mark(); render(); };
+
+$('sum').onclick = e => {
+  const g = e.target.closest('[data-go]');
+  if (g) { go(g.dataset.go); scrollTo({ top: 0 }); return; }
+  const t = e.target.closest('[data-s]');
+  if (!t) return;
+  FL[t.dataset.k] = new Set([t.dataset.s]);
+  mark();
   render();
-  $('st').className = '';
-  $('st').textContent = `Dados ativos: ${name} · Atualizado em ${new Date(t).toLocaleString('pt-BR')} · ${D.length} EJs analisadas`;
+  $('cnt').scrollIntoView({ behavior: 'smooth', block: 'center' });
+};
+
+const COL = { m: '#047857', g: '#10b981', y: '#f59e0b', r: '#ef4444', n: '#9aa3b2' }, COLN = { 'Mantém': '#6ee7b7' };
+
+function donut(T, c) {
+  const tot = c.reduce((a, b) => a + b, 0) || 1;
+  let a = 0;
+  const seg = T.map((t, i) => {
+    const x = a / tot * 100;
+    a += c[i];
+    return `${COLN[t[0]] || COL[t[1]]} ${x}% ${a / tot * 100}%`;
+  }).join(',');
+  return `<div class="dn" style="background:conic-gradient(${seg})"><span>${D.length}<small>EJs</small></span></div>`;
+}
+
+function board(lab, k, T) {
+  const c = T.map(t => D.filter(d => d[k][0] === t[0]).length);
+  return `<div class="bd1">
+    <div class="hd"><span class="tt2">${ico(k)}${lab}</span><button class="lk" data-go="${k}">Abrir</button></div>
+    ${donut(T, c)}
+    <div class="dl">` +
+    T.map((t, i) => `<div data-k="${k}" data-s="${t[0]}"><span class="chip ${t[1]}">${t[0]}</span><b>${c[i]}</b></div>`).join('') +
+    `</div></div>`;
+}
+
+const pc = (a, b) => b ? Math.round(a / b * 100) + '%' : '–';
+const sm = f => D.reduce((a, d) => a + f(d), 0), cn = (k, v) => D.filter(d => d[k][0] === v).length;
+const pb = (p, m) => `<span class="pc">${Math.round(p * 100)}%</span><div class="pb"><i class="${m ? 'm' : ''}" style="width:${Math.min(100, p * 100)}%"></i></div>`;
+const gp = (g, f, ok, bad) => g <= 0 ? `<b class="gt">+${f(-g)}</b><small>${ok}</small>` : `<b class="rt">${f(g)}</b><small>${bad}</small>`;
+const df = (x, f) => `<b class="${x >= 0 ? 'gt' : 'rt'}">${x >= 0 ? '+' : '−'}${f(Math.abs(x))}</b>`;
+
+const IND = {
+  fa: {
+    t: 'Faturamento',
+    d: 'Faturamento realizado contra a meta anual e contra o esperado escalonado até o mês de corte.',
+    cols: ['Realizado', 'Meta anual', '% da meta', 'Gap p/ meta anual', 'Esperado até o mês', 'Diferença p/ esperado'],
+    cells: d => d.meta > 0 ? [R(d.fat), R(d.meta), pb(d.pct, d.pct >= 1), gp(d.meta - d.fat, RC, 'acima da meta', 'faltam'), RC(d.esp), df(d.fat - d.esp, RC)] : [R(d.fat), '–', '–', '–', '–', '–'],
+    kpis: () => {
+      const tf = sm(d => d.fat), tm = sm(d => d.meta), te = sm(d => d.esp);
+      return [
+        ['Realizado', RC(tf), R(tf)],
+        ['Meta anual', RC(tm), 'soma das EJs'],
+        ['% da meta', pc(tf, tm), 'esperado até o mês: ' + pc(te, tm)],
+        ['Gap p/ meta anual', RC(sm(d => Math.max(0, d.meta - d.fat))), D.filter(d => d.meta > d.fat).length + ' EJs abaixo da meta'],
+        ['Meta batida', cn('fa', 'Meta batida') + ' EJs', '100% da meta']
+      ];
+    }
+  },
+  ecm: {
+    t: 'ECM',
+    d: 'Membros engajados de cada EJ contra a meta de engajamento (% dos membros).',
+    cols: ['Membros', 'Meta de engajamento', 'Engajados necessários', 'Engajados', 'Gap'],
+    cells: d => d.mem ? [d.mem, N1(d.ecmP) + '%', d.ealvo, d.eng, gp(d.ealvo - d.eng, N1, 'acima da meta', 'faltam engajados')] : ['0', '–', '–', '–', '–'],
+    kpis: () => [
+      ['Membros no núcleo', sm(d => d.mem), 'soma das EJs'],
+      ['Engajados', sm(d => d.eng), 'soma das EJs'],
+      ['Meta batida', cn('ecm', 'Batida') + ' EJs', ''],
+      ['Meta não batida', cn('ecm', 'Não batida') + ' EJs', ''],
+      ['Sem membros', cn('ecm', 'Sem membros') + ' EJs', '']
+    ]
+  },
+  cs: {
+    t: 'CSAT',
+    d: 'Nota de satisfação contra a meta da EJ (ou o mínimo definido). Coleta abaixo de 80% pontua nota 1 no cluster.',
+    cols: ['Contratos finalizados', 'Coleta', 'Nota', 'Meta', 'Diferença'],
+    cells: d => d.ctr ? [d.ctr, d.coleta ? N1(d.coleta) + '%' : '–', N1(d.nota), N1(d.calvo), df(d.nota - d.calvo, N1)] : ['0', '–', '–', N1(d.calvo), '–'],
+    kpis: () => {
+      const w = D.filter(d => d.ctr > 0), c = w.filter(d => d.coleta > 0);
+      return [
+        ['Nota média', w.length ? N1(w.reduce((a, d) => a + d.nota, 0) / w.length) : '–', 'EJs com CSAT: ' + w.length],
+        ['Contratos finalizados', sm(d => d.ctr), ''],
+        ['Coleta média', c.length ? N1(c.reduce((a, d) => a + d.coleta, 0) / c.length) + '%' : '–', ''],
+        ['Meta batida', cn('cs', 'Batido') + ' EJs', ''],
+        ['Abaixo da meta', cn('cs', 'Baixo') + ' EJs', ''],
+        ['Sem CSAT', cn('cs', 'Sem CSAT') + ' EJs', '']
+      ];
+    }
+  },
+  co: {
+    t: 'Colaborativo',
+    d: 'Faturamento colaborativo contra a meta anual e contra o esperado pelos meses de tracking.',
+    cols: ['Realizado', 'Meta anual', '% da meta', 'Gap p/ meta anual', 'Esperado (tracking)', 'Diferença p/ esperado'],
+    cells: d => d.cm > 0 ? [RC(d.colab), RC(d.cm), pb(d.colab / d.cm, d.colab >= d.cm), gp(d.cm - d.colab, RC, 'acima da meta', 'faltam'), RC(d.cesp), df(d.colab - d.cesp, RC)] : [RC(d.colab), '–', '–', '–', '–', '–'],
+    kpis: () => {
+      const tc = sm(d => d.colab), tm = sm(d => d.cm);
+      return [
+        ['Realizado', RC(tc), R(tc)],
+        ['Meta anual', RC(tm), 'soma das EJs'],
+        ['% da meta', pc(tc, tm), ''],
+        ['Gap p/ meta anual', RC(sm(d => Math.max(0, d.cm - d.colab))), ''],
+        ['Meta batida', cn('co', 'Meta batida') + ' EJs', '100% da meta']
+      ];
+    }
+  },
+  cu: {
+    t: 'Cluster',
+    d: 'Índice de cada EJ contra os limites do cluster atual. A projeção também considera as regras de pontuação de cada cluster.',
+    cols: ['Cluster atual', 'Faturamento', 'Índice', 'Mínimo p/ manter', 'Mínimo p/ subir', 'Gap p/ subir'],
+    cells: d => d.cl >= 1 && d.cl <= 5 ? ['C' + d.cl, R(d.fat), RC(d.idx), RC(LOW[d.cl - 1]), d.cl < 5 ? RC(LOW[d.cl]) : 'topo', d.cl < 5 ? (d.idx < LOW[d.cl] ? `<b class="rt">${RC(LOW[d.cl] - d.idx)}</b>` : '<b class="gt">atingido</b>') : '–'] : ['–', R(d.fat), '–', '–', '–', '–'],
+    kpis: () => [
+      ['Sobem', cn('cu', 'Sobe') + ' EJs', 'projeção'],
+      ['Mantêm', cn('cu', 'Mantém') + ' EJs', 'projeção'],
+      ['Caem', cn('cu', 'Cai') + ' EJs', 'projeção'],
+      ['Sem cluster', cn('cu', 'Sem cluster') + ' EJs', '']
+    ]
+  }
+};
+
+const IC = {
+  geral: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/>',
+  fa: '<path d="M12 2v20"/><path d="M17 6.5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>',
+  ecm: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9"/><path d="M16 3.1a4 4 0 0 1 0 7.8"/>',
+  cs: '<path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4 6.1 20.5l1.2-6.5L2.5 9.4l6.6-.9z"/>',
+  co: '<circle cx="6" cy="12" r="3"/><circle cx="18" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><path d="M8.6 10.6l6.8-3.2M8.6 13.4l6.8 3.2"/>',
+  cu: '<path d="M22 7l-8.5 8.5-5-5L2 17"/><path d="M16 7h6v6"/>',
+  upd: '<path d="M21 12a9 9 0 0 1-15.4 6.4L3 16"/><path d="M3 12a9 9 0 0 1 15.4-6.4L21 8"/><path d="M21 3v5h-5"/><path d="M3 21v-5h5"/>',
+  chev: '<path d="M6 9l6 6 6-6"/>',
+  up: '<path d="M12 16V4"/><path d="M7 9l5-5 5 5"/><path d="M5 20h14"/>'
+};
+
+const ico = k => `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${IC[k]}</svg>`;
+const TT = { geral: "DADOS DAS EJ'S", fa: 'Faturamento', ecm: 'ECM', cs: 'CSAT', co: 'Colaborativo', cu: 'Cluster', upd: 'Atualizar dados' };
+let OPEN = true;
+
+function nav() {
+  const badge = k => {
+    if (!D.length) return '';
+    const r = D.filter(d => d[k][1] === 'r').length, y = D.filter(d => d[k][1] === 'y').length;
+    return (y ? `<span class="bg y" title="Amarelo">${y}</span>` : '') + (r ? `<span class="bg r" title="Vermelho / ruim">${r}</span>` : '');
+  };
+  const sub = [['fa', 'Faturamento'], ['ecm', 'ECM'], ['cs', 'CSAT'], ['co', 'Colaborativo'], ['cu', 'Cluster']];
+  $('nav').innerHTML = `<button class="nv${VW === 'geral' ? ' on' : ''}" data-v="geral">${ico('geral')}<span class="lb">DADOS DAS EJ'S</span><span class="car${OPEN ? '' : ' cl'}">${ico('chev')}</span></button>` +
+    (OPEN ? sub.map(([k, l]) => `<button class="nv sub${k === VW ? ' on' : ''}" data-v="${k}">${ico(k)}<span class="lb">${l}</span><span class="bw">${badge(k)}</span></button>`).join('') : '') +
+    `<div class="sep"></div><button class="nv${VW === 'upd' ? ' on' : ''}" data-v="upd">${ico('upd')}<span class="lb">Atualizar dados</span></button>`;
+}
+
+let VW = 'geral';
+$('nav').onclick = e => {
+  const b = e.target.closest('.nv');
+  if (!b) return;
+  const v = b.dataset.v;
+  if (v === 'geral') OPEN = VW === 'geral' ? !OPEN : true;
+  go(v);
+  scrollTo({ top: 0 });
+};
+
+function refresh() { VW === 'geral' ? render() : indRows(); }
+
+function go(v, keep) {
+  if (!keep) FL = {};
+  closePop();
+  VW = v;
+  const has = D.length > 0;
+  $('out').hidden = !(v === 'geral' && has);
+  $('ind').hidden = !(IND[v] && has);
+  $('upd').hidden = v !== 'upd';
+  $('empty').hidden = has || v === 'upd';
+  if (v === 'geral' && has) render();
+  if (IND[v] && has) renderInd();
+  $('pt').textContent = TT[v];
+  $('ps').textContent = IND[v] ? IND[v].d : v === 'upd' ? 'Envie a planilha da ALIMENTAÇÃO para atualizar o link na nuvem' : 'Planilha completa, boards por indicador e maiores gaps do núcleo';
+  nav();
+  mark();
+}
+
+function renderInd() {
+  const k = VW, c = IND[k], T = SUMR.find(x => x[1] === k)[2], n = T.map(t => D.filter(d => d[k][0] === t[0]).length);
+  $('ind').innerHTML = `<div class="card"><h2 class="ttl">${ico(k)}${c.t}</h2><p class="dsc">${c.d}</p><div class="kp">` +
+    c.kpis().map(x => `<div><small>${x[0]}</small><b>${x[1]}</b><span>${x[2]}</span></div>`).join('') +
+    `</div></div>
+    <div class="card"><h2>Situação das EJs · clique para filtrar</h2><div class="rowb">` +
+    donut(T, n) +
+    `<div class="dl" style="flex:1">` +
+    T.map((t, i) => `<div data-s="${t[0]}"><span class="chip ${t[1]}">${t[0]}</span><b>${n[i]}</b></div>`).join('') +
+    `</div></div></div>
+    <div class="card"><div class="row"><label style="flex:1;min-width:150px">Buscar EJ<input id="iq" placeholder="Digite o nome…" style="width:100%"></label><span id="icnt"></span><button class="ghost" id="iclr">Mostrar todas</button></div>
+    <div class="tw"><table style="min-width:720px"><thead><tr><th>EJ</th><th>Cl.</th>` +
+    c.cols.map(x => `<th>${x}</th>`).join('') +
+    `<th>Situação<button class="fb" data-k="${k}">▾</button></th></tr></thead><tbody id="itb"></tbody></table></div></div>`;
+  $('iq').oninput = indRows;
+  $('iclr').onclick = () => { FL = {}; $('iq').value = ''; closePop(); mark(); indRows(); };
+  indRows();
+  mark();
+}
+
+function indRows() {
+  const c = IND[VW], q = ($('iq').value || '').trim().toLowerCase();
+  const v = D.filter(d => d.nome.toLowerCase().includes(q) && sel(VW, d[VW][0]));
+  $('itb').innerHTML = v.map(d => `<tr><td class="nm">${esc(d.nome)}</td><td class="k">${d.cl > 0 ? 'C' + d.cl : '–'}</td>` +
+    c.cells(d).map(x => `<td>${x}</td>`).join('') +
+    `<td>${ch(d[VW])}</td></tr>`).join('') || `<tr><td colspan="${c.cols.length + 3}" style="text-align:center;color:var(--mut);padding:26px">Nenhuma EJ com esses filtros.</td></tr>`;
+  $('icnt').textContent = v.length + ' de ' + D.length + ' EJs';
+}
+
+$('ind').onclick = e => {
+  const t = e.target.closest('[data-s]');
+  if (!t) return;
+  FL[VW] = new Set([t.dataset.s]);
+  mark();
+  indRows();
+};
+
+nav();
+
+function show(name, t) {
+  const tf = D.reduce((a, d) => a + d.fat, 0), tm = D.reduce((a, d) => a + d.meta, 0), te = D.reduce((a, d) => a + d.esp, 0);
+  const bat = D.filter(d => d.meta > 0 && d.fat >= d.meta), bm = bat.reduce((a, d) => a + d.meta, 0), gaps = D.filter(d => d.meta > d.fat);
+  const gt = gaps.reduce((a, d) => a + d.meta - d.fat, 0), ahead = D.filter(d => d.fat >= d.esp).length;
+  const K = [
+    ['Faturamento realizado', RC(tf), R(tf)],
+    ['Meta anual total', RC(tm), 'soma das metas das EJs'],
+    ['% da meta', (tm ? Math.round(tf / tm * 100) : 0) + '%', 'esperado até ' + MN[$('mes').value - 1] + ': ' + (tm ? Math.round(te / tm * 100) : 0) + '%'],
+    ['Gap total p/ a meta', RC(gt), gaps.length + ' EJs ainda abaixo da meta'],
+    ['Meta batida', bat.length + ' EJs', 'somam ' + RC(bm) + ' de meta'],
+    ['EJs em dia no mês', ahead + ' de ' + D.length, 'faturamento ≥ esperado']
+  ];
+  $('top').innerHTML = K.map(k => `<div><small>${k[0]}</small><b>${k[1]}</b><span>${k[2]}</span></div>`).join('');
+  $('sum').innerHTML = SUMR.map(x => board(x[0], x[1], x[2])).join('');
+  mark();
+  const top = gaps.sort((a, b) => (b.meta - b.fat) - (a.meta - a.fat)).slice(0, 6), mx = top.length ? top[0].meta - top[0].fat : 1;
+  $('gl').innerHTML = top.map(d => `<div class="it"><b>${esc(d.nome)}</b><span class="rt"><b>${RC(d.meta - d.fat)}</b></span><div class="bar"><i style="width:${(d.meta - d.fat) / mx * 100}%"></i></div></div>`).join('') || '<span style="color:var(--mut)">Todas as EJs bateram a meta</span>';
+  if (VW === 'upd') VW = 'geral';
+  go(VW, true);
+  $('st').hidden = false;
+  $('st').textContent = (name ? name + ' · ' : '') + 'Atualizado: ' + new Date(t).toLocaleString('pt-BR');
+}
+
+function msg(t, e) {
+  $('msg').style.color = e ? 'var(--rf)' : 'var(--gf)';
+  $('msg').textContent = t;
+  if (e) go('upd', true);
 }
 
 function params() {
-  return {
-    mes: +$('mes').value,
-    trk: +$('trk').value || 6,
-    cmin: +$('cmin').value || 3.5
-  };
+  return { mes: +$('mes').value, trk: +$('trk').value || 6, cmin: +$('cmin').value || 3.5 };
 }
 
-let RAW = null;
+let RAW = null, DB = null, TS = Date.now();
+const COLS = [1, 2, 10, 13, 20, 22, 25, 29, 55, 74, 75, 76, 90, 94, 95, 96, 97];
 
-async function apply(rows, name, t) {
+function pack(rows) {
+  const hi = rows.findIndex(r => String(r[0]).trim().toUpperCase() === 'ID');
+  if (hi < 0) return [];
+  return rows.slice(hi + 1).filter(r => num(r[0]) > 0).map(r => {
+    const o = {};
+    COLS.forEach(c => { const v = r[c - 1]; o[c] = typeof v === 'number' ? v : (v == null ? '' : String(v)); });
+    return o;
+  });
+}
+
+function unpack(p) {
+  return [['ID']].concat(p.map(o => {
+    const r = [];
+    COLS.forEach(c => r[c - 1] = o[c]);
+    return r;
+  }));
+}
+
+async function save(rows, name, t) {
+  const rec = { name, t, rows: pack(rows), params: params() };
+  try { localStorage.setItem(KEY, JSON.stringify(rec)); } catch(e){}
+  if (DB) {
+    try {
+      await DB.collection('monitor').doc('latest').set(rec);
+      msg('Dados salvos e sincronizados no Firebase para todos.', false);
+    } catch(e) {
+      console.warn("Erro ao salvar no Firestore:", e);
+      msg('Atualizado localmente (erro ao sincronizar na nuvem: ' + e.message + ')', true);
+    }
+  }
+}
+
+function apply(rows, name, t, keep) {
   try {
-    const timestamp = t || Date.now();
     D = calc(rows, params());
     RAW = rows;
-    show(name, timestamp);
-
-    // Salvar localmente
-    const payload = { rows, name, t: timestamp, params: params() };
-    try { localStorage.setItem(KEY, JSON.stringify(payload)); } catch(e){}
-
-    // Sincronizar no Firebase Firestore
-    if (db) {
-      try {
-        await db.collection("monitor").doc("latest").set(payload);
-        setSyncStatus("Nuvem Sincronizada", "sync-ok");
-      } catch(err) {
-        console.warn("Erro ao salvar no Firestore:", err);
-      }
-    }
+    TS = t || Date.now();
+    show(name, TS);
+    if (!keep) save(rows, name, TS);
   } catch(e) {
-    $('st').className = 'err';
-    $('st').textContent = 'Erro ao processar dados: ' + e.message;
+    msg('Erro: ' + e.message, true);
   }
 }
 
@@ -809,13 +837,10 @@ function readFile(f) {
   const rd = new FileReader();
   rd.onload = e => {
     try {
-      const wb = /\.csv$/i.test(f.name)
-        ? XLSX.read(e.target.result, { type: 'string' })
-        : XLSX.read(e.target.result, { type: 'array' });
+      const wb = /\.csv$/i.test(f.name) ? XLSX.read(e.target.result, { type: 'string' }) : XLSX.read(e.target.result, { type: 'array' });
       apply(fromBook(wb), f.name);
     } catch(x) {
-      $('st').className = 'err';
-      $('st').textContent = 'Erro ao ler arquivo: ' + x.message;
+      msg('Erro ao ler o arquivo: ' + x.message, true);
     }
   };
   /\.csv$/i.test(f.name) ? rd.readAsText(f) : rd.readAsArrayBuffer(f);
@@ -823,118 +848,100 @@ function readFile(f) {
 
 $('dz').onclick = () => $('fi').click();
 $('fi').onchange = e => e.target.files[0] && readFile(e.target.files[0]);
-
-['dragover', 'dragenter'].forEach(ev => $('dz').addEventListener(ev, e => {
-  e.preventDefault();
-  $('dz').classList.add('on');
-}));
-
-['dragleave', 'drop'].forEach(ev => $('dz').addEventListener(ev, e => {
-  e.preventDefault();
-  $('dz').classList.remove('on');
-}));
-
-$('dz').addEventListener('drop', e => {
-  const f = e.dataTransfer.files[0];
-  if (f) readFile(f);
-});
+['dragover', 'dragenter'].forEach(ev => $('dz').addEventListener(ev, e => { e.preventDefault(); $('dz').classList.add('on'); }));
+['dragleave', 'drop'].forEach(ev => $('dz').addEventListener(ev, e => { e.preventDefault(); $('dz').classList.remove('on'); }));
+$('dz').addEventListener('drop', e => { const f = e.dataTransfer.files[0]; if (f) readFile(f); });
 
 $('go').onclick = () => {
   const t = $('ta').value.trim();
   if (t) {
-    try { apply(fromText(t), 'Dados colados'); } catch(x) {
-      $('st').className = 'err';
-      $('st').textContent = 'Erro: ' + x.message;
-    }
-  } else if (RAW) {
-    apply(RAW, 'Parâmetros atualizados');
-  } else {
-    $('st').className = 'err';
-    $('st').textContent = 'Envie um arquivo ou cole a planilha primeiro.';
-  }
+    try { apply(fromText(t), 'Dados colados'); } catch(x) { msg('Erro: ' + x.message, true); }
+  } else msg('Envie um arquivo ou cole a planilha primeiro.', true);
 };
 
 ['mes', 'trk', 'cmin'].forEach(i => $(i).onchange = () => {
-  if (RAW) apply(RAW, 'Parâmetros alterados');
+  if (RAW) apply(RAW, '', TS, true);
 });
 
 $('q').oninput = render;
 
-// Alternância de Tema Claro/Escuro
-function updateThemeIcon() {
-  const isDark = document.documentElement.getAttribute("data-theme") === "dark" || (!document.documentElement.getAttribute("data-theme") && window.matchMedia("(prefers-color-scheme: dark)").matches);
-  const btn = $('btnThemeToggle');
-  if (btn) btn.textContent = isDark ? '☀️' : '🌙';
+// Gestão de Tema
+function initTheme() {
+  const saved = localStorage.getItem('vert_theme');
+  if (saved) document.documentElement.setAttribute('data-theme', saved);
+  updateThemeBtn();
 }
-
-$('btnThemeToggle').onclick = () => {
-  const cur = document.documentElement.getAttribute("data-theme") || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-  const next = cur === "dark" ? "light" : "dark";
-  document.documentElement.setAttribute("data-theme", next);
-  localStorage.setItem("monitor_theme", next);
-  updateThemeIcon();
+function updateThemeBtn() {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark' || 
+    (!document.documentElement.getAttribute('data-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  $('themeIco').textContent = isDark ? '🌙' : '☀️';
+}
+$('btnTheme').onclick = () => {
+  const cur = document.documentElement.getAttribute('data-theme') || 
+    (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('vert_theme', next);
+  updateThemeBtn();
 };
 
-function setSyncStatus(text, cls) {
-  const el = $('syncStatus');
-  if (el) {
-    el.textContent = text;
-    el.className = "pill " + (cls || "");
-  }
-}
+// Inicialização Principal
+(async () => {
+  initTheme();
+  let s = null;
 
-// Inicialização de Dados (Cache Local + Firebase Firestore em Tempo Real)
-(function init() {
-  // Tema
-  const savedTheme = localStorage.getItem("monitor_theme");
-  if (savedTheme) document.documentElement.setAttribute("data-theme", savedTheme);
-  updateThemeIcon();
-
-  // Carregar dados salvos no navegador primeiro (cache instantâneo)
+  // 1. Inicializar Firebase
   try {
-    const s = JSON.parse(localStorage.getItem(KEY) || 'null');
-    if (s && s.rows) {
-      RAW = s.rows;
+    if (window.firebase) {
+      firebase.initializeApp(firebaseConfig);
+      DB = firebase.firestore();
+    }
+  } catch(e) {
+    console.warn("Erro ao iniciar Firebase:", e);
+  }
+
+  // 2. Carregar do cache local imediatamente
+  try {
+    s = JSON.parse(localStorage.getItem(KEY) || 'null');
+  } catch(e) {}
+
+  if (s && s.rows && s.rows.length) {
+    try {
+      RAW = unpack(s.rows);
       if (s.params) {
         if (s.params.mes) $('mes').value = s.params.mes;
         if (s.params.trk) $('trk').value = s.params.trk;
         if (s.params.cmin) $('cmin').value = s.params.cmin;
       }
-      D = calc(s.rows, params());
-      show(s.name, s.t);
+      apply(RAW, s.name, s.t, true);
+    } catch(e) {
+      msg('Erro: ' + e.message, true);
     }
-  } catch(e) {}
+  } else {
+    $('empty').textContent = 'Sem dados ainda. Abra “Atualizar dados” abaixo e envie a planilha.';
+    go('upd', true);
+  }
 
-  // Inicializar Firebase Firestore
-  if (FIREBASE_CONFIG && window.firebase) {
-    try {
-      firebase.initializeApp(FIREBASE_CONFIG);
-      db = firebase.firestore();
-      setSyncStatus("Nuvem Online", "sync-ok");
-
-      // Ouvinte em tempo real: sincroniza atualizações para todas as pessoas
-      db.collection("monitor").doc("latest").onSnapshot(doc => {
-        const data = doc.data();
-        if (data && data.rows) {
-          RAW = data.rows;
+  // 3. Conexão Firestore em tempo real
+  if (DB) {
+    DB.collection('monitor').doc('latest').onSnapshot(doc => {
+      const data = doc.data();
+      if (data && data.rows && data.rows.length) {
+        if (!RAW || data.t > TS) {
+          RAW = unpack(data.rows);
+          TS = data.t;
           if (data.params) {
             if (data.params.mes) $('mes').value = data.params.mes;
             if (data.params.trk) $('trk').value = data.params.trk;
             if (data.params.cmin) $('cmin').value = data.params.cmin;
           }
-          D = calc(data.rows, params());
-          show(data.name + ' (Nuvem)', data.t);
+          apply(RAW, (data.name ? data.name + ' (Nuvem)' : 'Nuvem'), data.t, true);
           try { localStorage.setItem(KEY, JSON.stringify(data)); } catch(e){}
         }
-      }, err => {
-        console.warn("Erro no listener do Firestore:", err);
-      });
-    } catch(err) {
-      console.warn("Falha ao inicializar Firebase:", err);
-      setSyncStatus("LocalStorage", "sync-local");
-    }
-  } else {
-    setSyncStatus("LocalStorage", "sync-local");
+      }
+    }, err => {
+      console.warn("Listener Firestore:", err);
+    });
   }
 })();
 </script>
