@@ -605,13 +605,19 @@ main {
   border: 1px solid var(--bd);
   color: var(--tx);
   font-weight: 600;
-  font-size: 12.5px;
+  font-size: 12px;
   padding: 8px 14px;
   border-radius: var(--radius-md);
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   transition: all 0.15s;
+  white-space: nowrap;
+  flex: none;
+}
+
+.btn-secondary svg {
+  flex: none;
 }
 
 .btn-secondary:hover {
@@ -1614,7 +1620,20 @@ const h=(tag,a={},...k)=>{
     else if(x in n)n[x]=v;
     else n.setAttribute(x,v);
   }
-  k.flat().forEach(c=>n.append(c));
+  k.flat().forEach(c=>{
+    if(c==null) return;
+    if(typeof c==="string" && c.trim().startsWith("<") && c.trim().endsWith(">")){
+      try {
+        n.append(document.createRange().createContextualFragment(c.trim()));
+      } catch(e) {
+        const t=document.createElement("template");
+        t.innerHTML=c.trim();
+        n.append(...t.content.childNodes);
+      }
+    } else {
+      n.append(c);
+    }
+  });
   return n;
 };
 
