@@ -1090,11 +1090,17 @@ h2 .n, h3 .n { background: var(--bd); color: var(--mu); border-radius: 99px; fon
     <!-- Sidebar Footer -->
     <div class="sidebar-footer">
       <div class="sidebar-status-pill">
-        <span class="pill" id="syncStatus">Conectando...</span>
+        <button class="pill" id="syncStatus" style="cursor:pointer;border:1px solid var(--bd);width:100%;text-align:left;display:flex;align-items:center;justify-content:space-between;padding:6px 10px" title="Clique para gerenciar a conexão com Firebase">
+          <span id="syncStatusText">Conectando...</span>
+          <span style="font-size:11px;opacity:0.7">⚙</span>
+        </button>
       </div>
       <div class="sidebar-btn-grid">
         <button id="cfg" class="sidebar-btn" title="Configurações do evento">
           <span>⚙</span> <span>Config</span>
+        </button>
+        <button id="btnFirebase" class="sidebar-btn" style="color:var(--wip)" title="Conectar ao Firebase / Nuvem">
+          <span>🔥</span> <span>Firebase</span>
         </button>
         <button id="btnBackup" class="sidebar-btn" title="Backup / JSON">
           <span>💾</span> <span>Backup</span>
@@ -1638,8 +1644,185 @@ document.addEventListener("mousedown",e=>{
 });
 document.addEventListener("focusout",()=>setTimeout(()=>{if(pend)render()},60));
 
+function setSyncStatus(text, cls){
+  const el = $("#syncStatus"), txt = $("#syncStatusText");
+  if(txt) txt.textContent = text;
+  else if(el) el.textContent = text;
+  if(el){
+    el.className = "pill " + (cls || "");
+  }
+}
+
+async function initFirebase(cfg){
+  if(!cfg || !window.firebase) return false;
+  try {
+    if(window.firebase.apps && window.firebase.apps.length){
+      await Promise.all(window.firebase.apps.map(app => app.delete()));
+    }
+    firebase.initializeApp(cfg);
+    db = firebase.firestore();
+    setSyncStatus("🟢 Nuvem Online (Firebase)", "sync-ok");
+
+    // Listeners em tempo real
+    db.collection("links").onSnapshot(s => {
+      links = s.docs.map(d => ({id: d.id, ...d.data()})).sort((a,b) => (a.ord||0) - (b.ord||0));
+      localStorage.setItem("pertencer_links", JSON.stringify(links));
+      render();
+    }, err => {
+      console.warn("Erro no listener de links:", err);
+    });
+
+    db.collection("config").doc("event").onSnapshot(s => {
+      const c = s.data && s.data();
+      if(c){
+        if(c.name) D.name = c.name;
+        if(c.dday) D.dday = c.dday;
+        localStorage.setItem("pertencer_cfg", JSON.stringify({name: D.name, dday: D.dday}));
+      }
+      render();
+    }, err => {
+      console.warn("Erro no listener de config:", err);
+    });
+
+    db.collection("tasks").onSnapshot(s => {
+      ov = {};
+      s.docs.forEach(d => ov[d.id] = d.data());
+      localStorage.setItem("pertencer_tasks", JSON.stringify(ov));
+      render();
+    }, err => {
+      console.warn("Erro no listener de tarefas:", err);
+      setSyncStatus("⚠️ Erro de Permissão Firebase", "sync-local");
+    });
+
+    localStorage.setItem("pertencer_firebase_config", JSON.stringify(cfg));
+    return true;
+  } catch(e) {
+    console.error("Falha ao inicializar Firebase:", e);
+    setSyncStatus("❌ Erro no Firebase", "sync-local");
+    toast("Falha ao conectar no Firebase: " + (e.message || e));
+    return false;
+  }
+}
+
+async function uploadAllToFirebase(){
+  if(!db){ toast("Firebase não conectado."); return; }
+  try {
+    toast("Enviando dados locais para o Firebase...");
+    await db.collection("config").doc("event").set({name: D.name, dday: D.dday});
+    for(const l of links){
+      await db.collection("links").doc(l.id).set(l);
+    }
+    const allTasks = all();
+    for(const t of allTasks){
+      const patch = ov[t.id] || {};
+      if(Object.keys(patch).length > 0){
+        await db.collection("tasks").doc(t.id).set(patch);
+      }
+    }
+    toast("Todos os dados foram salvos no Firebase! 🚀");
+  } catch(e) {
+    console.error("Erro no upload:", e);
+    toast("Erro ao sincronizar com Firebase: " + (e.message || e));
+  }
+}
+
+function firebaseModal(){
+  const S = $("#sh"), O = $("#ov");
+  S.style.setProperty("--cc", "var(--ok)");
+  O.style.display = "flex";
+
+  const savedCfg = localStorage.getItem("pertencer_firebase_config");
+  const isConnected = !!db;
+
+  const statusBox = isConnected
+    ? h("div", {style: "background:color-mix(in srgb,var(--ok) 14%,transparent);color:var(--ok);padding:10px 14px;border-radius:10px;font-weight:600;margin-bottom:12px;font-size:13px;display:flex;align-items:center;gap:8px"},
+        "🟢 Sincronização ativa via Firebase Firestore (Tempo real)")
+    : h("div", {style: "background:color-mix(in srgb,var(--wip) 14%,transparent);color:var(--wip);padding:10px 14px;border-radius:10px;font-weight:600;margin-bottom:12px;font-size:13px;display:flex;align-items:center;gap:8px"},
+        "💾 Armazenamento atual: LocalStorage (Offline no Navegador)");
+
+  const cfgArea = h("textarea", {
+    style: "min-height:140px;font-family:monospace;font-size:12px",
+    placeholder: 'Cole aqui o objeto firebaseConfig:\n{\n  apiKey: "...",\n  authDomain: "...",\n  projectId: "...",\n  storageBucket: "...",\n  messagingSenderId: "...",\n  appId: "..."\n}',
+    value: savedCfg ? JSON.stringify(JSON.parse(savedCfg), null, 2) : (FIREBASE_CONFIG ? JSON.stringify(FIREBASE_CONFIG, null, 2) : "")
+  });
+
+  const close = () => { O.style.display = "none"; };
+
+  S.replaceChildren(
+    h("h3", {style: "margin:0 0 10px;display:flex;align-items:center;gap:8px"}, "🔥 Configuração do Firebase Firestore"),
+    h("p", {cls: "sub", style: "margin:0 0 12px"}, "Conecte as credenciais do seu projeto Firebase para sincronizar tarefas, prazos e links entre todos os coordenadores em tempo real."),
+    statusBox,
+    h("label", {}, "Credenciais do Firebase (Objeto SDK ou JSON)", cfgArea),
+    h("div", {cls: "btns", style: "margin-top:14px;flex-wrap:wrap;gap:8px"},
+      isConnected ? h("button", {
+        style: "color:var(--late)",
+        on: {
+          click: () => {
+            if(confirm("Deseja desconectar do Firebase e voltar a salvar apenas no navegador?")){
+              localStorage.removeItem("pertencer_firebase_config");
+              db = null;
+              setSyncStatus("💾 LocalStorage (Conectar Firebase)", "sync-local");
+              toast("Desconectado do Firebase.");
+              close();
+              render();
+            }
+          }
+        }
+      }, "Desconectar") : h("span"),
+      isConnected ? h("button", {
+        style: "background:var(--card);border:1px solid var(--bd)",
+        on: {click: uploadAllToFirebase}
+      }, "📤 Subir dados locais p/ Nuvem") : h("span"),
+      h("button", {on: {click: close}}, "Fechar"),
+      h("button", {
+        cls: "add",
+        style: "background:var(--ok)",
+        on: {
+          click: async () => {
+            const raw = cfgArea.value.trim();
+            if(!raw){
+              toast("Cole as credenciais do Firebase.");
+              return;
+            }
+            try {
+              let parsed;
+              const clean = raw.replace(/^(const|let|var)\s+\w+\s*=\s*/, "").replace(/;?\s*$/, "");
+              try {
+                parsed = JSON.parse(clean);
+              } catch(e) {
+                parsed = new Function("return (" + clean + ")")();
+              }
+              if(!parsed || !parsed.apiKey || !parsed.projectId){
+                toast("Configuração inválida. Os campos apiKey e projectId são obrigatórios.");
+                return;
+              }
+              const ok = await initFirebase(parsed);
+              if(ok){
+                toast("Conectado ao Firebase com sucesso!");
+                close();
+                render();
+              }
+            } catch(err) {
+              toast("Erro ao ler credenciais: " + err.message);
+            }
+          }
+        }
+      }, "Conectar ao Firebase")
+    )
+  );
+}
+
+// Global Event Listeners
+document.addEventListener("mousedown",e=>{
+  if(!e.target.closest("#pop,.av,#sh button"))$("#pop").style.display="none";
+  if(e.target.id==="ov"){mid=null;$("#ov").style.display="none";render()}
+});
+document.addEventListener("focusout",()=>setTimeout(()=>{if(pend)render()},60));
+
 // Setup Listeners
 $("#cfg").addEventListener("click",cfgModal);
+$("#btnFirebase").addEventListener("click",firebaseModal);
+$("#syncStatus").addEventListener("click",firebaseModal);
 $("#btnBackup").addEventListener("click",backupModal);
 $("#btnThemeToggle").addEventListener("click",toggleTheme);
 $("#btnToggleSidebar").addEventListener("click",toggleSidebarMobile);
@@ -1658,30 +1841,28 @@ $("#brandBtn").addEventListener("click",()=>go("all"));
   if(savedTheme){document.documentElement.setAttribute("data-theme",savedTheme)}
   updateThemeIcon();
 
-  if(FIREBASE_CONFIG && window.firebase){
-    try {
-      firebase.initializeApp(FIREBASE_CONFIG);
-      db = firebase.firestore();
-      $("#syncStatus").textContent = "🟢 Nuvem Online";
-      $("#syncStatus").className = "pill sync-ok";
-
-      db.collection("links").onSnapshot(s=>{links=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.ord||0)-(b.ord||0));render()},()=>{});
-      db.collection("config").doc("event").onSnapshot(s=>{const c=s.data&&s.data();if(c){if(c.name)D.name=c.name;if(c.dday)D.dday=c.dday}render()},()=>{});
-      db.collection("tasks").onSnapshot(s=>{ov={};s.docs.forEach(d=>ov[d.id]=d.data());render()},()=>{});
-      return;
-    } catch(e) {
-      console.warn("Falha ao inicializar Firebase, alternando para LocalStorage:", e);
-    }
-  }
-
-  // Fallback: LocalStorage do navegador
-  $("#syncStatus").textContent = "💾 LocalStorage";
-  $("#syncStatus").className = "pill sync-local";
+  // Load local cache first so UI responds immediately
   try {
     const lk = localStorage.getItem("pertencer_links");if(lk)links=JSON.parse(lk);
     const ts = localStorage.getItem("pertencer_tasks");if(ts)ov=JSON.parse(ts);
     const cf = localStorage.getItem("pertencer_cfg");if(cf){const c=JSON.parse(cf);D.name=c.name||D.name;D.dday=c.dday||D.dday}
   } catch(e){}
+
+  // Check for Firebase config (code or saved)
+  const savedFb = localStorage.getItem("pertencer_firebase_config");
+  let activeFb = null;
+  if(FIREBASE_CONFIG){
+    activeFb = FIREBASE_CONFIG;
+  } else if(savedFb){
+    try { activeFb = JSON.parse(savedFb); } catch(e){}
+  }
+
+  if(activeFb && window.firebase){
+    initFirebase(activeFb);
+  } else {
+    setSyncStatus("💾 LocalStorage (Conectar Firebase)", "sync-local");
+  }
+
   render();
 })();
 </script>
