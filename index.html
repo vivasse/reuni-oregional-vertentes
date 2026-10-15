@@ -65,6 +65,23 @@ header .i{max-width:1360px;margin:0 auto;display:flex;justify-content:space-betw
 h1{margin:0;font-size:24px;font-weight:700;letter-spacing:-.02em}
 header p{margin:4px 0 0;opacity:.75;font-size:13px}
 #st{font-size:12px;opacity:.9;background:var(--card);color:var(--tx);padding:5px 12px;border-radius:99px;box-shadow:0 0 0 1px var(--bd);display:inline-flex;align-items:center;gap:6px}
+
+/* Badge de Sincronização em Nuvem */
+.cloud-badge{
+  display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:600;
+  padding:5px 12px;border-radius:99px;border:1px solid var(--bd);background:var(--card);
+  color:var(--tx);box-shadow:0 1px 3px rgba(0,0,0,.04);cursor:pointer;transition:all .15s;
+}
+.cloud-badge .dot{width:8px;height:8px;border-radius:50%;background:#9aa3b2;flex:none}
+.cloud-badge.ok{border-color:rgba(16,185,129,.35);background:rgba(16,185,129,.08);color:#047857}
+.cloud-badge.ok .dot{background:#10b981;box-shadow:0 0 6px rgba(16,185,129,.6)}
+.cloud-badge.syncing{border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.08);color:#b45309}
+.cloud-badge.syncing .dot{background:#f59e0b;box-shadow:0 0 6px rgba(245,158,11,.6);animation:pulse 1s infinite alternate}
+.cloud-badge.err{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.08);color:#b91c1c}
+.cloud-badge.err .dot{background:#ef4444;box-shadow:0 0 6px rgba(239,68,68,.6);animation:pulse 1.2s infinite alternate}
+
+@keyframes pulse{from{opacity:.4}to{opacity:1}}
+
 .card{background:var(--card);border:0;border-radius:18px;padding:18px;margin-top:16px;box-shadow:0 0 0 1px var(--bd),0 16px 36px -22px rgba(20,30,60,.28)}
 .app{max-width:none;margin:0;gap:0;align-items:stretch;min-height:100vh;display:flex}
 main{flex:1;min-width:0;padding:26px 32px 56px;max-width:1480px;margin:0 auto}
@@ -182,13 +199,33 @@ aside .car.cl{transform:rotate(-90deg)}
 .top p{margin:3px 0 0;color:var(--mut);font-size:13px;max-width:70ch}
 .ic{width:18px;height:18px;flex:none;vertical-align:middle}
 
-.aside-footer{margin-top:auto;padding-top:14px;border-top:1px solid rgba(255,255,255,.12)}
+.aside-footer{margin-top:auto;padding-top:14px;border-top:1px solid rgba(255,255,255,.12);display:flex;flex-direction:column;gap:8px}
 .btn-theme{
   background:rgba(255,255,255,.08);color:rgba(255,255,255,.85);border:1px solid rgba(255,255,255,.14);
   width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:9px 12px;
   font-size:12px;font-weight:600;border-radius:10px;cursor:pointer;transition:background .15s;
 }
 .btn-theme:hover{background:rgba(255,255,255,.16);color:#fff}
+
+/* Modal de Ativação do Firestore */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(15,23,42,.65);backdrop-filter:blur(5px);
+  z-index:999;display:flex;align-items:center;justify-content:center;padding:16px;
+}
+.modal-box{
+  background:var(--card);color:var(--tx);border-radius:18px;max-width:560px;width:100%;
+  padding:26px;border:1px solid var(--bd);box-shadow:0 24px 48px -12px rgba(0,0,0,.35);
+  font-family:var(--font-family);position:relative;
+}
+.modal-box h3{margin:0 0 8px;font-size:18px;display:flex;align-items:center;gap:8px}
+.modal-box p{margin:0 0 16px;font-size:13px;color:var(--mut);line-height:1.55}
+.steps-box{background:var(--in);border:1px solid var(--bd);border-radius:12px;padding:14px 16px;margin-bottom:18px}
+.steps-box ol{margin:0;padding-left:18px;font-size:12.5px;color:var(--tx);line-height:1.7}
+.steps-box ol li b{color:var(--ac)}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+.btn-link{display:inline-flex;align-items:center;gap:6px;background:var(--ac);color:#fff;padding:9px 16px;border-radius:9px;text-decoration:none;font-size:12.5px;font-weight:700}
+.btn-link:hover{filter:brightness(1.1)}
+.btn-close{background:var(--in);color:var(--tx);border:1px solid var(--bd);padding:9px 14px;border-radius:9px;font-size:12.5px;font-weight:600;cursor:pointer}
 
 @media(max-width:900px){
   .app{flex-direction:column}
@@ -235,10 +272,15 @@ aside .car.cl{transform:rotate(-90deg)}
         <h1 id="pt">DADOS DAS EJ'S</h1>
         <p id="ps"></p>
       </div>
-      <span id="st" hidden></span>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <div id="cloudBadge" class="cloud-badge" title="Clique para detalhes da sincronização online">
+          <span class="dot"></span> Conectando nuvem…
+        </div>
+        <span id="st" hidden></span>
+      </div>
     </div>
 
-    <div id="empty" class="card">Carregando dados…</div>
+    <div id="empty" class="card">Carregando dados da nuvem…</div>
 
     <div id="out" hidden>
       <div class="card">
@@ -304,7 +346,10 @@ aside .car.cl{transform:rotate(-90deg)}
     <div id="ind" hidden></div>
 
     <section class="card" id="upd" hidden>
-      <h2>Atualizar dados</h2>
+      <h2>Atualizar dados (Sincronização em tempo real na nuvem)</h2>
+      <p style="font-size:13px;color:var(--mut);margin:0 0 12px">
+        Tudo o que você enviar ou alterar aqui será salvo no Firebase e aparecerá automaticamente em todos os links e computadores.
+      </p>
       <div id="dz" style="margin-top:12px">
         <svg class="ic" style="width:26px;height:26px;display:block;margin:0 auto 6px;color:var(--ac)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 16V4"/><path d="M7 9l5-5 5 5"/><path d="M5 20h14"/>
@@ -314,14 +359,43 @@ aside .car.cl{transform:rotate(-90deg)}
       <input type="file" id="fi" accept=".xlsx,.xls,.csv" hidden>
       <textarea id="ta" placeholder="…ou cole aqui a planilha copiada do Excel (inclua a linha de cabeçalho que começa com ID)"></textarea>
       <div class="row" style="margin:10px 0 0">
-        <button id="go">Atualizar</button>
+        <button id="go">Salvar e Atualizar para Todos</button>
       </div>
-      <div id="msg" style="font-size:12px;color:var(--mut);margin-top:8px"></div>
+      <div id="msg" style="font-size:12.5px;margin-top:10px;padding:8px 12px;border-radius:8px;display:none"></div>
     </section>
   </main>
 </div>
 
 <div id="pop" hidden></div>
+
+<!-- Modal Informativo do Firebase Firestore -->
+<div id="modalCloud" class="modal-overlay" style="display:none">
+  <div class="modal-box">
+    <h3>☁️ Sincronização Online em Tempo Real</h3>
+    <p>
+      Para que tudo o que for feito em um link apareça instantaneamente em todos os outros computadores e navegadores, o banco de dados do seu projeto Firebase (<b>roadmap-76391</b>) precisa estar ativado.
+    </p>
+
+    <div class="steps-box">
+      <div style="font-weight:700;margin-bottom:8px;font-size:13px">Ativação rápida (feita uma única vez):</div>
+      <ol>
+        <li>Acesse o console do Firestore no link abaixo;</li>
+        <li>Clique no botão <b>"Criar banco de dados"</b> (Create Database);</li>
+        <li>Escolha a localização (ex.: <i>southamerica-east1</i> ou <i>us-central1</i>);</li>
+        <li>Marque a opção <b>"Iniciar no modo de teste"</b> (Start in test mode) para permitir gravação imediata;</li>
+        <li>Clique em <b>Ativar</b> / <b>Concluir</b>.</li>
+      </ol>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-close" id="btnCloseModal">Fechar</button>
+      <button class="btn-close" id="btnTestCloud">🔄 Testar Conexão</button>
+      <a class="btn-link" href="https://console.firebase.google.com/project/roadmap-76391/firestore" target="_blank" rel="noopener">
+        Abrir Console do Firebase ↗
+      </a>
+    </div>
+  </div>
+</div>
 
 <script>
 // Configuração Oficial do Firebase
@@ -699,7 +773,7 @@ function go(v, keep) {
   if (v === 'geral' && has) render();
   if (IND[v] && has) renderInd();
   $('pt').textContent = TT[v];
-  $('ps').textContent = IND[v] ? IND[v].d : v === 'upd' ? 'Envie a planilha da ALIMENTAÇÃO para atualizar o link na nuvem' : 'Planilha completa, boards por indicador e maiores gaps do núcleo';
+  $('ps').textContent = IND[v] ? IND[v].d : v === 'upd' ? 'Envie a planilha da ALIMENTAÇÃO para atualizar todos os links em tempo real' : 'Planilha completa, boards por indicador e maiores gaps do núcleo';
   nav();
   mark();
 }
@@ -766,10 +840,22 @@ function show(name, t) {
   $('st').textContent = (name ? name + ' · ' : '') + 'Atualizado: ' + new Date(t).toLocaleString('pt-BR');
 }
 
-function msg(t, e) {
-  $('msg').style.color = e ? 'var(--rf)' : 'var(--gf)';
-  $('msg').textContent = t;
-  if (e) go('upd', true);
+function msg(t, isErr) {
+  const el = $('msg');
+  if (!el) return;
+  el.style.display = 'block';
+  el.style.background = isErr ? 'rgba(239,68,68,.1)' : 'rgba(16,185,129,.1)';
+  el.style.color = isErr ? 'var(--rf)' : 'var(--gf)';
+  el.style.border = '1px solid ' + (isErr ? 'rgba(239,68,68,.25)' : 'rgba(16,185,129,.25)');
+  el.innerHTML = t;
+  if (isErr) go('upd', true);
+}
+
+function updateCloudBadge(status, text) {
+  const el = $('cloudBadge');
+  if (!el) return;
+  el.className = 'cloud-badge ' + status;
+  el.innerHTML = `<span class="dot"></span> ${text}`;
 }
 
 function params() {
@@ -800,14 +886,22 @@ function unpack(p) {
 async function save(rows, name, t) {
   const rec = { name, t, rows: pack(rows), params: params() };
   try { localStorage.setItem(KEY, JSON.stringify(rec)); } catch(e){}
+
   if (DB) {
+    updateCloudBadge('syncing', 'Sincronizando na nuvem…');
     try {
       await DB.collection('monitor').doc('latest').set(rec);
-      msg('Dados salvos e sincronizados no Firebase para todos.', false);
+      updateCloudBadge('ok', 'Nuvem Online (Tempo Real)');
+      msg('✅ Dados salvos na nuvem! Atualizados para todos os links em tempo real.', false);
     } catch(e) {
       console.warn("Erro ao salvar no Firestore:", e);
-      msg('Atualizado localmente (erro ao sincronizar na nuvem: ' + e.message + ')', true);
+      updateCloudBadge('err', 'Nuvem Pendente: Ativar Firestore');
+      openCloudModal();
+      msg('⚠️ Salvo apenas neste navegador. Para que apareça em todos os links, o <b>Firestore</b> precisa ser ativado no console do Firebase (clique no aviso vermelho acima).', true);
     }
+  } else {
+    updateCloudBadge('err', 'Nuvem Desconectada');
+    msg('⚠️ Firebase não inicializado.', true);
   }
 }
 
@@ -859,8 +953,9 @@ $('go').onclick = () => {
   } else msg('Envie um arquivo ou cole a planilha primeiro.', true);
 };
 
+// Alteração de parâmetros agora sincroniza em tempo real para todos na nuvem!
 ['mes', 'trk', 'cmin'].forEach(i => $(i).onchange = () => {
-  if (RAW) apply(RAW, '', TS, true);
+  if (RAW) apply(RAW, 'Parâmetros atualizados', Date.now(), false);
 });
 
 $('q').oninput = render;
@@ -885,6 +980,28 @@ $('btnTheme').onclick = () => {
   updateThemeBtn();
 };
 
+// Modal de Nuvem
+function openCloudModal() { $('modalCloud').style.display = 'flex'; }
+function closeCloudModal() { $('modalCloud').style.display = 'none'; }
+$('cloudBadge').onclick = openCloudModal;
+$('btnCloseModal').onclick = closeCloudModal;
+
+$('btnTestCloud').onclick = async () => {
+  if (!DB) { alert("Firebase não foi inicializado."); return; }
+  $('btnTestCloud').textContent = 'Testando...';
+  try {
+    const doc = await DB.collection('monitor').doc('latest').get();
+    alert("✅ Conexão estabelecida com sucesso! O Firestore está ativo e online.");
+    updateCloudBadge('ok', 'Nuvem Online (Tempo Real)');
+    closeCloudModal();
+  } catch(e) {
+    alert("❌ Erro na conexão: " + e.message + "\n\nCertifique-se de ter clicado em 'Criar banco de dados' no Firebase Console em 'Modo de teste'.");
+    updateCloudBadge('err', 'Nuvem Pendente: Ativar Firestore');
+  } finally {
+    $('btnTestCloud').textContent = '🔄 Testar Conexão';
+  }
+};
+
 // Inicialização Principal
 (async () => {
   initTheme();
@@ -895,12 +1012,14 @@ $('btnTheme').onclick = () => {
     if (window.firebase) {
       firebase.initializeApp(firebaseConfig);
       DB = firebase.firestore();
+      updateCloudBadge('syncing', 'Conectando Firestore…');
     }
   } catch(e) {
     console.warn("Erro ao iniciar Firebase:", e);
+    updateCloudBadge('err', 'Erro Firebase');
   }
 
-  // 2. Carregar do cache local imediatamente
+  // 2. Carregar do cache local imediatamente para não deixar a tela em branco
   try {
     s = JSON.parse(localStorage.getItem(KEY) || 'null');
   } catch(e) {}
@@ -915,18 +1034,17 @@ $('btnTheme').onclick = () => {
       }
       apply(RAW, s.name, s.t, true);
     } catch(e) {
-      msg('Erro: ' + e.message, true);
+      msg('Erro ao carregar dados locais: ' + e.message, true);
     }
-  } else {
-    $('empty').textContent = 'Sem dados ainda. Abra “Atualizar dados” abaixo e envie a planilha.';
-    go('upd', true);
   }
 
-  // 3. Conexão Firestore em tempo real
+  // 3. Ouvinte em tempo real no Firestore (sincroniza qualquer alteração para todos)
   if (DB) {
     DB.collection('monitor').doc('latest').onSnapshot(doc => {
+      updateCloudBadge('ok', 'Nuvem Online (Tempo Real)');
       const data = doc.data();
       if (data && data.rows && data.rows.length) {
+        // Aplica se for mais novo ou se não tínhamos nada carregado
         if (!RAW || data.t > TS) {
           RAW = unpack(data.rows);
           TS = data.t;
@@ -938,10 +1056,27 @@ $('btnTheme').onclick = () => {
           apply(RAW, (data.name ? data.name + ' (Nuvem)' : 'Nuvem'), data.t, true);
           try { localStorage.setItem(KEY, JSON.stringify(data)); } catch(e){}
         }
+      } else if (!RAW) {
+        $('empty').textContent = 'Sem dados na nuvem ainda. Abra “Atualizar dados” abaixo e envie a planilha.';
+        go('upd', true);
       }
     }, err => {
       console.warn("Listener Firestore:", err);
+      updateCloudBadge('err', 'Nuvem Pendente: Ativar Firestore');
+      if (!RAW) {
+        $('empty').innerHTML = `
+          <div style="max-width:440px;margin:0 auto;text-align:center">
+            <b style="display:block;font-size:16px;margin-bottom:8px">Conectando banco de dados na nuvem…</b>
+            <p style="font-size:13px;color:var(--mut);margin-bottom:14px">
+              Para que os dados apareçam online para todas as pessoas, o Firestore precisa estar ativado no Firebase Console.
+            </p>
+            <button onclick="openCloudModal()" style="font-size:12px;padding:8px 16px">Ver Instruções de Ativação (1 min)</button>
+          </div>
+        `;
+      }
     });
+  } else {
+    updateCloudBadge('err', 'Firebase Desconectado');
   }
 })();
 </script>
