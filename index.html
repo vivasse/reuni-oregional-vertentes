@@ -3,6 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Monitor Vertentes · Núcleo Vertentes</title>
 
 <!-- Google Font: Montserrat -->
@@ -1325,7 +1328,6 @@ $('btnTestCloud').onclick = async () => {
 };
 
 function applyCloudData(data, sourceLabel) {
-  if (!data) return;
   isCloudConnected = true;
   activeDatabaseType = sourceLabel;
   updateCloudBadge('ok', `Nuvem Online (${sourceLabel})`);
@@ -1335,7 +1337,7 @@ function applyCloudData(data, sourceLabel) {
     cloudReconnectTimer = null;
   }
 
-  if (data.rows && data.rows.length) {
+  if (data && data.rows && data.rows.length) {
     if (!RAW || (data.t && data.t > TS)) {
       RAW = unpack(data.rows);
       TS = data.t || Date.now();
@@ -1347,9 +1349,15 @@ function applyCloudData(data, sourceLabel) {
       apply(RAW, (data.name ? data.name + ' (Nuvem)' : 'Nuvem'), TS, true);
       try { localStorage.setItem(KEY, JSON.stringify(data)); } catch(e){}
     }
-  } else if (!RAW) {
-    $('empty').textContent = 'Conectado à nuvem! Abra “Atualizar dados” abaixo e envie a planilha.';
-    go('upd', true);
+  } else if (!data) {
+    // O banco está online, mas monitor/latest ainda está vazio na nuvem
+    if (RAW && RAW.length) {
+      console.log("Nuvem conectada e vazia. Enviando dados locais para a nuvem automaticamente...");
+      save(RAW, 'Sincronização Nuvem', TS);
+    } else {
+      $('empty').textContent = 'Conectado à nuvem! Abra “Atualizar dados” abaixo e envie a planilha.';
+      go('upd', true);
+    }
   }
 }
 
