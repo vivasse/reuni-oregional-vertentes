@@ -15,7 +15,9 @@
 
 <!-- Firebase SDKs compatíveis -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 
 <style>
 :root{
@@ -368,30 +370,44 @@ aside .car.cl{transform:rotate(-90deg)}
 
 <div id="pop" hidden></div>
 
-<!-- Modal Informativo do Firebase Firestore -->
+<!-- Modal Informativo do Firebase -->
 <div id="modalCloud" class="modal-overlay" style="display:none">
   <div class="modal-box">
-    <h3>☁️ Sincronização Online em Tempo Real</h3>
+    <h3>☁️ Conexão Automática ao Firebase</h3>
     <p>
-      Para que tudo o que for feito em um link apareça instantaneamente em todos os outros computadores e navegadores, o banco de dados do seu projeto Firebase (<b>roadmap-76391</b>) precisa estar ativado.
+      O sistema está configurado para o projeto <b>roadmap-76391</b> e tenta <b>conectar automaticamente em segundo plano</b> a cada 7 segundos.
     </p>
 
     <div class="steps-box">
-      <div style="font-weight:700;margin-bottom:8px;font-size:13px">Ativação rápida (feita uma única vez):</div>
-      <ol>
-        <li>Acesse o console do Firestore no link abaixo;</li>
-        <li>Clique no botão <b>"Criar banco de dados"</b> (Create Database);</li>
-        <li>Escolha a localização (ex.: <i>southamerica-east1</i> ou <i>us-central1</i>);</li>
-        <li>Marque a opção <b>"Iniciar no modo de teste"</b> (Start in test mode) para permitir gravação imediata;</li>
-        <li>Clique em <b>Ativar</b> / <b>Concluir</b>.</li>
-      </ol>
+      <div style="font-weight:700;margin-bottom:10px;font-size:13px">Para liberar a conexão (escolha uma das opções abaixo):</div>
+      
+      <div style="margin-bottom:12px;padding:12px;background:var(--card);border-radius:10px;border:1px solid var(--bd)">
+        <b style="color:var(--ac);display:block;margin-bottom:4px">Opção 1 (Mais Rápida — Realtime Database, já criado):</b>
+        <span style="font-size:12px;color:var(--mut);display:block;margin-bottom:6px">1. Abra as regras do Realtime Database pelo botão abaixo;</span>
+        <span style="font-size:12px;color:var(--mut);display:block;margin-bottom:6px">2. Troque o conteúdo das regras por:</span>
+        <code style="display:block;background:var(--in);padding:6px 10px;border-radius:6px;font-size:11.5px;color:var(--tx);font-family:monospace;margin-bottom:6px">{ "rules": { ".read": true, ".write": true } }</code>
+        <span style="font-size:12px;color:var(--mut);display:block">3. Clique em <b>Publicar</b> (Publish).</span>
+      </div>
+
+      <div style="padding:12px;background:var(--card);border-radius:10px;border:1px solid var(--bd)">
+        <b style="color:var(--ac);display:block;margin-bottom:4px">Opção 2 (Cloud Firestore):</b>
+        <span style="font-size:12px;color:var(--mut);display:block;margin-bottom:4px">1. Acesse o Firestore e clique em <b>"Criar banco de dados"</b>;</span>
+        <span style="font-size:12px;color:var(--mut);display:block">2. Marque a opção <b>"Modo de teste"</b> e confirme.</span>
+      </div>
+
+      <p style="margin:12px 0 0;font-size:12px;color:#047857;font-weight:600">
+        ✨ Assim que você salvar no console, a página detectará e conectará automaticamente sem precisar recarregar!
+      </p>
     </div>
 
     <div class="modal-actions">
       <button class="btn-close" id="btnCloseModal">Fechar</button>
       <button class="btn-close" id="btnTestCloud">🔄 Testar Conexão</button>
-      <a class="btn-link" href="https://console.firebase.google.com/project/roadmap-76391/firestore" target="_blank" rel="noopener">
-        Abrir Console do Firebase ↗
+      <a class="btn-link" href="https://console.firebase.google.com/project/roadmap-76391/database/roadmap-76391-default-rtdb/rules" target="_blank" rel="noopener">
+        Abrir Regras Realtime Database ↗
+      </a>
+      <a class="btn-link" style="background:#0e7490" href="https://console.firebase.google.com/project/roadmap-76391/firestore" target="_blank" rel="noopener">
+        Abrir Firestore ↗
       </a>
     </div>
   </div>
@@ -402,6 +418,7 @@ aside .car.cl{transform:rotate(-90deg)}
 const firebaseConfig = {
   apiKey: "AIzaSyAUGdZc3VA0XFZlDaG4uTfA5MXH0hTntT4",
   authDomain: "roadmap-76391.firebaseapp.com",
+  databaseURL: "https://roadmap-76391-default-rtdb.firebaseio.com",
   projectId: "roadmap-76391",
   storageBucket: "roadmap-76391.firebasestorage.app",
   messagingSenderId: "390570515113",
@@ -862,7 +879,10 @@ function params() {
   return { mes: +$('mes').value, trk: +$('trk').value || 6, cmin: +$('cmin').value || 3.5 };
 }
 
-let RAW = null, DB = null, TS = Date.now();
+let RAW = null, DB = null, RTDB = null, AUTH = null, TS = Date.now();
+let isCloudConnected = false;
+let cloudReconnectTimer = null;
+let activeDatabaseType = null;
 const COLS = [1, 2, 10, 13, 20, 22, 25, 29, 55, 74, 75, 76, 90, 94, 95, 96, 97];
 
 function pack(rows) {
@@ -887,21 +907,40 @@ async function save(rows, name, t) {
   const rec = { name, t, rows: pack(rows), params: params() };
   try { localStorage.setItem(KEY, JSON.stringify(rec)); } catch(e){}
 
+  let savedInCloud = false;
+  updateCloudBadge('syncing', 'Sincronizando…');
+
+  // 1. Salvar no Realtime Database (rápido e direto)
+  if (RTDB) {
+    try {
+      await RTDB.ref('monitor/latest').set(rec);
+      savedInCloud = true;
+      activeDatabaseType = 'Realtime';
+    } catch(e) {
+      console.warn("RTDB set:", e.message || e);
+    }
+  }
+
+  // 2. Salvar também no Firestore (redundância e compatibilidade)
   if (DB) {
-    updateCloudBadge('syncing', 'Sincronizando na nuvem…');
     try {
       await DB.collection('monitor').doc('latest').set(rec);
-      updateCloudBadge('ok', 'Nuvem Online (Tempo Real)');
-      msg('✅ Dados salvos na nuvem! Atualizados para todos os links em tempo real.', false);
+      savedInCloud = true;
+      activeDatabaseType = activeDatabaseType || 'Firestore';
     } catch(e) {
-      console.warn("Erro ao salvar no Firestore:", e);
-      updateCloudBadge('err', 'Nuvem Pendente: Ativar Firestore');
-      openCloudModal();
-      msg('⚠️ Salvo apenas neste navegador. Para que apareça em todos os links, o <b>Firestore</b> precisa ser ativado no console do Firebase (clique no aviso vermelho acima).', true);
+      console.warn("Firestore set:", e.message || e);
     }
+  }
+
+  if (savedInCloud) {
+    isCloudConnected = true;
+    updateCloudBadge('ok', `Nuvem Online (${activeDatabaseType || 'Tempo Real'})`);
+    msg('✅ Dados salvos na nuvem! Atualizados para todos os links em tempo real.', false);
+    if ($('st')) $('st').textContent = (name ? name + ' · ' : '') + 'Nuvem atualizada em ' + new Date(t).toLocaleString('pt-BR');
   } else {
-    updateCloudBadge('err', 'Nuvem Desconectada');
-    msg('⚠️ Firebase não inicializado.', true);
+    updateCloudBadge('err', 'Nuvem Pendente: Ativar Acesso');
+    msg('⚠️ Salvo localmente neste navegador. Tentando conectar ao Firebase automaticamente em segundo plano...', true);
+    startAutoReconnect();
   }
 }
 
@@ -987,32 +1026,130 @@ $('cloudBadge').onclick = openCloudModal;
 $('btnCloseModal').onclick = closeCloudModal;
 
 $('btnTestCloud').onclick = async () => {
-  if (!DB) { alert("Firebase não foi inicializado."); return; }
   $('btnTestCloud').textContent = 'Testando...';
-  try {
-    const doc = await DB.collection('monitor').doc('latest').get();
-    alert("✅ Conexão estabelecida com sucesso! O Firestore está ativo e online.");
-    updateCloudBadge('ok', 'Nuvem Online (Tempo Real)');
-    closeCloudModal();
-  } catch(e) {
-    alert("❌ Erro na conexão: " + e.message + "\n\nCertifique-se de ter clicado em 'Criar banco de dados' no Firebase Console em 'Modo de teste'.");
-    updateCloudBadge('err', 'Nuvem Pendente: Ativar Firestore');
-  } finally {
-    $('btnTestCloud').textContent = '🔄 Testar Conexão';
+  const successList = [];
+  const errorList = [];
+
+  if (RTDB) {
+    try {
+      await RTDB.ref('monitor/latest').once('value');
+      successList.push("Realtime Database: Conectado com sucesso! ✅");
+    } catch(e) {
+      errorList.push("Realtime Database: " + (e.message || e));
+    }
+  } else {
+    errorList.push("Realtime Database: Não inicializado");
   }
+
+  if (DB) {
+    try {
+      await DB.collection('monitor').doc('latest').get();
+      successList.push("Cloud Firestore: Conectado com sucesso! ✅");
+    } catch(e) {
+      errorList.push("Cloud Firestore: " + (e.message || e));
+    }
+  } else {
+    errorList.push("Cloud Firestore: Não inicializado");
+  }
+
+  if (successList.length > 0) {
+    isCloudConnected = true;
+    updateCloudBadge('ok', 'Nuvem Online (Tempo Real)');
+    alert("🎉 Conexão estabelecida com sucesso!\n\n" + successList.join("\n"));
+    closeCloudModal();
+  } else {
+    updateCloudBadge('err', 'Nuvem Pendente: Ativar Acesso');
+    alert("❌ O Firebase ainda não permitiu leitura/gravação:\n\n" + errorList.join("\n") + "\n\nO aplicativo continuará tentando conectar automaticamente a cada 7 segundos.");
+  }
+  $('btnTestCloud').textContent = '🔄 Testar Conexão';
 };
+
+function applyCloudData(data, sourceLabel) {
+  if (!data) return;
+  isCloudConnected = true;
+  activeDatabaseType = sourceLabel;
+  updateCloudBadge('ok', `Nuvem Online (${sourceLabel})`);
+
+  if (cloudReconnectTimer) {
+    clearInterval(cloudReconnectTimer);
+    cloudReconnectTimer = null;
+  }
+
+  if (data.rows && data.rows.length) {
+    if (!RAW || (data.t && data.t > TS)) {
+      RAW = unpack(data.rows);
+      TS = data.t || Date.now();
+      if (data.params) {
+        if (data.params.mes) $('mes').value = data.params.mes;
+        if (data.params.trk) $('trk').value = data.params.trk;
+        if (data.params.cmin) $('cmin').value = data.params.cmin;
+      }
+      apply(RAW, (data.name ? data.name + ' (Nuvem)' : 'Nuvem'), TS, true);
+      try { localStorage.setItem(KEY, JSON.stringify(data)); } catch(e){}
+    }
+  } else if (!RAW) {
+    $('empty').textContent = 'Conectado à nuvem! Abra “Atualizar dados” abaixo e envie a planilha.';
+    go('upd', true);
+  }
+}
+
+function startAutoReconnect() {
+  if (cloudReconnectTimer) return;
+  cloudReconnectTimer = setInterval(async () => {
+    if (isCloudConnected) {
+      clearInterval(cloudReconnectTimer);
+      cloudReconnectTimer = null;
+      return;
+    }
+
+    // 1. Tentar conectar ao Realtime Database
+    if (RTDB) {
+      try {
+        const snap = await RTDB.ref('monitor/latest').once('value');
+        const val = snap.val();
+        applyCloudData(val, 'Realtime');
+        return;
+      } catch(e) {}
+    }
+
+    // 2. Tentar conectar ao Firestore
+    if (DB) {
+      try {
+        const doc = await DB.collection('monitor').doc('latest').get();
+        if (doc && doc.exists) {
+          applyCloudData(doc.data(), 'Firestore');
+        } else {
+          isCloudConnected = true;
+          activeDatabaseType = 'Firestore';
+          updateCloudBadge('ok', 'Nuvem Online (Firestore)');
+          if (cloudReconnectTimer) { clearInterval(cloudReconnectTimer); cloudReconnectTimer = null; }
+        }
+        return;
+      } catch(e) {}
+    }
+  }, 7000);
+}
 
 // Inicialização Principal
 (async () => {
   initTheme();
   let s = null;
 
-  // 1. Inicializar Firebase
+  // 1. Inicializar Firebase (RTDB + Firestore + Auth)
   try {
     if (window.firebase) {
-      firebase.initializeApp(firebaseConfig);
-      DB = firebase.firestore();
-      updateCloudBadge('syncing', 'Conectando Firestore…');
+      if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+      }
+      try { RTDB = firebase.database(); } catch(e) { console.warn("RTDB init:", e); }
+      try { DB = firebase.firestore(); } catch(e) { console.warn("Firestore init:", e); }
+      try {
+        if (firebase.auth) {
+          AUTH = firebase.auth();
+          AUTH.signInAnonymously().catch(e => console.log("Auth anon:", e.message));
+        }
+      } catch(e) {}
+      updateCloudBadge('syncing', 'Conectando Firebase…');
     }
   } catch(e) {
     console.warn("Erro ao iniciar Firebase:", e);
@@ -1038,46 +1175,60 @@ $('btnTestCloud').onclick = async () => {
     }
   }
 
-  // 3. Ouvinte em tempo real no Firestore (sincroniza qualquer alteração para todos)
-  if (DB) {
-    DB.collection('monitor').doc('latest').onSnapshot(doc => {
-      updateCloudBadge('ok', 'Nuvem Online (Tempo Real)');
-      const data = doc.data();
-      if (data && data.rows && data.rows.length) {
-        // Aplica se for mais novo ou se não tínhamos nada carregado
-        if (!RAW || data.t > TS) {
-          RAW = unpack(data.rows);
-          TS = data.t;
-          if (data.params) {
-            if (data.params.mes) $('mes').value = data.params.mes;
-            if (data.params.trk) $('trk').value = data.params.trk;
-            if (data.params.cmin) $('cmin').value = data.params.cmin;
-          }
-          apply(RAW, (data.name ? data.name + ' (Nuvem)' : 'Nuvem'), data.t, true);
-          try { localStorage.setItem(KEY, JSON.stringify(data)); } catch(e){}
-        }
-      } else if (!RAW) {
-        $('empty').textContent = 'Sem dados na nuvem ainda. Abra “Atualizar dados” abaixo e envie a planilha.';
-        go('upd', true);
-      }
-    }, err => {
-      console.warn("Listener Firestore:", err);
-      updateCloudBadge('err', 'Nuvem Pendente: Ativar Firestore');
-      if (!RAW) {
-        $('empty').innerHTML = `
-          <div style="max-width:440px;margin:0 auto;text-align:center">
-            <b style="display:block;font-size:16px;margin-bottom:8px">Conectando banco de dados na nuvem…</b>
-            <p style="font-size:13px;color:var(--mut);margin-bottom:14px">
-              Para que os dados apareçam online para todas as pessoas, o Firestore precisa estar ativado no Firebase Console.
-            </p>
-            <button onclick="openCloudModal()" style="font-size:12px;padding:8px 16px">Ver Instruções de Ativação (1 min)</button>
-          </div>
-        `;
-      }
-    });
-  } else {
-    updateCloudBadge('err', 'Firebase Desconectado');
+  // 3. Ouvintes em tempo real automáticos no Firebase
+  // Ouvinte 3A: Realtime Database
+  if (RTDB) {
+    try {
+      RTDB.ref('monitor/latest').on('value', snapshot => {
+        const val = snapshot.val();
+        applyCloudData(val, 'Realtime');
+      }, err => {
+        console.warn("RTDB listener:", err.message || err);
+      });
+    } catch(e) {
+      console.warn("RTDB listener catch:", e);
+    }
   }
+
+  // Ouvinte 3B: Cloud Firestore
+  if (DB) {
+    try {
+      DB.collection('monitor').doc('latest').onSnapshot(doc => {
+        if (doc && doc.exists) {
+          applyCloudData(doc.data(), 'Firestore');
+        } else {
+          isCloudConnected = true;
+          activeDatabaseType = 'Firestore';
+          updateCloudBadge('ok', 'Nuvem Online (Firestore)');
+          if (!RAW) {
+            $('empty').textContent = 'Conectado à nuvem! Abra “Atualizar dados” abaixo e envie a planilha.';
+            go('upd', true);
+          }
+        }
+      }, err => {
+        console.warn("Firestore listener:", err.message || err);
+        if (!isCloudConnected) {
+          updateCloudBadge('err', 'Nuvem Pendente: Ativar Acesso');
+          if (!RAW) {
+            $('empty').innerHTML = `
+              <div style="max-width:460px;margin:0 auto;text-align:center">
+                <b style="display:block;font-size:16px;margin-bottom:8px">Conectando automaticamente ao Firebase…</b>
+                <p style="font-size:13px;color:var(--mut);margin-bottom:14px">
+                  O aplicativo está tentando conectar ao projeto <b>roadmap-76391</b> em segundo plano a cada 7 segundos.
+                </p>
+                <button onclick="openCloudModal()" style="font-size:12px;padding:8px 16px">Ver Instruções de Liberação (30 seg)</button>
+              </div>
+            `;
+          }
+        }
+      });
+    } catch(e) {
+      console.warn("Firestore listener catch:", e);
+    }
+  }
+
+  // Iniciar loop de reconexão automática em segundo plano
+  startAutoReconnect();
 })();
 </script>
 </body>
