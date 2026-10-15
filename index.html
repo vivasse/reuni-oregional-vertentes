@@ -229,17 +229,267 @@ aside .car.cl{transform:rotate(-90deg)}
 .btn-link:hover{filter:brightness(1.1)}
 .btn-close{background:var(--in);color:var(--tx);border:1px solid var(--bd);padding:9px 14px;border-radius:9px;font-size:12.5px;font-weight:600;cursor:pointer}
 
+/* Botão de Tema no Mobile */
+.btn-theme-mob{
+  display:none;
+  background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.18);
+  color:#fff;
+  border-radius:99px;
+  width:36px;
+  height:36px;
+  align-items:center;
+  justify-content:center;
+  font-size:16px;
+  cursor:pointer;
+  transition:background .15s;
+  flex:none;
+}
+.btn-theme-mob:hover{background:rgba(255,255,255,.22)}
+
+/* Dica de rolagem horizontal na tabela */
+.scroll-hint{
+  display:none;
+  align-items:center;
+  gap:6px;
+  font-size:11px;
+  font-weight:600;
+  color:var(--mut);
+  margin:4px 0 8px;
+  padding:4px 10px;
+  background:var(--in);
+  border:1px solid var(--bd);
+  border-radius:8px;
+  width:fit-content;
+}
+
+/* Responsividade Completa para Tablets e Celulares */
 @media(max-width:900px){
   .app{flex-direction:column}
-  aside{width:100%;height:auto;position:sticky;top:0;z-index:30;padding:10px 12px;gap:8px}
-  .brand small{display:none}.brand b{font-size:15px}
-  #nav{flex-direction:row;overflow-x:auto}
-  aside .nv{width:auto;white-space:nowrap}
-  aside .sep{width:1px;height:auto;margin:4px}
-  aside .nv.sub{margin-left:0;width:auto;padding:11px 12px}
-  aside .nv.on::before{left:12px;right:12px;top:auto;bottom:0;width:auto;height:3px}
-  main{padding:16px 12px 44px}
+  aside{
+    width:100%;
+    height:auto;
+    min-height:0;
+    position:sticky;
+    top:0;
+    z-index:40;
+    padding:10px 14px 6px;
+    gap:8px;
+    box-shadow:0 4px 16px rgba(0,0,0,.18);
+  }
+  .brand{
+    padding:0;
+    width:100%;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .brand small{display:block;font-size:11px;opacity:.7}
+  .brand b{font-size:15px}
+  .btn-theme-mob{display:inline-flex}
+
+  #nav{
+    flex-direction:row;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+    gap:6px;
+    padding:3px 2px 7px;
+    margin:0 -4px;
+  }
+  #nav::-webkit-scrollbar{display:none}
+
+  aside .nv{
+    width:auto;
+    white-space:nowrap;
+    padding:7px 12px;
+    font-size:12px;
+    border-radius:99px;
+    background:rgba(255,255,255,.08);
+    gap:6px;
+    border:1px solid rgba(255,255,255,.1);
+  }
+  aside .nv:hover{background:rgba(255,255,255,.14)}
+  aside .nv.on{
+    background:rgba(255,255,255,.22);
+    color:#fff;
+    border-color:rgba(103,232,249,.4);
+  }
+  aside .nv.on::before{display:none}
+  aside .nv .car{display:none}
+  aside .sep{
+    width:1px;
+    height:22px;
+    align-self:center;
+    margin:0 2px;
+    background:rgba(255,255,255,.15);
+  }
+  aside .nv.sub{
+    margin-left:0;
+    width:auto;
+    padding:7px 12px;
+  }
+  main{
+    padding:14px 12px 50px;
+    max-width:100%;
+  }
   .aside-footer{display:none}
+
+  /* Cabeçalho da página */
+  .top{
+    flex-direction:column;
+    align-items:flex-start;
+    gap:10px;
+    margin-bottom:8px;
+  }
+  .top h1{
+    font-size:20px;
+    line-height:1.2;
+  }
+  .top p{
+    font-size:12px;
+  }
+
+  /* Cartões e Seções */
+  .card{
+    padding:14px;
+    border-radius:14px;
+    margin-top:12px;
+  }
+}
+
+@media(max-width:768px){
+  /* Dica de rolagem */
+  .scroll-hint{display:inline-flex}
+
+  /* Fixar nome da EJ ao rolar tabela no mobile */
+  .col-num{display:none !important}
+  table th.nm,
+  table td.nm{
+    position:sticky;
+    left:0;
+    z-index:3;
+    background:var(--card);
+    box-shadow:3px 0 8px -3px rgba(0,0,0,.15);
+  }
+  table th.nm{
+    z-index:5;
+  }
+  tr:hover td.nm{
+    background:var(--in);
+  }
+
+  /* Tabela touch */
+  .tw{
+    max-height:65vh;
+    border-radius:12px;
+    -webkit-overflow-scrolling:touch;
+  }
+  table{
+    min-width:860px;
+  }
+  th, td{
+    padding:8px 7px;
+    font-size:12.5px;
+  }
+
+  /* KPIs em grade mobile (2 colunas) */
+  .kp{
+    grid-template-columns:repeat(2, 1fr);
+    gap:8px;
+  }
+  .kp>div{
+    padding:12px 10px;
+    border-radius:12px;
+  }
+  .kp small{font-size:9.5px;letter-spacing:.02em}
+  .kp b{font-size:18px;margin-top:2px}
+  .kp span{font-size:10px}
+
+  /* Boards dos indicadores */
+  .bds{grid-template-columns:1fr;gap:12px}
+  .rowb{
+    flex-direction:column;
+    gap:14px;
+    align-items:stretch;
+  }
+  .rowb .dn{margin:0 auto}
+  .rowb .dl{max-width:none;width:100%}
+
+  /* Filtros organizados em grid mobile */
+  .row{
+    display:grid;
+    grid-template-columns:repeat(2, 1fr);
+    gap:8px;
+    align-items:end;
+  }
+  .row label{
+    width:100%;
+  }
+  .row label input,
+  .row label select{
+    width:100%;
+    padding:9px 10px;
+    font-size:15px; /* Evita auto-zoom incômodo no Safari iOS */
+    box-sizing:border-box;
+  }
+  .row input[type=number]{
+    width:100% !important;
+  }
+  .row label[style*="flex:1"],
+  .row label.search-label{
+    grid-column:1/-1;
+    min-width:0 !important;
+  }
+
+  /* Maiores Gaps */
+  .gl{
+    grid-template-columns:1fr;
+    gap:10px;
+  }
+
+  /* Modal no Mobile */
+  .modal-overlay{
+    padding:10px;
+    align-items:flex-end;
+  }
+  .modal-box{
+    padding:20px 16px;
+    border-radius:18px 18px 0 0;
+    max-height:88vh;
+    overflow-y:auto;
+  }
+  .modal-actions{
+    flex-direction:column;
+    gap:8px;
+  }
+  .modal-actions button,
+  .modal-actions a{
+    width:100%;
+    justify-content:center;
+    padding:11px;
+    font-size:13px;
+  }
+
+  /* Seção Atualizar */
+  #upd button#go{
+    width:100%;
+    padding:12px;
+    font-size:14px;
+  }
+  #dz{
+    padding:16px 12px;
+    font-size:12.5px;
+  }
+}
+
+@media(max-width:400px){
+  .kp{
+    grid-template-columns:1fr;
+  }
+  .row{
+    grid-template-columns:1fr;
+  }
 }
 </style>
 </head>
@@ -248,15 +498,20 @@ aside .car.cl{transform:rotate(-90deg)}
 <div class="app">
   <aside>
     <div class="brand">
-      <span class="lg0">
-        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/>
-        </svg>
-      </span>
-      <div>
-        <b>Monitor</b>
-        <small>Núcleo Vertentes</small>
+      <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0">
+        <span class="lg0">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/>
+          </svg>
+        </span>
+        <div>
+          <b>Monitor</b>
+          <small>Núcleo Vertentes</small>
+        </div>
       </div>
+      <button id="btnThemeMobile" class="btn-theme-mob" title="Alternar Tema" type="button">
+        <span id="themeIcoMob">☀️</span>
+      </button>
     </div>
     
     <div id="nav"></div>
@@ -306,12 +561,13 @@ aside .car.cl{transform:rotate(-90deg)}
           <span id="cnt"></span>
           <span style="font-size:12px;color:var(--mut)">· use o ▾ no título das colunas para filtrar</span>
         </div>
+        <div class="scroll-hint">👉 Deslize para o lado para ver todas as colunas</div>
         <div class="tw">
           <table>
             <thead>
               <tr>
-                <th>#</th>
-                <th>EJ</th>
+                <th class="col-num">#</th>
+                <th class="nm">EJ</th>
                 <th>Cl.<button class="fb" data-k="cl" title="Filtrar">▾</button></th>
                 <th>Faturamento</th>
                 <th>% da meta anual<button class="fb" data-k="fa" title="Filtrar">▾</button></th>
@@ -547,7 +803,7 @@ function row(d) {
               `<small>C${d.cl} · índice ${RC(d.idx)}${d.cl < 5 && d.idx < LOW[d.cl] ? ' · faltam ' + RC(LOW[d.cl] - d.idx) + ' p/ subir' : ''}</small>`;
 
   return `<tr>
-    <td class="k">${D.indexOf(d) + 1}</td>
+    <td class="k col-num">${D.indexOf(d) + 1}</td>
     <td class="nm">${esc(d.nome)}</td>
     <td class="k">${d.cl > 0 ? 'C' + d.cl : '–'}</td>
     <td><b>${R(d.fat)}</b><small>meta ${R(d.meta)}</small></td>
@@ -806,7 +1062,8 @@ function renderInd() {
     T.map((t, i) => `<div data-s="${t[0]}"><span class="chip ${t[1]}">${t[0]}</span><b>${n[i]}</b></div>`).join('') +
     `</div></div></div>
     <div class="card"><div class="row"><label style="flex:1;min-width:150px">Buscar EJ<input id="iq" placeholder="Digite o nome…" style="width:100%"></label><span id="icnt"></span><button class="ghost" id="iclr">Mostrar todas</button></div>
-    <div class="tw"><table style="min-width:720px"><thead><tr><th>EJ</th><th>Cl.</th>` +
+    <div class="scroll-hint">👉 Deslize para o lado para ver todas as colunas</div>
+    <div class="tw"><table style="min-width:720px"><thead><tr><th class="nm">EJ</th><th>Cl.</th>` +
     c.cols.map(x => `<th>${x}</th>`).join('') +
     `<th>Situação<button class="fb" data-k="${k}">▾</button></th></tr></thead><tbody id="itb"></tbody></table></div></div>`;
   $('iq').oninput = indRows;
@@ -1008,16 +1265,19 @@ function initTheme() {
 function updateThemeBtn() {
   const isDark = document.documentElement.getAttribute('data-theme') === 'dark' || 
     (!document.documentElement.getAttribute('data-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
-  $('themeIco').textContent = isDark ? '🌙' : '☀️';
+  if ($('themeIco')) $('themeIco').textContent = isDark ? '🌙' : '☀️';
+  if ($('themeIcoMob')) $('themeIcoMob').textContent = isDark ? '🌙' : '☀️';
 }
-$('btnTheme').onclick = () => {
+function toggleTheme() {
   const cur = document.documentElement.getAttribute('data-theme') || 
     (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
   const next = cur === 'dark' ? 'light' : 'dark';
   document.documentElement.setAttribute('data-theme', next);
   localStorage.setItem('vert_theme', next);
   updateThemeBtn();
-};
+}
+if ($('btnTheme')) $('btnTheme').onclick = toggleTheme;
+if ($('btnThemeMobile')) $('btnThemeMobile').onclick = toggleTheme;
 
 // Modal de Nuvem
 function openCloudModal() { $('modalCloud').style.display = 'flex'; }
