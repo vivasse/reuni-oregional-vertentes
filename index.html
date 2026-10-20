@@ -550,28 +550,60 @@ tr.exp-row td{
 .kp span{font-size:11px;color:var(--mut)}
 .two{display:grid;grid-template-columns:1fr;gap:16px}
 .bds{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:14px}
-.bd1{background:var(--in);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:14px;box-shadow:inset 0 0 0 1px var(--bd)}
+.bd1{background:var(--in);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:14px;box-shadow:inset 0 0 0 1px var(--bd);transition:all .15s}
 .bd1 .hd{display:flex;align-items:center;justify-content:space-between}
 .tt2{display:flex;align-items:center;gap:8px;font-weight:700}.tt2 .ic{color:var(--ac);width:17px;height:17px}
-.lk{background:none;color:var(--ac);padding:2px 8px;font-size:12px;font-weight:700;border-radius:8px;border:0;cursor:pointer}
-.lk:hover{background:var(--card)}
+.lk{background:none;color:var(--ac);padding:3px 8px;font-size:12px;font-weight:700;border-radius:8px;border:0;cursor:pointer;transition:all .15s}
+.lk:hover{background:var(--card);filter:brightness(1.05)}
 .dn{width:116px;height:116px;border-radius:50%;margin:0 auto;position:relative;display:flex;align-items:center;justify-content:center;flex:none}
-.dn::after{content:"";position:absolute;inset:17px;background:var(--in);border-radius:50%}
-.card .dn::after{background:var(--card)}.bd1 .dn::after{background:var(--in)}
-.dn span{position:relative;z-index:1;font-size:24px;font-weight:800;line-height:1;text-align:center}
+.dn::after{display:none !important}
+.dn-svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(0deg)}
+.dn-slice{cursor:pointer;transition:opacity .15s, stroke-width .15s}
+.dn-slice:hover{stroke-width:6.2}
+.dn span{position:relative;z-index:1;font-size:22px;font-weight:800;line-height:1;text-align:center;pointer-events:none}
 .dn small{display:block;font-size:10px;font-weight:600;color:var(--mut);margin-top:3px}
 .dl{display:flex;flex-direction:column;gap:3px}
-.dl>div{display:flex;justify-content:space-between;align-items:center;padding:4px 8px;border-radius:9px;cursor:pointer;font-size:13px}
-.dl>div:hover{background:var(--card)}
-.rowb{display:flex;align-items:center;gap:28px;flex-wrap:wrap}.rowb .dl{min-width:220px;max-width:420px}
-.gl{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px 32px}
-.gl .it{display:grid;grid-template-columns:1fr auto;gap:2px 10px;font-size:13px}
-.gl .it b{font-weight:700}
-.gl .bar{grid-column:1/-1;height:8px;border-radius:9px;background:var(--nb);overflow:hidden}
-.gl .bar i{display:block;height:100%;background:linear-gradient(90deg,#f59e0b,#ef4444)}
-#empty{text-align:center;color:var(--mut);padding:30px}
-button.ghost{background:var(--in);color:var(--tx);border:1px solid var(--bd)}
-#cnt{font-size:12px;color:var(--mut);align-self:center}
+.dl>div, .dl .dl-item{display:flex;justify-content:space-between;align-items:center;padding:5px 8px;border-radius:9px;cursor:pointer;font-size:13px;transition:all .15s}
+.dl>div:hover, .dl .dl-item:hover{background:var(--card)}
+
+/* Destaque e Atenuação de Filtro nos Cards */
+.bd1.has-filter{box-shadow:0 0 0 1.5px var(--ac), 0 4px 14px -4px rgba(79,70,229,.2)}
+.bd1.has-filter .dl .dl-item:not(.active){opacity:0.38}
+.bd1.has-filter .dl .dl-item.active{opacity:1;background:var(--card);box-shadow:0 0 0 1px var(--ac);font-weight:700}
+.bd1.has-filter .dn-slice:not(.active){opacity:0.3}
+.bd1.has-filter .dn-slice.active{opacity:1;stroke-width:6.5}
+
+/* Barra de Chips de Filtros Ativos */
+.filter-chips-bar{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+  padding:8px 12px;background:var(--in);border:1px solid var(--bd);border-radius:12px;
+  margin:0 0 14px;
+}
+.chips-list{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.filter-chip{
+  display:inline-flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--bd);
+  color:var(--tx);padding:4px 10px;border-radius:99px;font-size:12px;font-weight:500;
+  box-shadow:0 1px 2px rgba(0,0,0,.04);
+}
+.filter-chip b{color:var(--ac);font-weight:700}
+.chip-remove-btn{
+  background:none;border:0;padding:0 3px;margin:0;color:var(--mut);cursor:pointer;
+  font-size:11px;line-height:1;border-radius:50%;display:inline-flex;align-items:center;
+  justify-content:center;transition:all .15s;
+}
+.chip-remove-btn:hover{color:var(--rf);background:var(--rb)}
+.btn-clear-chips{
+  background:none;border:0;color:var(--mut);font-size:12px;font-weight:700;
+  cursor:pointer;padding:4px 8px;border-radius:6px;text-decoration:underline;
+  transition:color .15s;margin-left:auto;
+}
+.btn-clear-chips:hover{color:var(--rf)}
+
+/* Contador de EJs no cabeçalho da tabela */
+.table-count-text{
+  font-size:12px;color:var(--mut);font-weight:600;background:var(--in);
+  border:1px solid var(--bd);padding:4px 11px;border-radius:99px;white-space:nowrap;
+}
 .lgd{font-size:12px;color:var(--mut);margin:0 0 14px;line-height:2.1}
 .lgd b{color:var(--tx)}
 .cb{display:flex;align-items:center;gap:7px;padding:3px 0;cursor:pointer}
@@ -582,26 +614,84 @@ button.ghost{background:var(--in);color:var(--tx);border:1px solid var(--bd)}
 .fb{background:none;border:1px solid var(--bd);color:var(--mut);padding:0 5px;margin-left:5px;font-size:10px;border-radius:5px;line-height:16px;font-weight:400;cursor:pointer}
 .fb.on{background:var(--ac);color:#fff;border-color:var(--ac)}
 
-/* Sidebar Executiva */
+/* Sidebar Executiva Retrátil */
 aside{
   width:262px;min-height:100vh;top:0;margin:0;border:0;border-radius:0;box-shadow:none;
-  padding:22px 14px;display:flex;flex-direction:column;gap:18px;overflow:auto;
+  padding:22px 14px;display:flex;flex-direction:column;gap:18px;overflow-y:auto;overflow-x:hidden;
   background:linear-gradient(185deg,#16213e 0%,#1e1b4b 62%,#0e4155 130%);color:#fff;
   flex:none;position:sticky;
+  transition:width .25s cubic-bezier(0.4,0,0.2,1), padding .25s ease;
+  z-index:30;
 }
-.brand{display:flex;align-items:center;gap:12px;padding:0 6px}
-.brand b{display:block;font-size:17px;letter-spacing:-.01em}
-.brand small{opacity:.65;font-size:12px}
-.lg0{width:38px;height:38px;border-radius:11px;margin:0;background:rgba(255,255,255,.12);display:inline-flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.16)}
+.brand{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 4px;min-height:38px}
+.brand-info{display:flex;align-items:center;gap:10px;flex:1;min-width:0;cursor:pointer}
+.brand-text{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:opacity .2s, width .2s}
+.brand b{display:block;font-size:16px;letter-spacing:-.01em;line-height:1.2}
+.brand small{opacity:.65;font-size:11.5px}
+.brand-actions{display:flex;align-items:center;gap:6px;flex:none}
+.lg0{width:38px;height:38px;border-radius:11px;margin:0;background:rgba(255,255,255,.12);display:inline-flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.16);flex:none;transition:transform .15s}
+.lg0:hover{transform:scale(1.05)}
 .lg0 .ic{width:20px;height:20px}
+
+/* Botões de Controle e Toggle da Sidebar */
+.btn-sidebar-toggle{
+  background:rgba(255,255,255,.08);color:rgba(255,255,255,.85);border:1px solid rgba(255,255,255,.14);
+  border-radius:9px;width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:all .15s;padding:0;flex:none;
+}
+.btn-sidebar-toggle:hover{background:rgba(255,255,255,.18);color:#fff;transform:scale(1.04)}
+.btn-sidebar-toggle .sb-ic-expand{display:none}
+
+.btn-quick-toggle{
+  background:var(--card);color:var(--mut);border:1px solid var(--bd);
+  border-radius:10px;width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:all .15s;box-shadow:0 1px 3px rgba(0,0,0,.04);flex:none;
+}
+.btn-quick-toggle:hover{color:var(--ac);border-color:var(--ac);background:var(--in);transform:scale(1.03)}
+aside.collapsed ~ main .btn-quick-toggle svg{transform:scaleX(-1)}
+
+/* Estado Retraído / Colapsado da Sidebar (Desktop) */
+aside.collapsed{
+  width:70px;
+  padding:20px 8px;
+}
+aside.collapsed .brand{
+  flex-direction:column;
+  justify-content:center;
+  gap:10px;
+  padding:0;
+}
+aside.collapsed .brand-info{
+  flex:none;
+  justify-content:center;
+  width:100%;
+}
+aside.collapsed .brand-text{
+  display:none;
+}
+aside.collapsed .brand-actions{
+  width:100%;
+  justify-content:center;
+}
+aside.collapsed .btn-sidebar-toggle{
+  width:38px;
+  height:32px;
+}
+aside.collapsed .sb-ic-collapse{
+  display:none !important;
+}
+aside.collapsed .sb-ic-expand{
+  display:block !important;
+}
+
 #nav{display:flex;flex-direction:column;gap:3px}
 aside .nv{
   display:flex;align-items:center;justify-content:flex-start;gap:11px;width:100%;
   background:none;color:rgba(255,255,255,.78);padding:11px 12px;border-radius:11px;
   font-weight:600;font-size:13.5px;text-align:left;position:relative;border:0;cursor:pointer;
-  transition:background .15s,color .15s;
+  transition:background .15s,color .15s,transform .15s;
 }
-aside .nv .lb{flex:1;min-width:0}
+aside .nv .lb{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 aside .nv .ic{color:rgba(255,255,255,.55);transition:color .15s}
 aside .nv:hover{background:rgba(255,255,255,.08);color:#fff}
 aside .nv:hover .ic{color:#fff}
@@ -628,13 +718,86 @@ aside .car.cl{transform:rotate(-90deg)}
 .top p{margin:3px 0 0;color:var(--mut);font-size:13px;max-width:70ch}
 .ic{width:18px;height:18px;flex:none;vertical-align:middle}
 
+/* Itens da Navegação no modo Colapsado */
+aside.collapsed #nav{
+  align-items:center;
+}
+aside.collapsed .nv{
+  padding:10px 0;
+  justify-content:center;
+  width:100%;
+  border-radius:10px;
+}
+aside.collapsed .nv .lb,
+aside.collapsed .nv .car{
+  display:none !important;
+}
+aside.collapsed .nv.sub{
+  margin-left:0;
+  width:100%;
+  padding:8px 0;
+  justify-content:center;
+}
+aside.collapsed .nv.sub .ic{
+  width:18px;
+  height:18px;
+}
+aside.collapsed .nv.on::before{
+  left:0;
+  top:16%;
+  bottom:16%;
+  width:3.5px;
+  border-radius:0 3px 3px 0;
+}
+aside.collapsed .nv .bw{
+  position:absolute;
+  top:6px;
+  right:8px;
+  gap:2px;
+}
+aside.collapsed .nv .bw .bg{
+  min-width:7px;
+  width:7px;
+  height:7px;
+  padding:0;
+  border-radius:50%;
+  font-size:0;
+  line-height:0;
+  border:1px solid rgba(22,33,62,.85);
+}
+aside.collapsed .sep{
+  margin:6px 2px;
+  width:100%;
+}
+
+/* Footer da Sidebar Executiva */
 .aside-footer{margin-top:auto;padding-top:14px;border-top:1px solid rgba(255,255,255,.12);display:flex;flex-direction:column;gap:8px}
-.btn-theme{
+.btn-theme, .btn-collapse-desktop{
   background:rgba(255,255,255,.08);color:rgba(255,255,255,.85);border:1px solid rgba(255,255,255,.14);
   width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:9px 12px;
-  font-size:12px;font-weight:600;border-radius:10px;cursor:pointer;transition:background .15s;
+  font-size:12px;font-weight:600;border-radius:10px;cursor:pointer;transition:background .15s, transform .15s;
 }
-.btn-theme:hover{background:rgba(255,255,255,.16);color:#fff}
+.btn-theme:hover, .btn-collapse-desktop:hover{background:rgba(255,255,255,.16);color:#fff}
+.btn-collapse-desktop .sb-footer-ic{width:16px;height:16px;transition:transform .2s}
+
+aside.collapsed .aside-footer{
+  align-items:center;
+  padding-top:10px;
+}
+aside.collapsed .aside-footer .aside-label{
+  display:none !important;
+}
+aside.collapsed .btn-theme,
+aside.collapsed .btn-collapse-desktop{
+  padding:9px 0;
+  justify-content:center;
+  width:38px;
+  height:38px;
+  border-radius:10px;
+}
+aside.collapsed .btn-collapse-desktop .sb-footer-ic{
+  transform:rotate(180deg);
+}
 
 /* Modal de Ativação do Firestore */
 .modal-overlay{
@@ -694,7 +857,7 @@ aside .car.cl{transform:rotate(-90deg)}
 @media(max-width:900px){
   .app{flex-direction:column}
   aside{
-    width:100%;
+    width:100% !important;
     height:auto;
     min-height:0;
     position:sticky;
@@ -704,37 +867,85 @@ aside .car.cl{transform:rotate(-90deg)}
     gap:8px;
     box-shadow:0 4px 16px rgba(0,0,0,.18);
   }
+  aside.collapsed{
+    width:100% !important;
+    padding:10px 14px 6px;
+  }
   .brand{
     padding:0;
     width:100%;
     display:flex;
+    flex-direction:row !important;
     align-items:center;
     justify-content:space-between;
+  }
+  .brand-info{
+    flex:1 !important;
+    justify-content:flex-start !important;
+  }
+  .brand-text{
+    display:block !important;
   }
   .brand small{display:block;font-size:11px;opacity:.7}
   .brand b{font-size:15px}
   .btn-theme-mob{display:inline-flex}
+  .btn-collapse-desktop{display:none !important}
+  .btn-quick-toggle{display:none !important}
+
+  /* No Mobile: Suporte ao menu retrátil para economizar espaço de tela */
+  aside.collapsed-mobile #nav,
+  aside.collapsed-mobile .aside-footer{
+    display:none !important;
+  }
+  aside.collapsed-mobile .btn-sidebar-toggle .sb-ic-collapse{
+    display:none !important;
+  }
+  aside.collapsed-mobile .btn-sidebar-toggle .sb-ic-expand{
+    display:block !important;
+  }
 
   #nav{
-    flex-direction:row;
+    flex-direction:row !important;
     overflow-x:auto;
     -webkit-overflow-scrolling:touch;
     scrollbar-width:none;
     gap:6px;
     padding:3px 2px 7px;
     margin:0 -4px;
+    align-items:stretch !important;
   }
   #nav::-webkit-scrollbar{display:none}
 
   aside .nv{
-    width:auto;
+    width:auto !important;
     white-space:nowrap;
-    padding:7px 12px;
+    padding:7px 12px !important;
     font-size:12px;
     border-radius:99px;
     background:rgba(255,255,255,.08);
     gap:6px;
     border:1px solid rgba(255,255,255,.1);
+    justify-content:flex-start !important;
+  }
+  aside .nv .lb{
+    display:inline !important;
+  }
+  aside .nv.sub{
+    margin-left:0 !important;
+    width:auto !important;
+    padding:7px 12px !important;
+  }
+  aside .nv .bw{
+    position:static !important;
+  }
+  aside .nv .bw .bg{
+    min-width:20px !important;
+    width:auto !important;
+    height:auto !important;
+    padding:1px 6px !important;
+    font-size:11px !important;
+    line-height:normal !important;
+    border:none !important;
   }
   aside .nv:hover{background:rgba(255,255,255,.14)}
   aside .nv.on{
@@ -743,18 +954,13 @@ aside .car.cl{transform:rotate(-90deg)}
     border-color:rgba(103,232,249,.4);
   }
   aside .nv.on::before{display:none}
-  aside .nv .car{display:none}
+  aside .nv .car{display:none !important}
   aside .sep{
     width:1px;
     height:22px;
     align-self:center;
     margin:0 2px;
     background:rgba(255,255,255,.15);
-  }
-  aside .nv.sub{
-    margin-left:0;
-    width:auto;
-    padding:7px 12px;
   }
   main{
     padding:14px 12px 50px;
@@ -938,38 +1144,67 @@ aside .car.cl{transform:rotate(-90deg)}
 <body>
 
 <div class="app">
-  <aside>
+  <aside id="sidebar">
     <div class="brand">
-      <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0">
+      <div class="brand-info" id="brandLogo" title="Monitor Núcleo Vertentes">
         <span class="lg0">
           <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/>
           </svg>
         </span>
-        <div>
+        <div class="brand-text">
           <b>Monitor</b>
           <small>Núcleo Vertentes</small>
         </div>
       </div>
-      <button id="btnThemeMobile" class="btn-theme-mob" title="Alternar Tema" type="button">
-        <span id="themeIcoMob">☀️</span>
-      </button>
+      <div class="brand-actions">
+        <button id="btnToggleSidebar" class="btn-sidebar-toggle" title="Recolher menu lateral (Ctrl+B)" type="button" aria-label="Recolher ou expandir menu lateral">
+          <svg class="ic sb-ic-collapse" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="18" height="18" x="3" y="3" rx="2"/>
+            <path d="M9 3v18"/>
+            <path d="m14 9-3 3 3 3"/>
+          </svg>
+          <svg class="ic sb-ic-expand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="18" height="18" x="3" y="3" rx="2"/>
+            <path d="M9 3v18"/>
+            <path d="m13 15 3-3-3-3"/>
+          </svg>
+        </button>
+        <button id="btnThemeMobile" class="btn-theme-mob" title="Alternar Tema" type="button">
+          <span id="themeIcoMob">☀️</span>
+        </button>
+      </div>
     </div>
     
     <div id="nav"></div>
     
     <div class="aside-footer">
-      <button id="btnTheme" class="btn-theme">
-        <span id="themeIco">☀️</span> Alternar Tema
+      <button id="btnCollapseFooter" class="btn-collapse-desktop" title="Recolher menu lateral (Ctrl+B)" type="button">
+        <svg class="ic sb-footer-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/>
+        </svg>
+        <span class="aside-label">Recolher</span>
+      </button>
+      <button id="btnTheme" class="btn-theme" title="Alternar Tema">
+        <span id="themeIco">☀️</span> <span class="aside-label">Alternar Tema</span>
       </button>
     </div>
   </aside>
 
   <main>
     <div class="top">
-      <div>
-        <h1 id="pt">MONITORAMENTO</h1>
-        <p id="ps"></p>
+      <div style="display:flex;align-items:center;gap:12px;min-width:0">
+        <button id="btnQuickToggleSidebar" class="btn-quick-toggle" title="Recolher / expandir menu lateral (Ctrl+B)" type="button" aria-label="Recolher ou expandir menu lateral">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="18" height="18" x="3" y="3" rx="2"/>
+            <path d="M9 3v18"/>
+            <path d="m14 9-3 3 3 3"/>
+          </svg>
+        </button>
+        <div>
+          <h1 id="pt">MONITORAMENTO</h1>
+          <p id="ps"></p>
+        </div>
       </div>
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
         <div id="cloudBadge" class="cloud-badge" title="Clique para detalhes da sincronização online">
@@ -982,10 +1217,30 @@ aside .car.cl{transform:rotate(-90deg)}
     <div id="empty" class="card">Carregando dados da nuvem…</div>
 
     <div id="out" hidden>
-      <div class="card">
+      <!-- (1) Visão geral do núcleo -->
+      <div class="card" id="cardOverview">
+        <h2>Dashboard · visão geral do núcleo</h2>
+        <div class="kp" id="top"></div>
+      </div>
+
+      <!-- (2) Situação por indicador & Maiores gaps -->
+      <div class="two" id="secIndicators">
+        <div class="card">
+          <h2>Situação das EJs por indicador · clique para filtrar</h2>
+          <div id="sum" class="bds"></div>
+        </div>
+        <div class="card">
+          <h2>Maiores gaps para a meta anual</h2>
+          <div class="gl" id="gl"></div>
+        </div>
+      </div>
+
+      <!-- (3) Planilha por EJ -->
+      <div class="card" id="cardTable">
         <div class="tbl-header-row">
           <div class="tbl-title-grp">
             <h2 style="margin:0">Planilha por EJ · ordem alfabética</h2>
+            <span id="tableEjCount" class="table-count-text">Mostrando 46 de 46 EJs</span>
             <button id="btnHelpTags" class="btn-help-pill" type="button" title="Legenda das metas e classificação" aria-label="Ver legenda das metas">
               <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
               <span>Legenda</span>
@@ -1003,6 +1258,12 @@ aside .car.cl{transform:rotate(-90deg)}
               <div class="pop-lg-item"><span class="txt-muted" style="font-weight:700">Zerado / Neutro</span><span>Sem faturamento ou sem movimentação</span></div>
             </div>
           </div>
+        </div>
+
+        <!-- Barra de Chips de Filtros Ativos -->
+        <div id="activeFilterChips" class="filter-chips-bar" style="display:none">
+          <div class="chips-list" id="chipsList"></div>
+          <button id="btnClearAllChips" class="btn-clear-chips" type="button">Limpar filtros</button>
         </div>
 
         <div class="filter-toolbar">
@@ -1038,8 +1299,8 @@ aside .car.cl{transform:rotate(-90deg)}
               </div>
             </div>
 
-            <button class="ghost" id="clr" type="button" title="Limpar todos os filtros">Mostrar todas</button>
-            <span id="cnt" class="badge-count"></span>
+            <button class="ghost" id="clr" type="button" title="Limpar filtros" style="display:none">Limpar filtros</button>
+            <span id="cnt" class="badge-count" style="display:none"></span>
           </div>
         </div>
 
@@ -1067,22 +1328,6 @@ aside .car.cl{transform:rotate(-90deg)}
             </thead>
             <tbody id="tb"></tbody>
           </table>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>Dashboard · visão geral do núcleo</h2>
-        <div class="kp" id="top"></div>
-      </div>
-
-      <div class="two">
-        <div class="card">
-          <h2>Situação das EJs por indicador · clique para filtrar</h2>
-          <div id="sum" class="bds"></div>
-        </div>
-        <div class="card">
-          <h2>Maiores gaps para a meta anual</h2>
-          <div class="gl" id="gl"></div>
         </div>
       </div>
     </div>
@@ -1468,7 +1713,10 @@ function render() {
   const f = $('q').value.trim().toLowerCase();
   const v = D.filter(d => d.nome.toLowerCase().includes(f) && okF(d));
   $('tb').innerHTML = v.map(row).join('') || '<tr><td colspan="11" style="text-align:center;color:var(--mut);padding:26px">Nenhuma EJ com esses filtros.</td></tr>';
-  $('cnt').textContent = v.length + ' de ' + D.length + ' EJs';
+  const countStr = `Mostrando ${v.length} de ${D.length} EJs`;
+  if ($('tableEjCount')) $('tableEjCount').textContent = countStr;
+  if ($('cnt')) $('cnt').textContent = countStr;
+  renderFilterChips();
 }
 
 // Evento de clique para expandir/recolher linhas
@@ -1528,6 +1776,8 @@ $('pop').onchange = e => {
   all[0].checked = it.every(i => i.checked);
   FL[PK] = new Set(it.filter(i => i.checked).map(i => i.dataset.s));
   mark();
+  renderBoards();
+  renderFilterChips();
   refresh();
 };
 
@@ -1568,40 +1818,155 @@ document.addEventListener('click', e => {
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closePop(); });
 window.addEventListener('scroll', e => { if (PK && !(e.target.closest && e.target.closest('#pop'))) closePop(); }, true);
 
-$('clr').onclick = () => { FL = {}; $('q').value = ''; closePop(); mark(); render(); };
+const IND_NAMES = {
+  fa: 'Faturamento',
+  ecm: 'ECM',
+  cs: 'CSAT',
+  co: 'Colaborativo',
+  cu: 'Cluster',
+  cl: 'Classe'
+};
+
+function renderFilterChips() {
+  const container = $('activeFilterChips');
+  const list = $('chipsList');
+  const btnClr = $('clr');
+  if (!container || !list) return;
+
+  const activeKeys = Object.keys(FL).filter(k => FL[k] && FL[k].size > 0 && FL[k].size < (OPTS[k] ? OPTS[k].length : 99));
+  const hasSearch = $('q') && $('q').value.trim().length > 0;
+
+  if (activeKeys.length === 0) {
+    container.style.display = 'none';
+    list.innerHTML = '';
+    if (btnClr) btnClr.style.display = hasSearch ? 'inline-flex' : 'none';
+    return;
+  }
+
+  container.style.display = 'flex';
+  if (btnClr) btnClr.style.display = 'inline-flex';
+
+  let html = '';
+  activeKeys.forEach(k => {
+    const label = IND_NAMES[k] || k;
+    FL[k].forEach(val => {
+      html += `<span class="filter-chip" data-k="${k}" data-val="${esc(val)}">
+        <span class="chip-text"><b>${esc(label)}:</b> ${esc(val)}</span>
+        <button type="button" class="chip-remove-btn" title="Remover filtro ${esc(val)}" aria-label="Remover filtro ${esc(val)}">✕</button>
+      </span>`;
+    });
+  });
+
+  list.innerHTML = html;
+}
+
+function clearAllFilters() {
+  FL = {};
+  if ($('q')) $('q').value = '';
+  closePop();
+  renderBoards();
+  renderFilterChips();
+  mark();
+  render();
+}
+
+if ($('clr')) $('clr').onclick = clearAllFilters;
+
+if ($('activeFilterChips')) {
+  $('activeFilterChips').onclick = e => {
+    const btnRemove = e.target.closest('.chip-remove-btn');
+    if (btnRemove) {
+      const chip = btnRemove.closest('.filter-chip');
+      if (!chip) return;
+      const k = chip.dataset.k;
+      const val = chip.dataset.val;
+      if (FL[k]) {
+        FL[k].delete(val);
+        if (FL[k].size === 0) delete FL[k];
+      }
+      renderBoards();
+      renderFilterChips();
+      mark();
+      render();
+      return;
+    }
+
+    if (e.target.closest('#btnClearAllChips')) {
+      clearAllFilters();
+    }
+  };
+}
 
 $('sum').onclick = e => {
   const g = e.target.closest('[data-go]');
   if (g) { go(g.dataset.go); scrollTo({ top: 0 }); return; }
   const t = e.target.closest('[data-s]');
   if (!t) return;
-  FL[t.dataset.k] = new Set([t.dataset.s]);
+  const k = t.dataset.k;
+  const s = t.dataset.s;
+  if (!k || !s) return;
+
+  if (FL[k] && FL[k].size === 1 && FL[k].has(s)) {
+    delete FL[k];
+  } else {
+    FL[k] = new Set([s]);
+  }
+
+  renderBoards();
+  renderFilterChips();
   mark();
   render();
-  $('cnt').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  const tbl = $('cardTable');
+  if (tbl) tbl.scrollIntoView({ behavior: 'smooth', block: 'start' });
 };
 
-const COL = { m: '#047857', g: '#10b981', y: '#f59e0b', r: '#ef4444', n: '#9aa3b2' }, COLN = { 'Mantém': '#6ee7b7' };
+$('sum').onkeydown = e => {
+  if (e.key === 'Enter' || e.key === ' ') {
+    const t = e.target.closest('[data-s]');
+    if (t) {
+      e.preventDefault();
+      t.click();
+    }
+  }
+};
 
-function donut(T, c) {
+const COL = { m: '#047857', g: '#10b981', y: '#f59e0b', r: '#ef4444', n: '#9aa3b2' }, COLN = { 'Mantém': '#9aa3b2' };
+
+function donut(T, c, k) {
   const tot = c.reduce((a, b) => a + b, 0) || 1;
-  let a = 0;
-  const seg = T.map((t, i) => {
-    const x = a / tot * 100;
-    a += c[i];
-    return `${COLN[t[0]] || COL[t[1]]} ${x}% ${a / tot * 100}%`;
-  }).join(',');
-  return `<div class="dn" style="background:conic-gradient(${seg})"><span>${D.length}<small>EJs</small></span></div>`;
+  let acc = 0;
+  const slices = T.map((t, i) => {
+    const val = c[i];
+    if (val <= 0) return '';
+    const pct = (val / tot) * 100;
+    const strokeDash = `${pct} ${100 - pct}`;
+    const offset = 25 - acc;
+    acc += pct;
+    const color = COLN[t[0]] || COL[t[1]] || '#9aa3b2';
+    const isActive = FL[k] && FL[k].has(t[0]);
+    const tip = `${t[0]}: ${val} EJs (${Math.round(pct)}%)`;
+    return `<circle class="dn-slice${isActive ? ' active' : ''}" cx="21" cy="21" r="15.9155" fill="transparent" stroke="${color}" stroke-width="4.8" stroke-dasharray="${strokeDash}" stroke-dashoffset="${offset}" data-k="${k}" data-s="${esc(t[0])}" role="button" tabindex="0"><title>${esc(tip)}</title></circle>`;
+  }).join('');
+  return `<div class="dn"><svg class="dn-svg" viewBox="0 0 42 42">${slices}</svg><span>${D.length}<small>EJs</small></span></div>`;
 }
 
 function board(lab, k, T) {
   const c = T.map(t => D.filter(d => d[k][0] === t[0]).length);
-  return `<div class="bd1">
-    <div class="hd"><span class="tt2">${ico(k)}${lab}</span><button class="lk" data-go="${k}">Abrir</button></div>
-    ${donut(T, c)}
+  const hasFilter = !!(FL[k] && FL[k].size > 0 && FL[k].size < T.length);
+  return `<div class="bd1${hasFilter ? ' has-filter' : ''}" data-k="${k}">
+    <div class="hd"><span class="tt2">${ico(k)}${lab}</span><button class="lk" data-go="${k}">Ver detalhes →</button></div>
+    ${donut(T, c, k)}
     <div class="dl">` +
-    T.map((t, i) => `<div data-k="${k}" data-s="${t[0]}"><span class="chip ${t[1]}">${t[0]}</span><b>${c[i]}</b></div>`).join('') +
+    T.map((t, i) => {
+      const isActive = FL[k] && FL[k].has(t[0]);
+      return `<div class="dl-item${isActive ? ' active' : ''}" data-k="${k}" data-s="${t[0]}" role="button" tabindex="0" title="Filtrar por ${t[0]}"><span class="chip ${t[1]}">${t[0]}</span><b>${c[i]}</b></div>`;
+    }).join('') +
     `</div></div>`;
+}
+
+function renderBoards() {
+  if (!$('sum')) return;
+  $('sum').innerHTML = SUMR.map(x => board(x[0], x[1], x[2])).join('');
 }
 
 const pc = (a, b) => b ? Math.round(a / b * 100) + '%' : '–';
@@ -1709,10 +2074,18 @@ function nav() {
     const r = D.filter(d => d[k][1] === 'r').length, y = D.filter(d => d[k][1] === 'y').length;
     return (y ? `<span class="bg y" title="Amarelo">${y}</span>` : '') + (r ? `<span class="bg r" title="Vermelho / ruim">${r}</span>` : '');
   };
+  const badgeTip = k => {
+    if (!D.length) return '';
+    const r = D.filter(d => d[k][1] === 'r').length, y = D.filter(d => d[k][1] === 'y').length;
+    const parts = [];
+    if (r) parts.push(`${r} vermelho(s)`);
+    if (y) parts.push(`${y} amarelo(s)`);
+    return parts.length ? ` · ${parts.join(', ')}` : '';
+  };
   const sub = [['fa', 'Faturamento'], ['ecm', 'ECM'], ['cs', 'CSAT'], ['co', 'Colaborativo'], ['cu', 'Cluster']];
-  $('nav').innerHTML = `<button class="nv${VW === 'geral' ? ' on' : ''}" data-v="geral">${ico('geral')}<span class="lb">MONITORAMENTO</span><span class="car${OPEN ? '' : ' cl'}">${ico('chev')}</span></button>` +
-    (OPEN ? sub.map(([k, l]) => `<button class="nv sub${k === VW ? ' on' : ''}" data-v="${k}">${ico(k)}<span class="lb">${l}</span><span class="bw">${badge(k)}</span></button>`).join('') : '') +
-    `<div class="sep"></div><button class="nv${VW === 'upd' ? ' on' : ''}" data-v="upd">${ico('upd')}<span class="lb">Atualizar dados</span></button>`;
+  $('nav').innerHTML = `<button class="nv${VW === 'geral' ? ' on' : ''}" data-v="geral" title="MONITORAMENTO">${ico('geral')}<span class="lb">MONITORAMENTO</span><span class="car${OPEN ? '' : ' cl'}">${ico('chev')}</span></button>` +
+    (OPEN ? sub.map(([k, l]) => `<button class="nv sub${k === VW ? ' on' : ''}" data-v="${k}" title="${l}${badgeTip(k)}">${ico(k)}<span class="lb">${l}</span><span class="bw">${badge(k)}</span></button>`).join('') : '') +
+    `<div class="sep"></div><button class="nv${VW === 'upd' ? ' on' : ''}" data-v="upd" title="Atualizar dados">${ico('upd')}<span class="lb">Atualizar dados</span></button>`;
 }
 
 let VW = 'geral';
@@ -1797,7 +2170,8 @@ function show(name, t) {
     ['EJs em dia no mês', ahead + ' de ' + D.length, 'faturamento ≥ esperado']
   ];
   $('top').innerHTML = K.map(k => `<div><small>${k[0]}</small><b>${k[1]}</b><span>${k[2]}</span></div>`).join('');
-  $('sum').innerHTML = SUMR.map(x => board(x[0], x[1], x[2])).join('');
+  renderBoards();
+  renderFilterChips();
   mark();
   const top = gaps.sort((a, b) => (b.meta - b.fat) - (a.meta - a.fat)).slice(0, 6), mx = top.length ? top[0].meta - top[0].fat : 1;
   $('gl').innerHTML = top.map(d => `<div class="it"><b>${esc(d.nome)}</b><span class="rt"><b>${RC(d.meta - d.fat)}</b></span><div class="bar"><i style="width:${(d.meta - d.fat) / mx * 100}%"></i></div></div>`).join('') || '<span style="color:var(--mut)">Todas as EJs bateram a meta</span>';
@@ -1972,6 +2346,76 @@ function toggleTheme() {
 if ($('btnTheme')) $('btnTheme').onclick = toggleTheme;
 if ($('btnThemeMobile')) $('btnThemeMobile').onclick = toggleTheme;
 
+// Gestão da Sidebar Executiva Retrátil
+function initSidebar() {
+  const aside = $('sidebar');
+  if (!aside) return;
+
+  const saved = localStorage.getItem('vert_sidebar_collapsed');
+  if (saved === '1' && window.innerWidth > 900) {
+    aside.classList.add('collapsed');
+  }
+  updateSidebarUI();
+
+  const toggle = () => {
+    if (window.innerWidth <= 900) {
+      aside.classList.toggle('collapsed-mobile');
+    } else {
+      const isColl = aside.classList.toggle('collapsed');
+      localStorage.setItem('vert_sidebar_collapsed', isColl ? '1' : '0');
+    }
+    updateSidebarUI();
+  };
+
+  if ($('btnToggleSidebar')) $('btnToggleSidebar').onclick = toggle;
+  if ($('btnQuickToggleSidebar')) $('btnQuickToggleSidebar').onclick = toggle;
+  if ($('btnCollapseFooter')) $('btnCollapseFooter').onclick = toggle;
+  if ($('brandLogo')) $('brandLogo').onclick = () => {
+    if (aside.classList.contains('collapsed')) toggle();
+  };
+
+  // Atalho de teclado universal Ctrl+B ou Cmd+B
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'b' || e.key === 'B')) {
+      const tag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+      if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+      e.preventDefault();
+      toggle();
+    }
+  });
+
+  window.addEventListener('resize', () => {
+    updateSidebarUI();
+  });
+}
+
+function updateSidebarUI() {
+  const aside = $('sidebar');
+  if (!aside) return;
+  const isCollapsed = aside.classList.contains('collapsed');
+  const isCollapsedMob = aside.classList.contains('collapsed-mobile');
+  const isMob = window.innerWidth <= 900;
+
+  const btnTog = $('btnToggleSidebar');
+  if (btnTog) {
+    btnTog.title = isMob
+      ? (isCollapsedMob ? 'Expandir menu' : 'Recolher menu')
+      : (isCollapsed ? 'Expandir menu lateral (Ctrl+B)' : 'Recolher menu lateral (Ctrl+B)');
+  }
+
+  const btnQuick = $('btnQuickToggleSidebar');
+  if (btnQuick) {
+    btnQuick.title = isCollapsed ? 'Expandir menu lateral (Ctrl+B)' : 'Recolher menu lateral (Ctrl+B)';
+  }
+
+  const btnFooter = $('btnCollapseFooter');
+  if (btnFooter) {
+    btnFooter.title = isCollapsed ? 'Expandir menu lateral (Ctrl+B)' : 'Recolher menu lateral (Ctrl+B)';
+    const label = btnFooter.querySelector('.aside-label');
+    if (label) label.textContent = isCollapsed ? 'Expandir' : 'Recolher';
+  }
+}
+
 // Modal de Nuvem
 function openCloudModal() { $('modalCloud').style.display = 'flex'; }
 function closeCloudModal() { $('modalCloud').style.display = 'none'; }
@@ -2091,6 +2535,7 @@ function startAutoReconnect() {
 // Inicialização Principal
 (async () => {
   initTheme();
+  initSidebar();
   let s = null;
 
   // 1. Inicializar Firebase (RTDB + Firestore + Auth)
