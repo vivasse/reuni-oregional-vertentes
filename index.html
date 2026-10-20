@@ -1028,6 +1028,252 @@ aside.collapsed .btn-collapse-desktop .sb-footer-ic{
   transform:rotate(180deg);
 }
 
+/* Drawer Lateral: Perfil Completo da EJ */
+.ej-drawer-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(15, 23, 42, 0.45);
+  backdrop-filter:blur(4px);
+  -webkit-backdrop-filter:blur(4px);
+  z-index:90;
+  opacity:0;
+  transition:opacity .25s ease;
+}
+.ej-drawer-overlay.active{
+  opacity:1;
+}
+
+.ej-drawer{
+  position:fixed;
+  top:0;
+  right:0;
+  bottom:0;
+  width:min(520px, 100vw);
+  background:var(--card);
+  border-left:1px solid var(--bd);
+  box-shadow:-12px 0 38px rgba(15, 23, 42, 0.22);
+  z-index:95;
+  display:flex;
+  flex-direction:column;
+  transform:translateX(100%);
+  transition:transform .3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.ej-drawer.active{
+  transform:translateX(0);
+}
+
+.ej-drawer-header{
+  padding:20px 22px 18px;
+  border-bottom:1px solid var(--bd);
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+  background:var(--card);
+  position:sticky;
+  top:0;
+  z-index:2;
+}
+.ej-drawer-title-grp{
+  flex:1;
+  min-width:0;
+}
+.ej-drawer-kicker{
+  display:block;
+  font-size:10.5px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  color:var(--ac);
+  margin-bottom:4px;
+}
+.ej-drawer-title{
+  margin:0 0 8px;
+  font-size:20px;
+  font-weight:800;
+  color:var(--tx);
+  letter-spacing:-.01em;
+  line-height:1.25;
+  word-break:break-word;
+}
+.ej-drawer-badges{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.ej-drawer-pill{
+  font-size:11px;
+  font-weight:700;
+  padding:2px 8px;
+  border-radius:6px;
+  background:var(--in);
+  border:1px solid var(--bd);
+  color:var(--tx);
+}
+.btn-drawer-close{
+  background:var(--in);
+  border:1px solid var(--bd);
+  color:var(--mut);
+  border-radius:10px;
+  width:34px;
+  height:34px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  transition:all .15s ease;
+  flex:none;
+}
+.btn-drawer-close:hover{
+  color:var(--tx);
+  background:var(--table-hover);
+  border-color:var(--tx);
+}
+.btn-drawer-close svg{
+  width:16px;
+  height:16px;
+}
+
+.ej-drawer-body{
+  flex:1;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  padding:20px 22px;
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+}
+
+/* Visão Rápida / Raio-X Executivo em 3s */
+.drawer-health-card{
+  background:linear-gradient(135deg, rgba(79,70,229,.05) 0%, rgba(6,182,212,.05) 100%), var(--in);
+  border:1px solid var(--bd);
+  border-radius:14px;
+  padding:14px 16px;
+}
+.drawer-health-header{
+  font-size:11px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+  color:var(--mut);
+  margin-bottom:10px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.drawer-health-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(78px, 1fr));
+  gap:8px;
+}
+.drawer-health-item{
+  background:var(--card);
+  border:1px solid var(--bd);
+  border-radius:10px;
+  padding:8px 8px 6px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:4px;
+  text-align:center;
+}
+.drawer-health-item small{
+  font-size:9.5px;
+  font-weight:700;
+  text-transform:uppercase;
+  color:var(--mut);
+}
+
+/* Seções de Indicadores no Drawer */
+.drawer-section{
+  background:var(--card);
+  border:1px solid var(--bd);
+  border-radius:14px;
+  padding:16px;
+  box-shadow:0 1px 3px rgba(0,0,0,.03);
+}
+.drawer-sec-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:12px;
+  padding-bottom:10px;
+  border-bottom:1px solid var(--bd);
+}
+.drawer-sec-title{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:13px;
+  font-weight:800;
+  color:var(--tx);
+  letter-spacing:.01em;
+}
+.drawer-sec-title svg{
+  width:16px;
+  height:16px;
+  color:var(--ac);
+}
+.drawer-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px 14px;
+}
+.drawer-item{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+.drawer-item.full{
+  grid-column:1 / -1;
+}
+.drawer-item-k{
+  font-size:11px;
+  color:var(--mut);
+  font-weight:600;
+}
+.drawer-item-v{
+  font-size:13px;
+  font-weight:700;
+  color:var(--tx);
+  font-variant-numeric:tabular-nums;
+}
+.drawer-item-v.large{
+  font-size:18px;
+  font-weight:800;
+}
+
+.drawer-progress-box{
+  margin-top:6px;
+}
+.drawer-progress-box .pb{
+  height:7px;
+  margin:4px 0 3px;
+}
+
+.ej-drawer-footer{
+  padding:14px 22px;
+  border-top:1px solid var(--bd);
+  background:var(--card);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  position:sticky;
+  bottom:0;
+  z-index:2;
+}
+.btn-drawer-filter{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  padding:9px 16px;
+  font-size:12.5px;
+  font-weight:700;
+}
+
 /* Modal de Ativação do Firestore */
 .modal-overlay{
   position:fixed;inset:0;background:rgba(15,23,42,.65);backdrop-filter:blur(5px);
@@ -1586,6 +1832,29 @@ aside.collapsed .btn-collapse-desktop .sb-footer-ic{
 
 <div id="pop" hidden></div>
 
+<!-- Drawer Lateral: Perfil Detalhado da EJ -->
+<div id="ejDrawerOverlay" class="ej-drawer-overlay" style="display:none" aria-hidden="true"></div>
+<aside id="ejDrawer" class="ej-drawer" style="display:none" aria-label="Perfil detalhado da EJ" aria-hidden="true">
+  <div class="ej-drawer-header">
+    <div class="ej-drawer-title-grp">
+      <span class="ej-drawer-kicker">Perfil da EJ</span>
+      <h2 id="drawerEjName" class="ej-drawer-title">–</h2>
+      <div class="ej-drawer-badges" id="drawerEjBadges"></div>
+    </div>
+    <button id="btnDrawerClose" class="btn-drawer-close" type="button" aria-label="Fechar perfil da EJ" title="Fechar perfil (Esc)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+    </button>
+  </div>
+  <div class="ej-drawer-body" id="drawerEjBody"></div>
+  <div class="ej-drawer-footer">
+    <button id="btnDrawerFilterEj" class="btn-drawer-filter" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <span>Filtrar na planilha</span>
+    </button>
+    <button id="btnDrawerCloseFoot" class="ghost" type="button">Fechar</button>
+  </div>
+</aside>
+
 <!-- Modal Informativo do Firebase -->
 <div id="modalCloud" class="modal-overlay" style="display:none">
   <div class="modal-box">
@@ -1956,13 +2225,265 @@ const okF = d => SUMR.every(x => sel(x[1], d[x[1]][0])) && sel('cl', cls(d));
 let SORT_KEY = null;
 let SORT_DIR = 'desc';
 
-function openProfile(ejName) {
-  if (typeof window.showEjProfile === 'function') {
-    window.showEjProfile(ejName);
-  } else {
-    console.log('Perfil da EJ clicado:', ejName);
-  }
+function openEjProfile(ejName) {
+  const d = D.find(x => x.nome === ejName);
+  if (!d) return;
+
+  const overlay = $('ejDrawerOverlay');
+  const drawer = $('ejDrawer');
+  if (!overlay || !drawer) return;
+
+  const gap = d.meta - d.fat;
+  const eg = d.fat - d.esp;
+  const mesIdx = +($('mes').value || 1) - 1;
+  const mesNome = MN[mesIdx] || 'mês';
+  const trk = $('trk').value || 6;
+
+  // Barra de progresso para faturamento
+  const barCls = d.fa[1] === 'm' ? 'bar-m' :
+                 d.fa[1] === 'g' ? 'bar-g' :
+                 d.fa[1] === 'y' ? 'bar-y' :
+                 d.fa[1] === 'r' ? 'bar-r' : 'bar-n';
+  const barWidth = Math.max(0, Math.min(100, Math.round(d.pct * 100)));
+  const gapCls = gap <= 0 ? 'gt' : 'rt';
+  const espCls = eg >= 0 ? 'gt' : 'rt';
+
+  const rank = D.indexOf(d) + 1;
+
+  $('drawerEjName').textContent = d.nome;
+  $('drawerEjBadges').innerHTML = `
+    <span class="ej-drawer-pill">${d.cl > 0 ? 'Classe C' + d.cl : 'Sem classe'}</span>
+    ${renderStatus(d.cu)}
+    <span class="txt-muted" style="font-size:11.5px">Posição #${rank} de ${D.length} EJs</span>
+  `;
+
+  // Itens do Diagnóstico Rápido em 3s
+  const healthItems = [
+    { label: 'Faturamento', st: d.fa },
+    { label: 'ECM', st: d.ecm },
+    { label: 'CSAT', st: d.cs },
+    { label: 'Colaborativo', st: d.co },
+    { label: 'Cluster', st: d.cu }
+  ];
+
+  const html = `
+    <!-- Raio-X Rápido -->
+    <div class="drawer-health-card">
+      <div class="drawer-health-header">
+        <span>Diagnóstico em 3s</span>
+        <span>${d.cl > 0 ? 'Cluster ' + d.cl : 'Sem cluster'}</span>
+      </div>
+      <div class="drawer-health-grid">
+        ${healthItems.map(item => `
+          <div class="drawer-health-item">
+            <small>${item.label}</small>
+            ${renderStatus(item.st)}
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
+    <!-- 1. Faturamento & Metas -->
+    <div class="drawer-section">
+      <div class="drawer-sec-header">
+        <div class="drawer-sec-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+          <span>Faturamento & Metas</span>
+        </div>
+        ${renderStatus(d.fa)}
+      </div>
+      <div class="drawer-grid">
+        <div class="drawer-item">
+          <span class="drawer-item-k">Realizado</span>
+          <span class="drawer-item-v large">${R(d.fat)}</span>
+        </div>
+        <div class="drawer-item">
+          <span class="drawer-item-k">Meta Anual</span>
+          <span class="drawer-item-v large">${R(d.meta)}</span>
+        </div>
+        <div class="drawer-item full drawer-progress-box">
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:700">
+            <span>Progresso da meta anual</span>
+            <span>${Math.round(d.pct * 100)}%</span>
+          </div>
+          <div class="pb"><i class="${barCls}" style="width:${barWidth}%"></i></div>
+        </div>
+        <div class="drawer-item">
+          <span class="drawer-item-k">Gap Restante</span>
+          <span class="drawer-item-v ${gapCls}">${gap <= 0 ? '+' + R(-gap) + ' (superada)' : R(gap) + ' faltam'}</span>
+        </div>
+        <div class="drawer-item">
+          <span class="drawer-item-k">Esperado até ${mesNome}</span>
+          <span class="drawer-item-v">${R(d.esp)}</span>
+        </div>
+        <div class="drawer-item full">
+          <span class="drawer-item-k">vs. Esperado do mês</span>
+          <span class="drawer-item-v ${d.meta <= 0 ? '' : espCls}">${d.meta <= 0 ? '–' : (eg >= 0 ? '+' : '−') + R(Math.abs(eg)) + ' ' + (eg >= 0 ? 'acima do esperado' : 'abaixo do esperado')}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. ECM (Engajamento) -->
+    <div class="drawer-section">
+      <div class="drawer-sec-header">
+        <div class="drawer-sec-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          <span>ECM (Engajamento)</span>
+        </div>
+        ${renderStatus(d.ecm)}
+      </div>
+      <div class="drawer-grid">
+        <div class="drawer-item">
+          <span class="drawer-item-k">Membros Engajados</span>
+          <span class="drawer-item-v">${d.eng} de ${d.mem || 0}</span>
+        </div>
+        <div class="drawer-item">
+          <span class="drawer-item-k">Meta de Engajamento</span>
+          <span class="drawer-item-v">${d.ealvo} (${d.ecmP || 0}%)</span>
+        </div>
+        <div class="drawer-item full">
+          <span class="drawer-item-k">Diferença</span>
+          <span class="drawer-item-v ${d.eng >= d.ealvo ? 'gt' : 'rt'}">${d.eng >= d.ealvo ? '+' + (d.eng - d.ealvo) + ' acima da meta' : (d.ealvo - d.eng) + ' membros faltantes'}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. CSAT & Clientes -->
+    <div class="drawer-section">
+      <div class="drawer-sec-header">
+        <div class="drawer-sec-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+          <span>CSAT & Satisfação</span>
+        </div>
+        ${renderStatus(d.cs)}
+      </div>
+      <div class="drawer-grid">
+        <div class="drawer-item">
+          <span class="drawer-item-k">Nota Média</span>
+          <span class="drawer-item-v">${d.ctr ? N1(d.nota) : '–'}</span>
+        </div>
+        <div class="drawer-item">
+          <span class="drawer-item-k">Meta de Nota</span>
+          <span class="drawer-item-v">${N1(d.calvo)}</span>
+        </div>
+        <div class="drawer-item">
+          <span class="drawer-item-k">Contratos Avaliados</span>
+          <span class="drawer-item-v">${d.ctr || 0}</span>
+        </div>
+        <div class="drawer-item">
+          <span class="drawer-item-k">Taxa de Coleta</span>
+          <span class="drawer-item-v ${d.coleta != null && d.coleta < 80 ? 'rt' : ''}">${d.coleta != null ? d.coleta + '%' : '–'}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Colaborativo -->
+    <div class="drawer-section">
+      <div class="drawer-sec-header">
+        <div class="drawer-sec-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+          <span>Faturamento Colaborativo</span>
+        </div>
+        ${renderStatus(d.co)}
+      </div>
+      <div class="drawer-grid">
+        <div class="drawer-item">
+          <span class="drawer-item-k">Realizado</span>
+          <span class="drawer-item-v">${R(d.colab)}</span>
+        </div>
+        <div class="drawer-item">
+          <span class="drawer-item-k">Meta Anual</span>
+          <span class="drawer-item-v">${d.cm > 0 ? R(d.cm) : 'Sem meta'}</span>
+        </div>
+        <div class="drawer-item">
+          <span class="drawer-item-k">Esperado (${trk}m)</span>
+          <span class="drawer-item-v">${d.cm > 0 ? R(d.cesp) : '–'}</span>
+        </div>
+        <div class="drawer-item">
+          <span class="drawer-item-k">Diferença</span>
+          <span class="drawer-item-v ${d.cm > 0 && d.colab >= d.cm ? 'gt' : ''}">${d.cm > 0 ? (d.colab >= d.cm ? 'Meta batida' : R(d.cm - d.colab) + ' faltam') : '–'}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. Cluster & Projeção -->
+    <div class="drawer-section">
+      <div class="drawer-sec-header">
+        <div class="drawer-sec-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>
+          <span>Cluster & Projeção</span>
+        </div>
+        ${renderStatus(d.cu)}
+      </div>
+      <div class="drawer-grid">
+        <div class="drawer-item">
+          <span class="drawer-item-k">Cluster Atual</span>
+          <span class="drawer-item-v">${d.cl > 0 ? 'Cluster ' + d.cl : 'Sem cluster'}</span>
+        </div>
+        <div class="drawer-item">
+          <span class="drawer-item-k">Índice Atual</span>
+          <span class="drawer-item-v">${formatClusterIdx(d.idx)}</span>
+        </div>
+        <div class="drawer-item full">
+          <span class="drawer-item-k">P/ Subir de Cluster</span>
+          <span class="drawer-item-v ${d.cl < 5 && d.cl >= 1 && d.idx < LOW[d.cl] ? 'rt' : 'gt'}">${d.cl < 5 && d.cl >= 1 && d.idx < LOW[d.cl] ? formatClusterIdx(LOW[d.cl] - d.idx) + ' faltam (mín. ' + formatClusterIdx(LOW[d.cl]) + ')' : (d.cl === 5 ? 'Cluster 5 (Máximo atingido)' : 'Patamar atingido')}</span>
+        </div>
+      </div>
+    </div>
+  `;
+
+  $('drawerEjBody').innerHTML = html;
+
+  // Botão de filtrar na planilha
+  $('btnDrawerFilterEj').onclick = () => {
+    closeEjProfile();
+    if (VW !== 'geral') go('geral');
+    const qEl = $('q');
+    if (qEl) {
+      qEl.value = d.nome;
+      render();
+    }
+    const cardTable = $('cardTable');
+    if (cardTable) {
+      cardTable.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  overlay.style.display = 'block';
+  drawer.style.display = 'flex';
+  requestAnimationFrame(() => {
+    overlay.classList.add('active');
+    drawer.classList.add('active');
+    overlay.setAttribute('aria-hidden', 'false');
+    drawer.setAttribute('aria-hidden', 'false');
+  });
 }
+
+function closeEjProfile() {
+  const overlay = $('ejDrawerOverlay');
+  const drawer = $('ejDrawer');
+  if (!overlay || !drawer) return;
+
+  overlay.classList.remove('active');
+  drawer.classList.remove('active');
+  overlay.setAttribute('aria-hidden', 'true');
+  drawer.setAttribute('aria-hidden', 'true');
+
+  setTimeout(() => {
+    overlay.style.display = 'none';
+    drawer.style.display = 'none';
+  }, 300);
+}
+
+// Conectar ao stub global
+window.showEjProfile = openEjProfile;
+function openProfile(ejName) {
+  openEjProfile(ejName);
+}
+
+if ($('btnDrawerClose')) $('btnDrawerClose').onclick = closeEjProfile;
+if ($('btnDrawerCloseFoot')) $('btnDrawerCloseFoot').onclick = closeEjProfile;
+if ($('ejDrawerOverlay')) $('ejDrawerOverlay').onclick = closeEjProfile;
 
 function updateSortHeaders() {
   const sortLabels = { fat: 'Faturamento', pct: '% da meta', gap: 'Gap p/ meta', esp: 'Esperado' };
@@ -2743,8 +3264,15 @@ function initSidebar() {
     if (aside.classList.contains('collapsed')) toggle();
   };
 
-  // Atalho de teclado universal Ctrl+B ou Cmd+B
+  // Atalhos de teclado universais: Escape fecha drawer, Ctrl+B alterna sidebar
   document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      const drawer = $('ejDrawer');
+      if (drawer && drawer.classList.contains('active')) {
+        closeEjProfile();
+        return;
+      }
+    }
     if ((e.ctrlKey || e.metaKey) && (e.key === 'b' || e.key === 'B')) {
       const tag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
       if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
