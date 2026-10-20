@@ -124,7 +124,7 @@ table{
   border-collapse:separate;
   border-spacing:0;
   width:100%;
-  min-width:1120px;
+  min-width:1040px;
 }
 th{
   position:sticky;
@@ -148,24 +148,26 @@ th.col-num, td.col-num{
   left:0;
   z-index:12;
   background:var(--card);
-  width:46px;
-  min-width:46px;
-  max-width:46px;
+  width:42px;
+  min-width:42px;
+  max-width:42px;
   text-align:center;
+  padding-left:4px;
+  padding-right:4px;
 }
 th.col-num{ z-index:22; }
 th.nm, td.nm{
   position:sticky;
-  left:46px;
+  left:42px;
   z-index:11;
   background:var(--card);
-  min-width:165px;
-  max-width:220px;
+  min-width:160px;
+  max-width:215px;
   box-shadow:4px 0 8px -3px rgba(0,0,0,.08);
 }
 th.nm{ z-index:21; }
 
-/* Linhas e Hover */
+/* Linhas, Zebra Sutil e Hover com Barra Indicadora */
 td{
   padding:10px 10px;
   border-bottom:1px solid var(--bd);
@@ -174,9 +176,17 @@ td{
   transition:background .12s ease;
 }
 tbody tr.main-row{ cursor:pointer; }
+tbody tr.main-row:nth-child(4n+1) td{ background:rgba(248,250,252,.6); }
+tbody tr.main-row:nth-child(4n+1) td.col-num,
+tbody tr.main-row:nth-child(4n+1) td.nm{ background:var(--card); }
+:root[data-theme="dark"] tbody tr.main-row:nth-child(4n+1) td{ background:rgba(29,36,48,.4); }
+:root[data-theme="dark"] tbody tr.main-row:nth-child(4n+1) td.col-num,
+:root[data-theme="dark"] tbody tr.main-row:nth-child(4n+1) td.nm{ background:var(--card); }
+
 tbody tr.main-row:hover td{ background:var(--table-hover); }
 tbody tr.main-row:hover td.col-num,
 tbody tr.main-row:hover td.nm{ background:var(--table-hover); }
+tbody tr.main-row:hover td.col-num{ box-shadow:inset 3px 0 0 var(--ac); }
 
 tbody tr.main-row.expanded td{ background:rgba(79,70,229,.04); }
 tbody tr.main-row.expanded td.col-num,
@@ -228,6 +238,90 @@ tr.main-row.expanded .btn-exp .exp-ic{
   color:var(--tx);
   font-size:13px;
 }
+.ej-cell-wrap{
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+  align-items:flex-start;
+}
+.btn-ej-profile{
+  background:none;
+  border:0;
+  padding:0;
+  margin:0;
+  text-align:left;
+  cursor:pointer;
+  font-family:inherit;
+  font-size:13px;
+  font-weight:700;
+  color:var(--tx);
+  line-height:1.25;
+  transition:color .15s ease;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+.btn-ej-profile:hover{
+  color:var(--ac);
+  text-decoration:underline;
+}
+.ej-sub-classe{
+  display:inline-block;
+  font-size:10px;
+  font-weight:600;
+  color:var(--mut);
+  background:var(--in);
+  border:1px solid var(--bd);
+  padding:1px 5px;
+  border-radius:4px;
+  letter-spacing:0.02em;
+  line-height:1.2;
+}
+
+/* Cabeçalhos Ordenáveis */
+th.sortable{
+  cursor:pointer;
+  user-select:none;
+  transition:background .15s ease, color .15s ease;
+}
+th.sortable:hover{
+  color:var(--tx);
+  background:rgba(79,70,229,.05);
+}
+.sort-ico{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:12px;
+  height:12px;
+  font-size:11px;
+  margin-left:3px;
+  opacity:0.35;
+  transition:all .15s ease;
+  vertical-align:middle;
+}
+th.sortable:hover .sort-ico{
+  opacity:0.75;
+}
+th.sortable.sort-asc .sort-ico,
+th.sortable.sort-desc .sort-ico{
+  opacity:1;
+  color:var(--ac);
+  font-weight:800;
+}
+th.sortable.sort-active{
+  color:var(--ac);
+}
+.tbl-info-badge{
+  cursor:help;
+  font-size:13px;
+  opacity:0.7;
+  transition:opacity .15s;
+  display:inline-flex;
+  align-items:center;
+}
+.tbl-info-badge:hover{ opacity:1; }
 
 /* Alinhamento de cabeçalhos e botões de filtro */
 .th-wrap{
@@ -351,6 +445,34 @@ tr.exp-row td{
 }
 .exp-sec-grid .k{ color:var(--mut); font-weight:500; }
 .exp-sec-grid .v{ font-weight:600; color:var(--tx); text-align:right; }
+
+.exp-footer-actions{
+  grid-column:1 / -1;
+  display:flex;
+  justify-content:flex-end;
+  padding-top:6px;
+}
+.btn-profile-link{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:8px 14px;
+  font-size:12px;
+  font-weight:700;
+  color:var(--ac);
+  background:rgba(79,70,229,.08);
+  border:1px solid rgba(79,70,229,.2);
+  border-radius:8px;
+  cursor:pointer;
+  transition:all .15s ease;
+  font-family:inherit;
+}
+.btn-profile-link:hover{
+  background:var(--ac);
+  color:#fff;
+  border-color:var(--ac);
+  box-shadow:0 2px 8px rgba(79,70,229,.3);
+}
 
 /* Toolbar de Filtros e Popovers */
 .tbl-header-row{
@@ -526,13 +648,12 @@ tr.exp-row td{
 .table-subinfo{
   display:flex;
   align-items:center;
-  justify-content:space-between;
+  justify-content:flex-end;
   gap:12px;
   margin:4px 0 10px;
   font-size:11.5px;
   color:var(--mut);
 }
-.filter-tip{ color:var(--mut); font-size:11.5px; }
 .badge-count{
   font-size:12px;
   font-weight:600;
@@ -1239,7 +1360,8 @@ aside.collapsed .btn-collapse-desktop .sb-footer-ic{
       <div class="card" id="cardTable">
         <div class="tbl-header-row">
           <div class="tbl-title-grp">
-            <h2 style="margin:0">Planilha por EJ · ordem alfabética</h2>
+            <h2 style="margin:0">Planilha por EJ <span id="tableSortMode" style="font-size:12px;font-weight:500;color:var(--mut)">(ordem alfabética)</span></h2>
+            <span class="tbl-info-badge" title="Dica: use ▾ nos títulos para filtrar, clique nos cabeçalhos com ↕ para ordenar e clique na linha para expandir detalhes" aria-label="Informações sobre a tabela">ℹ️</span>
             <span id="tableEjCount" class="table-count-text">Mostrando 46 de 46 EJs</span>
             <button id="btnHelpTags" class="btn-help-pill" type="button" title="Legenda das metas e classificação" aria-label="Ver legenda das metas">
               <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
@@ -1305,7 +1427,6 @@ aside.collapsed .btn-collapse-desktop .sb-footer-ic{
         </div>
 
         <div class="table-subinfo">
-          <span class="filter-tip">Dica: use ▾ nos títulos das colunas para filtrar · clique na linha para expandir detalhes</span>
           <div class="scroll-hint">👉 Deslize para o lado para ver todas as colunas</div>
         </div>
 
@@ -1314,12 +1435,11 @@ aside.collapsed .btn-collapse-desktop .sb-footer-ic{
             <thead>
               <tr>
                 <th class="col-num"><div class="th-wrap"><span>#</span></div></th>
-                <th class="nm"><div class="th-wrap"><span>EJ</span></div></th>
-                <th><div class="th-wrap"><span>Cl.</span><button class="fb" data-k="cl" title="Filtrar por Cluster" type="button">▾</button></div></th>
-                <th class="col-r"><div class="th-wrap th-r"><span>Faturamento</span></div></th>
-                <th class="col-r col-pct"><div class="th-wrap th-r"><span>% da meta anual</span><button class="fb" data-k="fa" title="Filtrar por % da meta" type="button">▾</button></div></th>
-                <th class="col-r"><div class="th-wrap th-r"><span>Gap p/ meta anual</span></div></th>
-                <th class="col-r"><div class="th-wrap th-r"><span>Esperado até o mês</span></div></th>
+                <th class="nm"><div class="th-wrap"><span>EJ</span><button class="fb" data-k="cl" title="Filtrar por Cluster da EJ" type="button">▾</button></div></th>
+                <th class="col-r sortable" data-sort="fat" title="Clique para ordenar por Faturamento"><div class="th-wrap th-r"><span>Faturamento</span><span class="sort-ico" data-ico="fat">↕</span></div></th>
+                <th class="col-r col-pct sortable" data-sort="pct" title="Clique para ordenar por % da Meta"><div class="th-wrap th-r"><span>% da meta anual</span><span class="sort-ico" data-ico="pct">↕</span><button class="fb" data-k="fa" title="Filtrar por % da meta" type="button">▾</button></div></th>
+                <th class="col-r sortable" data-sort="gap" title="Clique para ordenar por Gap para meta"><div class="th-wrap th-r"><span>Gap p/ meta anual</span><span class="sort-ico" data-ico="gap">↕</span></div></th>
+                <th class="col-r sortable" data-sort="esp" title="Clique para ordenar por Esperado até o mês"><div class="th-wrap th-r"><span>Esperado até o mês</span><span class="sort-ico" data-ico="esp">↕</span></div></th>
                 <th><div class="th-wrap"><span>ECM</span><button class="fb" data-k="ecm" title="Filtrar por ECM" type="button">▾</button></div></th>
                 <th><div class="th-wrap"><span>CSAT</span><button class="fb" data-k="cs" title="Filtrar por CSAT" type="button">▾</button></div></th>
                 <th><div class="th-wrap"><span>Colaborativo</span><button class="fb" data-k="co" title="Filtrar por Colaborativo" type="button">▾</button></div></th>
@@ -1443,6 +1563,7 @@ const RC = n => {
          a >= 1e3 ? 'R$ ' + (n / 1e3).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + ' mil' : R(n);
 };
 const N1 = n => n.toLocaleString('pt-BR', { maximumFractionDigits: 2 });
+const formatClusterIdx = n => n > 0 ? (n >= 1e4 ? n / 1e6 : n).toLocaleString('pt-BR', { minimumFractionDigits: (Math.round((n >= 1e4 ? n / 1e6 : n) * 10) % 10 !== 0 ? 1 : 0), maximumFractionDigits: 1 }) : '0';
 const LOW = [1, 12000000.01, 24000000.01, 61000000.01, 130000000.01];
 
 function calc(rows, P) {
@@ -1563,9 +1684,10 @@ function toggleRow(ejName) {
   }
 }
 
-function row(d) {
+function row(d, rowIdx) {
   const gap = d.meta - d.fat, eg = d.fat - d.esp;
   const isExp = EXP.has(d.nome);
+  const numIdx = rowIdx != null ? rowIdx : (D.indexOf(d) + 1);
   
   // Barra de progresso para todas as linhas com trilho visível
   const barCls = d.fa[1] === 'm' ? 'bar-m' :
@@ -1579,9 +1701,9 @@ function row(d) {
   const gapSub = d.meta <= 0 ? 'sem meta' : (gap <= 0 ? 'acima da meta' : 'faltam p/ meta');
   const gapCls = gap <= 0 ? 'gt' : 'rt';
 
-  // Esperado formatado (herói + secundário)
-  const espHero = d.meta <= 0 ? '–' : (eg >= 0 ? '+' : '−') + RC(Math.abs(eg));
-  const espSub = d.meta <= 0 ? 'sem meta' : 'esp. ' + RC(d.esp);
+  // Esperado formatado (herói: meta esperada até o mês / secundário: diferença contra realizado)
+  const espHero = d.meta <= 0 ? '–' : RC(d.esp);
+  const espSub = d.meta <= 0 ? 'sem meta' : (eg >= 0 ? '+' : '−') + RC(Math.abs(eg));
   const espCls = eg >= 0 ? 'gt' : 'rt';
 
   return `<tr class="main-row${isExp ? ' expanded' : ''}" data-ej="${esc(d.nome)}" title="Clique na linha para expandir/recolher os detalhes">
@@ -1590,11 +1712,15 @@ function row(d) {
         <button class="btn-exp" type="button" aria-label="Expandir detalhes de ${esc(d.nome)}">
           <svg class="exp-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
         </button>
-        <span class="row-idx">${D.indexOf(d) + 1}</span>
+        <span class="row-idx">${numIdx}</span>
       </div>
     </td>
-    <td class="nm"><span class="ej-name">${esc(d.nome)}</span></td>
-    <td class="k"><span class="txt-muted">${d.cl > 0 ? 'C' + d.cl : '–'}</span></td>
+    <td class="nm">
+      <div class="ej-cell-wrap">
+        <button type="button" class="btn-ej-profile" data-ej="${esc(d.nome)}" title="Abrir perfil de ${esc(d.nome)}">${esc(d.nome)}</button>
+        <span class="ej-sub-classe">${d.cl > 0 ? 'Classe C' + d.cl : 'Sem classe'}</span>
+      </div>
+    </td>
     <td class="col-r" title="Faturamento: ${R(d.fat)} · Meta anual: ${R(d.meta)}">
       <span class="val-hero fat-hero">${R(d.fat)}</span>
       <span class="val-sub">meta ${RC(d.meta)}</span>
@@ -1611,8 +1737,8 @@ function row(d) {
       <span class="val-sub">${gapSub}</span>
     </td>
     <td class="col-r" title="Esperado até o mês: ${R(d.esp)}">
-      <span class="val-hero ${d.meta <= 0 ? '' : espCls}">${espHero}</span>
-      <span class="val-sub">${espSub}</span>
+      <span class="val-hero">${espHero}</span>
+      <span class="val-sub ${d.meta <= 0 ? '' : espCls}">${espSub}</span>
     </td>
     <td title="${d.mem ? d.eng + ' de ' + d.ealvo + ' engajados' : 'Sem membros'}">
       ${renderStatus(d.ecm)}
@@ -1624,12 +1750,12 @@ function row(d) {
       <span class="val-hero colab-val">${RC(d.colab)}</span>
       ${renderStatus(d.co)}
     </td>
-    <td title="${d.cl > 0 ? 'Cluster ' + d.cl + ' · Índice ' + RC(d.idx) : 'Sem cluster'}">
+    <td title="${d.cl > 0 ? 'Cluster ' + d.cl + ' · Índice ' + formatClusterIdx(d.idx) : 'Sem cluster'}">
       ${renderStatus(d.cu)}
     </td>
   </tr>
   <tr class="exp-row${isExp ? ' open' : ''}" data-ej-exp="${esc(d.nome)}">
-    <td colspan="11">
+    <td colspan="10">
       <div class="exp-card">
         <div class="exp-sec">
           <div class="exp-sec-title">
@@ -1695,9 +1821,16 @@ function row(d) {
           <div class="exp-sec-grid">
             <span class="k">Cluster atual</span><span class="v">${d.cl > 0 ? 'Cluster ' + d.cl : 'Sem cluster'}</span>
             <span class="k">Projeção</span><span class="v">${renderStatus(d.cu)}</span>
-            <span class="k">Índice atual</span><span class="v">${RC(d.idx)}</span>
-            <span class="k">P/ Subir</span><span class="v">${d.cl < 5 && d.cl >= 1 && d.idx < LOW[d.cl] ? RC(LOW[d.cl] - d.idx) + ' faltam' : (d.cl === 5 ? 'Cluster 5 (Máximo)' : 'Patamar atingido')}</span>
+            <span class="k">Índice atual</span><span class="v">${formatClusterIdx(d.idx)}</span>
+            <span class="k">P/ Subir</span><span class="v">${d.cl < 5 && d.cl >= 1 && d.idx < LOW[d.cl] ? formatClusterIdx(LOW[d.cl] - d.idx) + ' faltam' : (d.cl === 5 ? 'Cluster 5 (Máximo)' : 'Patamar atingido')}</span>
           </div>
+        </div>
+
+        <div class="exp-footer-actions">
+          <button type="button" class="btn-profile-link" data-ej="${esc(d.nome)}">
+            <span>Ver perfil completo de ${esc(d.nome)}</span>
+            <svg class="ic" style="width:14px;height:14px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+          </button>
         </div>
       </div>
     </td>
@@ -1709,18 +1842,83 @@ const cls = d => d.cl >= 1 && d.cl <= 5 ? 'C' + d.cl : 'Sem cluster';
 const sel = (k, v) => FL[k] ? FL[k].has(v) : true;
 const okF = d => SUMR.every(x => sel(x[1], d[x[1]][0])) && sel('cl', cls(d));
 
+let SORT_KEY = null;
+let SORT_DIR = 'desc';
+
+function openProfile(ejName) {
+  if (typeof window.showEjProfile === 'function') {
+    window.showEjProfile(ejName);
+  } else {
+    console.log('Perfil da EJ clicado:', ejName);
+  }
+}
+
+function updateSortHeaders() {
+  const sortLabels = { fat: 'Faturamento', pct: '% da meta', gap: 'Gap p/ meta', esp: 'Esperado' };
+  const modeEl = $('tableSortMode');
+  if (modeEl) {
+    if (SORT_KEY && sortLabels[SORT_KEY]) {
+      modeEl.textContent = `(ordenado por ${sortLabels[SORT_KEY]} ${SORT_DIR === 'asc' ? '↑' : '↓'})`;
+    } else {
+      modeEl.textContent = '(ordem alfabética)';
+    }
+  }
+
+  document.querySelectorAll('th.sortable').forEach(th => {
+    const k = th.dataset.sort;
+    const ico = th.querySelector('.sort-ico');
+    const isActive = SORT_KEY === k;
+    th.classList.toggle('sort-active', isActive);
+    th.classList.toggle('sort-asc', isActive && SORT_DIR === 'asc');
+    th.classList.toggle('sort-desc', isActive && SORT_DIR === 'desc');
+    if (ico) {
+      ico.textContent = !isActive ? '↕' : (SORT_DIR === 'asc' ? '↑' : '↓');
+    }
+  });
+}
+
 function render() {
   const f = $('q').value.trim().toLowerCase();
-  const v = D.filter(d => d.nome.toLowerCase().includes(f) && okF(d));
-  $('tb').innerHTML = v.map(row).join('') || '<tr><td colspan="11" style="text-align:center;color:var(--mut);padding:26px">Nenhuma EJ com esses filtros.</td></tr>';
+  let v = D.filter(d => d.nome.toLowerCase().includes(f) && okF(d));
+
+  if (SORT_KEY) {
+    v = [...v].sort((a, b) => {
+      let valA, valB;
+      if (SORT_KEY === 'fat') {
+        valA = a.fat; valB = b.fat;
+      } else if (SORT_KEY === 'pct') {
+        valA = a.pct; valB = b.pct;
+      } else if (SORT_KEY === 'gap') {
+        valA = a.meta - a.fat; valB = b.meta - b.fat;
+      } else if (SORT_KEY === 'esp') {
+        valA = a.esp; valB = b.esp;
+      } else {
+        valA = a.nome; valB = b.nome;
+      }
+
+      if (typeof valA === 'string') {
+        return SORT_DIR === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+      }
+      return SORT_DIR === 'asc' ? valA - valB : valB - valA;
+    });
+  }
+
+  $('tb').innerHTML = v.map((d, i) => row(d, i + 1)).join('') || '<tr><td colspan="10" style="text-align:center;color:var(--mut);padding:26px">Nenhuma EJ com esses filtros.</td></tr>';
   const countStr = `Mostrando ${v.length} de ${D.length} EJs`;
   if ($('tableEjCount')) $('tableEjCount').textContent = countStr;
   if ($('cnt')) $('cnt').textContent = countStr;
   renderFilterChips();
+  updateSortHeaders();
 }
 
-// Evento de clique para expandir/recolher linhas
+// Evento de clique para expandir/recolher linhas e abrir perfil da EJ
 $('tb').addEventListener('click', e => {
+  const profileBtn = e.target.closest('.btn-ej-profile, .btn-profile-link');
+  if (profileBtn) {
+    e.stopPropagation();
+    openProfile(profileBtn.dataset.ej);
+    return;
+  }
   const mainRow = e.target.closest('tr.main-row');
   if (!mainRow) return;
   if (e.target.closest('button.btn-exp')) {
@@ -1730,6 +1928,24 @@ $('tb').addEventListener('click', e => {
   }
   if (e.target.closest('button, a, input, select, .fb')) return;
   toggleRow(mainRow.dataset.ej);
+});
+
+// Evento de ordenação nos cabeçalhos da tabela
+document.querySelectorAll('th.sortable').forEach(th => {
+  th.addEventListener('click', e => {
+    if (e.target.closest('button, select, input, .fb')) return;
+    const k = th.dataset.sort;
+    if (SORT_KEY !== k) {
+      SORT_KEY = k;
+      SORT_DIR = 'desc';
+    } else if (SORT_DIR === 'desc') {
+      SORT_DIR = 'asc';
+    } else {
+      SORT_KEY = null;
+      SORT_DIR = 'desc';
+    }
+    render();
+  });
 });
 
 const OPTS = {};
@@ -2042,7 +2258,7 @@ const IND = {
     t: 'Cluster',
     d: 'Índice de cada EJ contra os limites do cluster atual. A projeção também considera as regras de pontuação de cada cluster.',
     cols: ['Cluster atual', 'Faturamento', 'Índice', 'Mínimo p/ manter', 'Mínimo p/ subir', 'Gap p/ subir'],
-    cells: d => d.cl >= 1 && d.cl <= 5 ? ['C' + d.cl, R(d.fat), RC(d.idx), RC(LOW[d.cl - 1]), d.cl < 5 ? RC(LOW[d.cl]) : 'topo', d.cl < 5 ? (d.idx < LOW[d.cl] ? `<b class="rt">${RC(LOW[d.cl] - d.idx)}</b>` : '<b class="gt">atingido</b>') : '–'] : ['–', R(d.fat), '–', '–', '–', '–'],
+    cells: d => d.cl >= 1 && d.cl <= 5 ? ['C' + d.cl, R(d.fat), formatClusterIdx(d.idx), formatClusterIdx(LOW[d.cl - 1]), d.cl < 5 ? formatClusterIdx(LOW[d.cl]) : 'topo', d.cl < 5 ? (d.idx < LOW[d.cl] ? `<b class="rt">${formatClusterIdx(LOW[d.cl] - d.idx)}</b>` : '<b class="gt">atingido</b>') : '–'] : ['–', R(d.fat), '–', '–', '–', '–'],
     kpis: () => [
       ['Sobem', cn('cu', 'Sobe') + ' EJs', 'projeção'],
       ['Mantêm', cn('cu', 'Mantém') + ' EJs', 'projeção'],
