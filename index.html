@@ -664,11 +664,119 @@ tr.exp-row td{
   border-radius:99px;
 }
 .kp{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
-.kp>div{background:var(--card);border:0;border-radius:14px;padding:16px 14px 14px;position:relative;overflow:hidden;box-shadow:0 0 0 1px var(--bd)}
-.kp>div::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,var(--ac),var(--ac2))}
-.kp small{display:block;color:var(--mut);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
-.kp b{display:block;font-size:24px;margin-top:4px;letter-spacing:-.02em}
-.kp span{font-size:11px;color:var(--mut)}
+.kp>div, .kp-card{
+  background:var(--card);
+  border:0;
+  border-radius:14px;
+  padding:14px 14px 13px;
+  position:relative;
+  overflow:hidden;
+  box-shadow:0 0 0 1px var(--bd), 0 2px 6px rgba(0,0,0,.03);
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  min-height:116px;
+  transition:all .15s ease;
+}
+.kp>div:hover, .kp-card:hover{
+  box-shadow:0 0 0 1px var(--bd), 0 8px 20px -6px rgba(20,30,60,.12);
+  transform:translateY(-1px);
+}
+.kp>div::before, .kp-card::before{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  top:0;
+  height:3px;
+  background:linear-gradient(90deg,var(--ac),var(--ac2));
+}
+.kp-card-alert::before{
+  background:linear-gradient(90deg,#ef4444,#f87171) !important;
+}
+.kp-card-ok::before{
+  background:linear-gradient(90deg,#10b981,#34d399) !important;
+}
+.kp small{
+  display:block;
+  color:var(--mut);
+  font-size:10.5px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+  line-height:1.2;
+}
+.kp b{
+  display:block;
+  font-size:22px;
+  font-weight:800;
+  color:var(--tx);
+  letter-spacing:-.02em;
+  line-height:1.2;
+  font-variant-numeric:tabular-nums;
+  margin:4px 0 2px;
+}
+.kp span, .kp-sub{
+  font-size:11px;
+  color:var(--mut);
+  line-height:1.25;
+  display:block;
+}
+.kp-sub b{
+  font-size:inherit;
+  display:inline;
+  margin:0;
+  color:var(--tx);
+  font-weight:700;
+}
+.kp-pct-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:6px;
+  margin:2px 0;
+}
+.kp-pct-row b{ margin:0; }
+.kp-badge{
+  font-size:9.5px;
+  font-weight:700;
+  padding:2px 6px;
+  border-radius:99px;
+  text-transform:uppercase;
+  letter-spacing:.03em;
+  white-space:nowrap;
+}
+.kp-track-wrap{
+  position:relative;
+  width:100%;
+  margin:4px 0 3px;
+  padding:2px 0;
+}
+.kp-bar{
+  height:5px;
+  border-radius:99px;
+  background:rgba(148, 163, 184, 0.22);
+  overflow:hidden;
+  position:relative;
+  width:100%;
+}
+:root[data-theme="dark"] .kp-bar{ background:rgba(148, 163, 184, 0.16); }
+.kp-bar i{
+  display:block;
+  height:100%;
+  border-radius:99px;
+  transition:width .3s ease;
+}
+.kp-marker{
+  position:absolute;
+  top:-1px;
+  bottom:-1px;
+  width:2px;
+  background:var(--tx);
+  border-radius:1px;
+  transform:translateX(-50%);
+  box-shadow:0 0 2px rgba(0,0,0,.35);
+}
 .two{display:grid;grid-template-columns:1fr;gap:16px}
 .bds{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:14px}
 .bd1{background:var(--in);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:14px;box-shadow:inset 0 0 0 1px var(--bd);transition:all .15s}
@@ -1630,7 +1738,7 @@ const SUMR = [
   ['ECM', 'ecm', [['Batida', 'g'], ['Não batida', 'r'], ['Sem membros', 'n']], 'Engajados ≥ meta da EJ'],
   ['CSAT', 'cs', [['Batido', 'g'], ['Baixo', 'r'], ['Sem CSAT', 'n']], 'Coleta < 80% já vem com nota 1'],
   ['Colaborativo', 'co', TAGS5, 'Escalonado pelos meses de tracking'],
-  ['Cluster (projeção)', 'cu', [['Sobe', 'g'], ['Mantém', 'g'], ['Cai', 'r'], ['Sem cluster', 'n']], 'Projeção de mudança de cluster']
+  ['Cluster', 'cu', [['Sobe', 'g'], ['Mantém', 'n'], ['Cai', 'r'], ['Sem cluster', 'n']], 'Projeção de mudança de cluster']
 ];
 
 const STATUS_CFG = {
@@ -1646,13 +1754,15 @@ const STATUS_CFG = {
   'Baixo':       { isChip: true, cls: 'chip r', text: 'Baixo' },
   'Cai':         { isChip: true, cls: 'chip r', text: 'Cai' },
   
-  // Neutros / vazios: texto cinza simples, sem pílula e sem fundo
+  // Neutros / pílula discreta neutra
+  'Mantém':        { isChip: true, cls: 'chip n', text: 'Mantém' },
+
+  // Vazios: texto cinza simples, sem pílula e sem fundo
   'Zerado':        { isChip: false, cls: 'txt-muted', text: 'Zerado' },
   'Sem membros':   { isChip: false, cls: 'txt-muted', text: 'Sem membros' },
   'Sem CSAT':      { isChip: false, cls: 'txt-muted', text: 'Sem CSAT' },
   'Sem contratos': { isChip: false, cls: 'txt-muted', text: 'Sem contratos' },
-  'Sem cluster':   { isChip: false, cls: 'txt-muted', text: 'Sem cluster' },
-  'Mantém':        { isChip: false, cls: 'txt-muted', text: 'Mantém' }
+  'Sem cluster':   { isChip: false, cls: 'txt-muted', text: 'Sem cluster' }
 };
 
 const renderStatus = st => {
@@ -2377,15 +2487,57 @@ function show(name, t) {
   const tf = D.reduce((a, d) => a + d.fat, 0), tm = D.reduce((a, d) => a + d.meta, 0), te = D.reduce((a, d) => a + d.esp, 0);
   const bat = D.filter(d => d.meta > 0 && d.fat >= d.meta), bm = bat.reduce((a, d) => a + d.meta, 0), gaps = D.filter(d => d.meta > d.fat);
   const gt = gaps.reduce((a, d) => a + d.meta - d.fat, 0), ahead = D.filter(d => d.fat >= d.esp).length;
-  const K = [
-    ['Faturamento realizado', RC(tf), R(tf)],
-    ['Meta anual total', RC(tm), 'soma das metas das EJs'],
-    ['% da meta', (tm ? Math.round(tf / tm * 100) : 0) + '%', 'esperado até ' + MN[$('mes').value - 1] + ': ' + (tm ? Math.round(te / tm * 100) : 0) + '%'],
-    ['Gap total p/ a meta', RC(gt), gaps.length + ' EJs ainda abaixo da meta'],
-    ['Meta batida', bat.length + ' EJs', 'somam ' + RC(bm) + ' de meta'],
-    ['EJs em dia no mês', ahead + ' de ' + D.length, 'faturamento ≥ esperado']
-  ];
-  $('top').innerHTML = K.map(k => `<div><small>${k[0]}</small><b>${k[1]}</b><span>${k[2]}</span></div>`).join('');
+  
+  const pctReal = tm ? Math.round(tf / tm * 100) : 0;
+  const pctEsp = tm ? Math.round(te / tm * 100) : 0;
+  const mesNome = MN[$('mes').value - 1] || 'mês';
+
+  const cardHtml = [
+    `<div class="kp-card" title="Faturamento total realizado: ${R(tf)}">
+      <small>Faturamento realizado</small>
+      <b>${RC(tf)}</b>
+      <span class="kp-sub">${R(tf)}</span>
+    </div>`,
+
+    `<div class="kp-card" title="Meta anual combinada de todas as 46 EJs: ${R(tm)}">
+      <small>Meta anual total</small>
+      <b>${RC(tm)}</b>
+      <span class="kp-sub">soma das metas das EJs</span>
+    </div>`,
+
+    `<div class="kp-card kp-card-pct" title="Realizado: ${pctReal}% · Esperado até ${mesNome}: ${pctEsp}%">
+      <small>% da meta anual</small>
+      <div class="kp-pct-row">
+        <b>${pctReal}%</b>
+        <span class="kp-badge ${pctReal >= pctEsp ? 'g' : 'y'}">${pctReal >= pctEsp ? 'Em dia' : 'Abaixo do esp.'}</span>
+      </div>
+      <div class="kp-track-wrap" title="Realizado: ${pctReal}% · Esperado até ${mesNome}: ${pctEsp}%">
+        <div class="kp-bar"><i class="${pctReal >= 100 ? 'bar-m' : (pctReal >= pctEsp ? 'bar-g' : 'bar-y')}" style="width:${Math.min(100, pctReal)}%"></i></div>
+        <div class="kp-marker" style="left:${Math.min(100, pctEsp)}%" title="Esperado até ${mesNome}: ${pctEsp}%"></div>
+      </div>
+      <span class="kp-sub">esperado até ${mesNome}: <b>${pctEsp}%</b></span>
+    </div>`,
+
+    `<div class="kp-card${gt > 0 ? ' kp-card-alert' : ' kp-card-ok'}" title="${gaps.length} EJs ainda abaixo da meta anual">
+      <small>Gap total p/ a meta</small>
+      <b class="${gt > 0 ? 'rt' : 'gt'}">${RC(gt)}</b>
+      <span class="kp-sub">${gaps.length > 0 ? gaps.length + ' EJs ainda abaixo da meta' : 'Todas as EJs bateram a meta!'}</span>
+    </div>`,
+
+    `<div class="kp-card" title="${bat.length} EJs com 100% ou mais da meta anual batida">
+      <small>Meta batida</small>
+      <b class="${bat.length > 0 ? 'gt' : ''}">${bat.length} EJs</b>
+      <span class="kp-sub">somam ${RC(bm)} de meta</span>
+    </div>`,
+
+    `<div class="kp-card" title="${ahead} de ${D.length} EJs com faturamento superior ou igual ao esperado de ${mesNome}">
+      <small>EJs em dia no mês</small>
+      <b>${ahead} de ${D.length}</b>
+      <span class="kp-sub">faturamento ≥ esperado</span>
+    </div>`
+  ].join('');
+
+  $('top').innerHTML = cardHtml;
   renderBoards();
   renderFilterChips();
   mark();
