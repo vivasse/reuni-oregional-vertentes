@@ -31,9 +31,11 @@
   --bg:#eef1f7;
   --card:#ffffff;
   --tx:#18202e;
-  --mut:#6a7588;
-  --bd:#e3e8f0;
-  --in:#f6f8fc;
+  --mut:#475569;
+  --mut-light:#64748b;
+  --bd:#e2e8f0;
+  --in:#f8fafc;
+  --table-hover:#f1f5f9;
   --hd:#16213e;
   --ac:#4f46e5;
   --ac2:#06b6d4;
@@ -45,13 +47,13 @@
 }
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
-    --bg:#0d1117;--card:#161b24;--tx:#e8ecf3;--mut:#94a0b4;--bd:#262e3b;--in:#1d2430;--hd:#0b1020;
+    --bg:#0d1117;--card:#161b24;--tx:#e8ecf3;--mut:#94a3b8;--mut-light:#cbd5e1;--bd:#262e3b;--in:#1d2430;--table-hover:#1f2735;--hd:#0b1020;
     --sh:0 8px 24px rgba(0,0,0,.35);
     --gb:#12392d;--gf:#7ae0b5;--yb:#40340f;--yf:#fbd36b;--rb:#431a1c;--rf:#ff9f9f;--nb:#262c37;--nf:#aab2c0;
   }
 }
 :root[data-theme="dark"]{
-  --bg:#0d1117;--card:#161b24;--tx:#e8ecf3;--mut:#94a0b4;--bd:#262e3b;--in:#1d2430;--hd:#0b1020;
+  --bg:#0d1117;--card:#161b24;--tx:#e8ecf3;--mut:#94a3b8;--mut-light:#cbd5e1;--bd:#262e3b;--in:#1d2430;--table-hover:#1f2735;--hd:#0b1020;
   --sh:0 8px 24px rgba(0,0,0,.35);
   --gb:#12392d;--gf:#7ae0b5;--yb:#40340f;--yf:#fbd36b;--rb:#431a1c;--rf:#ff9f9f;--nb:#262c37;--nf:#aab2c0;
 }
@@ -102,22 +104,444 @@ button{background:linear-gradient(120deg,var(--ac),#7c3aed);color:#fff;border:0;
 button:hover{filter:brightness(1.08)}
 #dz{border:2px dashed var(--bd);border-radius:16px;padding:22px;text-align:center;cursor:pointer;color:var(--mut)}
 #dz.on{border-color:var(--ac);background:var(--in)}
-.chip{display:inline-block;padding:3px 10px 3px 8px;border-radius:99px;font-size:11px;font-weight:600;white-space:nowrap}
-.chip::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:currentColor;margin-right:6px;opacity:.85;vertical-align:1px}
+.chip{display:inline-block;padding:3px 9px 3px 8px;border-radius:99px;font-size:11px;font-weight:600;white-space:nowrap;line-height:1.2}
+.chip::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:currentColor;margin-right:5px;opacity:.85;vertical-align:0px}
 .g{background:var(--gb);color:var(--gf)}.y{background:var(--yb);color:var(--yf)}.r{background:var(--rb);color:var(--rf)}.n{background:var(--nb);color:var(--nf)}.m{background:#047857;color:#fff}
-.gt{color:var(--gf)}.rt{color:var(--rf)}.yt{color:var(--yf)}
-.tw{overflow:auto;max-height:74vh;border-radius:14px;border:0;box-shadow:0 0 0 1px var(--bd)}
-table{border-collapse:separate;border-spacing:0;width:100%;min-width:1080px}
-th{position:sticky;top:0;z-index:2;background:var(--card);color:var(--mut);font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:10px 8px;text-align:left;border-bottom:1px solid var(--bd)}
-td{padding:9px 8px;border-bottom:1px solid var(--bd);vertical-align:middle;font-size:13px}
-tbody tr:last-child td{border-bottom:0}
-tr:hover td{background:var(--in)}
-td small{display:block;color:var(--mut);font-size:11px;margin-top:2px}
-td.k{color:var(--mut);width:34px}td.nm{font-weight:700;min-width:150px}
-.pb{height:6px;border-radius:9px;background:var(--nb);overflow:hidden;margin:5px 0 4px;min-width:90px}
-.pb i{display:block;height:100%;border-radius:9px;background:linear-gradient(90deg,var(--ac),var(--ac2))}
-.pb i.m{background:linear-gradient(90deg,#10b981,#34d399)}
-.pc{font-weight:800;font-size:14px}
+.gt{color:var(--gf);font-weight:700}.rt{color:var(--rf);font-weight:700}.yt{color:var(--yf);font-weight:700}
+.txt-muted{color:var(--mut);font-size:11.5px;font-weight:600;display:inline-block;padding:1px 0}
+
+/* Container da Tabela e Sticky Header / Left Columns */
+.tw{
+  overflow:auto;
+  max-height:74vh;
+  border-radius:14px;
+  border:0;
+  box-shadow:0 0 0 1px var(--bd), 0 8px 24px -12px rgba(20,30,60,.12);
+  position:relative;
+  background:var(--card);
+}
+table{
+  border-collapse:separate;
+  border-spacing:0;
+  width:100%;
+  min-width:1120px;
+}
+th{
+  position:sticky;
+  top:0;
+  z-index:10;
+  background:var(--card);
+  color:var(--mut);
+  font-size:10.5px;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  padding:11px 10px;
+  text-align:left;
+  border-bottom:2px solid var(--bd);
+  font-weight:700;
+  white-space:nowrap;
+}
+
+/* Colunas Sticky à Esquerda: # e EJ */
+th.col-num, td.col-num{
+  position:sticky;
+  left:0;
+  z-index:12;
+  background:var(--card);
+  width:46px;
+  min-width:46px;
+  max-width:46px;
+  text-align:center;
+}
+th.col-num{ z-index:22; }
+th.nm, td.nm{
+  position:sticky;
+  left:46px;
+  z-index:11;
+  background:var(--card);
+  min-width:165px;
+  max-width:220px;
+  box-shadow:4px 0 8px -3px rgba(0,0,0,.08);
+}
+th.nm{ z-index:21; }
+
+/* Linhas e Hover */
+td{
+  padding:10px 10px;
+  border-bottom:1px solid var(--bd);
+  vertical-align:middle;
+  font-size:13px;
+  transition:background .12s ease;
+}
+tbody tr.main-row{ cursor:pointer; }
+tbody tr.main-row:hover td{ background:var(--table-hover); }
+tbody tr.main-row:hover td.col-num,
+tbody tr.main-row:hover td.nm{ background:var(--table-hover); }
+
+tbody tr.main-row.expanded td{ background:rgba(79,70,229,.04); }
+tbody tr.main-row.expanded td.col-num,
+tbody tr.main-row.expanded td.nm{ background:rgba(79,70,229,.06); }
+
+/* Ícone de expansão na coluna # */
+.idx-wrap{
+  display:inline-flex;
+  align-items:center;
+  gap:2px;
+  justify-content:center;
+}
+.btn-exp{
+  background:none;
+  border:0;
+  padding:3px;
+  margin:0;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  color:var(--mut);
+  border-radius:6px;
+  transition:all .15s ease;
+}
+.btn-exp:hover{
+  background:rgba(0,0,0,.06);
+  color:var(--tx);
+}
+:root[data-theme="dark"] .btn-exp:hover{ background:rgba(255,255,255,.08); }
+.btn-exp .exp-ic{
+  width:13px;
+  height:13px;
+  transition:transform .2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+tr.main-row.expanded .btn-exp .exp-ic{
+  transform:rotate(90deg);
+  color:var(--ac);
+}
+.row-idx{
+  font-size:11px;
+  font-weight:600;
+  color:var(--mut);
+  min-width:16px;
+  text-align:center;
+}
+.ej-name{
+  font-weight:700;
+  color:var(--tx);
+  font-size:13px;
+}
+
+/* Alinhamento de cabeçalhos e botões de filtro */
+.th-wrap{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  white-space:nowrap;
+}
+.th-r{
+  justify-content:flex-end;
+  width:100%;
+}
+.col-r{
+  text-align:right;
+  font-variant-numeric:tabular-nums;
+}
+.col-r .val-hero,
+.col-r .val-sub{
+  text-align:right;
+}
+.col-pct .pct-top{
+  display:inline-flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:6px;
+  width:100%;
+}
+
+/* Hierarquia dos números */
+.val-hero{
+  display:block;
+  font-size:13.5px;
+  font-weight:700;
+  color:var(--tx);
+  line-height:1.25;
+}
+.fat-hero{
+  font-size:14px;
+  font-weight:800;
+}
+.colab-val{
+  font-size:12.5px;
+  font-weight:700;
+}
+.val-sub{
+  display:block;
+  font-size:11px;
+  font-weight:500;
+  color:var(--mut);
+  margin-top:2px;
+  line-height:1.2;
+}
+
+/* Barra de progresso para todas as linhas */
+.pb{
+  height:5px;
+  border-radius:99px;
+  background:rgba(148, 163, 184, 0.22);
+  overflow:hidden;
+  margin:4px 0 2px;
+  min-width:85px;
+  position:relative;
+}
+:root[data-theme="dark"] .pb{ background:rgba(148, 163, 184, 0.16); }
+.pb i{
+  display:block;
+  height:100%;
+  border-radius:99px;
+  transition:width .3s ease;
+}
+.pb i.bar-m{ background:linear-gradient(90deg, #059669, #10b981); }
+.pb i.bar-g{ background:linear-gradient(90deg, #10b981, #34d399); }
+.pb i.bar-y{ background:linear-gradient(90deg, #f59e0b, #fbbf24); }
+.pb i.bar-r{ background:linear-gradient(90deg, #ef4444, #f87171); }
+.pb i.bar-n{ background:var(--mut); opacity:.25; }
+.pc{ font-weight:800; font-size:13.5px; }
+
+/* Linhas Expansíveis (Drawer de Detalhes) */
+tr.exp-row{ display:none; }
+tr.exp-row.open{ display:table-row; }
+tr.exp-row td{
+  padding:0 !important;
+  background:var(--in) !important;
+  border-bottom:1px solid var(--bd);
+}
+.exp-card{
+  padding:14px 18px 16px;
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(210px, 1fr));
+  gap:12px 14px;
+  background:linear-gradient(180deg, rgba(79,70,229,.03) 0%, transparent 100%), var(--in);
+}
+.exp-sec{
+  background:var(--card);
+  border:1px solid var(--bd);
+  border-radius:12px;
+  padding:12px 14px;
+  box-shadow:0 2px 6px rgba(0,0,0,.03);
+}
+.exp-sec-title{
+  font-size:10.5px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+  color:var(--mut);
+  margin-bottom:8px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.exp-sec-title .ic{
+  width:14px;
+  height:14px;
+  color:var(--ac);
+}
+.exp-sec-grid{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:5px 12px;
+  font-size:11.5px;
+}
+.exp-sec-grid .k{ color:var(--mut); font-weight:500; }
+.exp-sec-grid .v{ font-weight:600; color:var(--tx); text-align:right; }
+
+/* Toolbar de Filtros e Popovers */
+.tbl-header-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:14px;
+  position:relative;
+}
+.tbl-title-grp{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.btn-help-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  background:var(--in);
+  color:var(--mut);
+  border:1px solid var(--bd);
+  border-radius:99px;
+  padding:4px 10px;
+  font-size:11.5px;
+  font-weight:600;
+  cursor:pointer;
+  transition:all .15s ease;
+}
+.btn-help-pill:hover{
+  background:var(--card);
+  color:var(--tx);
+  border-color:var(--ac);
+}
+.btn-help-pill .ic{ width:14px; height:14px; }
+
+.filter-toolbar{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-bottom:8px;
+}
+.search-box{
+  position:relative;
+  flex:1;
+  min-width:220px;
+}
+.search-box .search-ico{
+  position:absolute;
+  left:11px;
+  top:50%;
+  transform:translateY(-50%);
+  width:15px;
+  height:15px;
+  color:var(--mut);
+  pointer-events:none;
+}
+.search-box input{
+  width:100%;
+  padding:8px 12px 8px 34px;
+  border-radius:10px;
+  border:1px solid var(--bd);
+  background:var(--in);
+  color:var(--tx);
+  font-size:13px;
+  transition:border-color .15s, box-shadow .15s;
+}
+.search-box input:focus{
+  outline:none;
+  border-color:var(--ac);
+  box-shadow:0 0 0 3px rgba(79,70,229,.12);
+}
+
+.toolbar-actions{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.params-anchor{ position:relative; }
+.btn-params{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  background:var(--in);
+  color:var(--tx);
+  border:1px solid var(--bd);
+  border-radius:10px;
+  padding:8px 14px;
+  font-size:12.5px;
+  font-weight:600;
+  cursor:pointer;
+  transition:background .15s, border-color .15s;
+}
+.btn-params:hover{
+  background:var(--card);
+  border-color:var(--ac);
+}
+.btn-params .ic{ width:15px; height:15px; color:var(--ac); }
+
+/* Popovers Modernos */
+.dropdown-popover{
+  position:absolute;
+  z-index:60;
+  background:var(--card);
+  border:1px solid var(--bd);
+  border-radius:14px;
+  box-shadow:0 14px 34px -6px rgba(0,0,0,.22), 0 0 0 1px var(--bd);
+  padding:16px;
+  min-width:280px;
+  animation:popFade .18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes popFade{
+  from{opacity:0;transform:translateY(-6px)}
+  to{opacity:1;transform:translateY(0)}
+}
+.pop-title{
+  font-size:12px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+  color:var(--mut);
+  margin-bottom:12px;
+  padding-bottom:8px;
+  border-bottom:1px solid var(--bd);
+}
+.pop-legend-list{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  font-size:12px;
+}
+.pop-lg-item{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+.pop-lg-item span:last-child{
+  color:var(--mut);
+  font-size:11.5px;
+  text-align:right;
+}
+
+.params-popover{
+  top:calc(100% + 6px);
+  right:0;
+  min-width:290px;
+}
+.params-form{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.param-field{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  font-size:12px;
+  color:var(--mut);
+  font-weight:600;
+}
+.param-field select,
+.param-field input{
+  width:130px;
+  padding:6px 10px;
+  font-size:12.5px;
+}
+
+.table-subinfo{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin:4px 0 10px;
+  font-size:11.5px;
+  color:var(--mut);
+}
+.filter-tip{ color:var(--mut); font-size:11.5px; }
+.badge-count{
+  font-size:12px;
+  font-weight:600;
+  color:var(--mut);
+  background:var(--in);
+  border:1px solid var(--bd);
+  padding:6px 12px;
+  border-radius:99px;
+}
 .kp{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
 .kp>div{background:var(--card);border:0;border-radius:14px;padding:16px 14px 14px;position:relative;overflow:hidden;box-shadow:0 0 0 1px var(--bd)}
 .kp>div::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,var(--ac),var(--ac2))}
@@ -370,16 +794,31 @@ aside .car.cl{transform:rotate(-90deg)}
   table th.nm,
   table td.nm{
     position:sticky;
-    left:0;
-    z-index:3;
+    left:0 !important;
+    z-index:11;
     background:var(--card);
     box-shadow:3px 0 8px -3px rgba(0,0,0,.15);
   }
   table th.nm{
-    z-index:5;
+    z-index:21;
   }
-  tr:hover td.nm{
-    background:var(--in);
+  tbody tr.main-row:hover td.nm{
+    background:var(--table-hover);
+  }
+
+  .filter-toolbar{
+    flex-direction:column;
+    align-items:stretch;
+    gap:8px;
+  }
+  .toolbar-actions{
+    justify-content:space-between;
+  }
+  .params-popover{
+    right:auto;
+    left:0;
+    max-width:320px;
+    width:calc(100vw - 48px);
   }
 
   /* Tabela touch */
@@ -529,7 +968,7 @@ aside .car.cl{transform:rotate(-90deg)}
   <main>
     <div class="top">
       <div>
-        <h1 id="pt">DADOS DAS EJ'S</h1>
+        <h1 id="pt">MONITORAMENTO</h1>
         <p id="ps"></p>
       </div>
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
@@ -544,42 +983,86 @@ aside .car.cl{transform:rotate(-90deg)}
 
     <div id="out" hidden>
       <div class="card">
-        <h2>Planilha por EJ · ordem alfabética</h2>
-        <div class="row">
-          <label>Mês de corte<select id="mes"></select></label>
-          <label>Meses tracking Colab<input type="number" id="trk" value="6" min="1" max="12"></label>
-          <label>CSAT mín. sem meta<input type="number" id="cmin" value="3.5" step="0.1"></label>
-          <label style="flex:1;min-width:150px">Buscar EJ<input id="q" placeholder="Digite o nome…" style="width:100%"></label>
+        <div class="tbl-header-row">
+          <div class="tbl-title-grp">
+            <h2 style="margin:0">Planilha por EJ · ordem alfabética</h2>
+            <button id="btnHelpTags" class="btn-help-pill" type="button" title="Legenda das metas e classificação" aria-label="Ver legenda das metas">
+              <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+              <span>Legenda</span>
+            </button>
+          </div>
+
+          <!-- Popover de Legenda das Metas -->
+          <div id="popHelpTags" class="dropdown-popover" hidden>
+            <div class="pop-title">Classificação das Metas</div>
+            <div class="pop-legend-list">
+              <div class="pop-lg-item"><span class="chip m">Meta batida</span><span>100% ou mais da meta anual atingida</span></div>
+              <div class="pop-lg-item"><span class="chip g">Verde</span><span>Meta escalonada do mês atingida</span></div>
+              <div class="pop-lg-item"><span class="chip y">Amarelo</span><span>Muito perto do verde no mês</span></div>
+              <div class="pop-lg-item"><span class="chip r">Vermelho</span><span>Abaixo da meta esperada para o período</span></div>
+              <div class="pop-lg-item"><span class="txt-muted" style="font-weight:700">Zerado / Neutro</span><span>Sem faturamento ou sem movimentação</span></div>
+            </div>
+          </div>
         </div>
-        <div class="lgd">
-          <b>Tags das metas</b> &nbsp;
-          <span class="chip n">Zerado</span> sem nada · 
-          <span class="chip r">Vermelho</span> alguma movimentação · 
-          <span class="chip y">Amarelo</span> muito perto do verde · 
-          <span class="chip g">Verde</span> meta do mês escalonada batida · 
-          <span class="chip m">Meta batida</span> 100% da meta
+
+        <div class="filter-toolbar">
+          <div class="search-box">
+            <svg class="search-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input id="q" placeholder="Buscar EJ por nome…" aria-label="Buscar EJ por nome">
+          </div>
+
+          <div class="toolbar-actions">
+            <div class="params-anchor">
+              <button id="btnParams" class="btn-params" type="button" title="Ajustar parâmetros de cálculo" aria-label="Parâmetros de cálculo">
+                <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></svg>
+                <span>Parâmetros</span>
+              </button>
+
+              <!-- Popover de Parâmetros -->
+              <div id="popParams" class="dropdown-popover params-popover" hidden>
+                <div class="pop-title">Parâmetros de Cálculo</div>
+                <div class="params-form">
+                  <label class="param-field">
+                    <span>Mês de corte</span>
+                    <select id="mes"></select>
+                  </label>
+                  <label class="param-field">
+                    <span>Meses tracking Colab</span>
+                    <input type="number" id="trk" value="6" min="1" max="12">
+                  </label>
+                  <label class="param-field">
+                    <span>CSAT mín. sem meta</span>
+                    <input type="number" id="cmin" value="3.5" step="0.1">
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <button class="ghost" id="clr" type="button" title="Limpar todos os filtros">Mostrar todas</button>
+            <span id="cnt" class="badge-count"></span>
+          </div>
         </div>
-        <div class="row" style="margin:12px 0">
-          <button class="ghost" id="clr">Mostrar todas</button>
-          <span id="cnt"></span>
-          <span style="font-size:12px;color:var(--mut)">· use o ▾ no título das colunas para filtrar</span>
+
+        <div class="table-subinfo">
+          <span class="filter-tip">Dica: use ▾ nos títulos das colunas para filtrar · clique na linha para expandir detalhes</span>
+          <div class="scroll-hint">👉 Deslize para o lado para ver todas as colunas</div>
         </div>
-        <div class="scroll-hint">👉 Deslize para o lado para ver todas as colunas</div>
+
         <div class="tw">
           <table>
             <thead>
               <tr>
-                <th class="col-num">#</th>
-                <th class="nm">EJ</th>
-                <th>Cl.<button class="fb" data-k="cl" title="Filtrar">▾</button></th>
-                <th>Faturamento</th>
-                <th>% da meta anual<button class="fb" data-k="fa" title="Filtrar">▾</button></th>
-                <th>Gap p/ meta anual</th>
-                <th>Esperado até o mês</th>
-                <th>ECM<button class="fb" data-k="ecm" title="Filtrar">▾</button></th>
-                <th>CSAT<button class="fb" data-k="cs" title="Filtrar">▾</button></th>
-                <th>Colaborativo<button class="fb" data-k="co" title="Filtrar">▾</button></th>
-                <th>Cluster (projeção)<button class="fb" data-k="cu" title="Filtrar">▾</button></th>
+                <th class="col-num"><div class="th-wrap"><span>#</span></div></th>
+                <th class="nm"><div class="th-wrap"><span>EJ</span></div></th>
+                <th><div class="th-wrap"><span>Cl.</span><button class="fb" data-k="cl" title="Filtrar por Cluster" type="button">▾</button></div></th>
+                <th class="col-r"><div class="th-wrap th-r"><span>Faturamento</span></div></th>
+                <th class="col-r col-pct"><div class="th-wrap th-r"><span>% da meta anual</span><button class="fb" data-k="fa" title="Filtrar por % da meta" type="button">▾</button></div></th>
+                <th class="col-r"><div class="th-wrap th-r"><span>Gap p/ meta anual</span></div></th>
+                <th class="col-r"><div class="th-wrap th-r"><span>Esperado até o mês</span></div></th>
+                <th><div class="th-wrap"><span>ECM</span><button class="fb" data-k="ecm" title="Filtrar por ECM" type="button">▾</button></div></th>
+                <th><div class="th-wrap"><span>CSAT</span><button class="fb" data-k="cs" title="Filtrar por CSAT" type="button">▾</button></div></th>
+                <th><div class="th-wrap"><span>Colaborativo</span><button class="fb" data-k="co" title="Filtrar por Colaborativo" type="button">▾</button></div></th>
+                <th><div class="th-wrap"><span>Cluster (projeção)</span><button class="fb" data-k="cu" title="Filtrar por Cluster" type="button">▾</button></div></th>
               </tr>
             </thead>
             <tbody id="tb"></tbody>
@@ -784,39 +1267,195 @@ const SUMR = [
   ['Cluster (projeção)', 'cu', [['Sobe', 'g'], ['Mantém', 'g'], ['Cai', 'r'], ['Sem cluster', 'n']], 'Projeção de mudança de cluster']
 ];
 
+const STATUS_CFG = {
+  // Pílulas coloridas para status com atenção ou celebração
+  'Meta batida': { isChip: true, cls: 'chip m', text: 'Meta batida' },
+  'Verde':       { isChip: true, cls: 'chip g', text: 'Verde' },
+  'Batida':      { isChip: true, cls: 'chip g', text: 'Batida' },
+  'Batido':      { isChip: true, cls: 'chip g', text: 'Batido' },
+  'Sobe':        { isChip: true, cls: 'chip g', text: 'Sobe' },
+  'Amarelo':     { isChip: true, cls: 'chip y', text: 'Amarelo' },
+  'Vermelho':    { isChip: true, cls: 'chip r', text: 'Vermelho' },
+  'Não batida':  { isChip: true, cls: 'chip r', text: 'Não batida' },
+  'Baixo':       { isChip: true, cls: 'chip r', text: 'Baixo' },
+  'Cai':         { isChip: true, cls: 'chip r', text: 'Cai' },
+  
+  // Neutros / vazios: texto cinza simples, sem pílula e sem fundo
+  'Zerado':        { isChip: false, cls: 'txt-muted', text: 'Zerado' },
+  'Sem membros':   { isChip: false, cls: 'txt-muted', text: 'Sem membros' },
+  'Sem CSAT':      { isChip: false, cls: 'txt-muted', text: 'Sem CSAT' },
+  'Sem contratos': { isChip: false, cls: 'txt-muted', text: 'Sem contratos' },
+  'Sem cluster':   { isChip: false, cls: 'txt-muted', text: 'Sem cluster' },
+  'Mantém':        { isChip: false, cls: 'txt-muted', text: 'Mantém' }
+};
+
+const renderStatus = st => {
+  const label = Array.isArray(st) ? st[0] : String(st || '');
+  const cfg = STATUS_CFG[label];
+  if (!cfg) return `<span class="txt-muted">${esc(label || '–')}</span>`;
+  if (cfg.isChip) return `<span class="${cfg.cls}">${esc(cfg.text)}</span>`;
+  return `<span class="${cfg.cls}">${esc(cfg.text)}</span>`;
+};
+
 const cc = (k, s) => {
   const g = SUMR.find(x => x[1] === k), t = g && g[2].find(x => x[0] === s);
   return t ? t[1] : 'n';
 };
-const ch = a => `<span class="chip ${a[1]}">${a[0]}</span>`;
+const ch = a => renderStatus(a);
 
 let D = [];
+let EXP = new Set();
+
+function toggleRow(ejName) {
+  if (EXP.has(ejName)) EXP.delete(ejName);
+  else EXP.add(ejName);
+  const mRow = document.querySelector(`tr.main-row[data-ej="${CSS.escape(ejName)}"]`);
+  const eRow = document.querySelector(`tr.exp-row[data-ej-exp="${CSS.escape(ejName)}"]`);
+  if (mRow && eRow) {
+    const isNowOpen = EXP.has(ejName);
+    mRow.classList.toggle('expanded', isNowOpen);
+    eRow.classList.toggle('open', isNowOpen);
+  }
+}
 
 function row(d) {
   const gap = d.meta - d.fat, eg = d.fat - d.esp;
-  const gc = d.meta <= 0 ? '<small>sem meta</small>' :
-             gap <= 0 ? `<b class="gt">+${RC(-gap)}</b><small>acima da meta</small>` :
-             `<b class="rt">${RC(gap)}</b><small>faltam p/ a meta</small>`;
-  const ec = d.meta <= 0 ? '–' :
-             `<b class="${eg >= 0 ? 'gt' : 'rt'}">${eg >= 0 ? '+' : '−'}${RC(Math.abs(eg))}</b><small>esperado ${RC(d.esp)}</small>`;
-  const cg = d.cm > 0 ?
-             `${RC(d.colab)} de ${RC(d.cm)} · ` + (d.colab >= d.cm ? 'meta batida' : 'faltam ' + RC(d.cm - d.colab) + ' · esperado ' + RC(d.cesp)) :
-             `${RC(d.colab)} · sem meta`;
-  const cuS = d.cl < 1 || d.cl > 5 ? '' :
-              `<small>C${d.cl} · índice ${RC(d.idx)}${d.cl < 5 && d.idx < LOW[d.cl] ? ' · faltam ' + RC(LOW[d.cl] - d.idx) + ' p/ subir' : ''}</small>`;
+  const isExp = EXP.has(d.nome);
+  
+  // Barra de progresso para todas as linhas com trilho visível
+  const barCls = d.fa[1] === 'm' ? 'bar-m' :
+                 d.fa[1] === 'g' ? 'bar-g' :
+                 d.fa[1] === 'y' ? 'bar-y' :
+                 d.fa[1] === 'r' ? 'bar-r' : 'bar-n';
+  const barWidth = Math.max(0, Math.min(100, Math.round(d.pct * 100)));
 
-  return `<tr>
-    <td class="k col-num">${D.indexOf(d) + 1}</td>
-    <td class="nm">${esc(d.nome)}</td>
-    <td class="k">${d.cl > 0 ? 'C' + d.cl : '–'}</td>
-    <td><b>${R(d.fat)}</b><small>meta ${R(d.meta)}</small></td>
-    <td><span class="pc">${Math.round(d.pct * 100)}%</span> ${ch(d.fa)}<div class="pb"><i class="${d.pct >= 1 ? 'm' : ''}" style="width:${Math.min(100, d.pct * 100)}%"></i></div></td>
-    <td>${gc}</td>
-    <td>${ec}</td>
-    <td>${ch(d.ecm)}<small>${d.mem ? d.eng + ' / ' + d.ealvo + ' engajados' : 'sem membros'}</small></td>
-    <td>${ch(d.cs)}<small>${d.ctr ? 'nota ' + N1(d.nota) + ' · meta ' + N1(d.calvo) : 'sem contratos'}</small></td>
-    <td>${ch(d.co)}<small>${cg}</small></td>
-    <td>${ch(d.cu)}${cuS}</td>
+  // Gap formatado (herói + secundário)
+  const gapHero = d.meta <= 0 ? '–' : (gap <= 0 ? '+' : '') + RC(gap <= 0 ? -gap : gap);
+  const gapSub = d.meta <= 0 ? 'sem meta' : (gap <= 0 ? 'acima da meta' : 'faltam p/ meta');
+  const gapCls = gap <= 0 ? 'gt' : 'rt';
+
+  // Esperado formatado (herói + secundário)
+  const espHero = d.meta <= 0 ? '–' : (eg >= 0 ? '+' : '−') + RC(Math.abs(eg));
+  const espSub = d.meta <= 0 ? 'sem meta' : 'esp. ' + RC(d.esp);
+  const espCls = eg >= 0 ? 'gt' : 'rt';
+
+  return `<tr class="main-row${isExp ? ' expanded' : ''}" data-ej="${esc(d.nome)}" title="Clique na linha para expandir/recolher os detalhes">
+    <td class="k col-num">
+      <div class="idx-wrap">
+        <button class="btn-exp" type="button" aria-label="Expandir detalhes de ${esc(d.nome)}">
+          <svg class="exp-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </button>
+        <span class="row-idx">${D.indexOf(d) + 1}</span>
+      </div>
+    </td>
+    <td class="nm"><span class="ej-name">${esc(d.nome)}</span></td>
+    <td class="k"><span class="txt-muted">${d.cl > 0 ? 'C' + d.cl : '–'}</span></td>
+    <td class="col-r" title="Faturamento: ${R(d.fat)} · Meta anual: ${R(d.meta)}">
+      <span class="val-hero fat-hero">${R(d.fat)}</span>
+      <span class="val-sub">meta ${RC(d.meta)}</span>
+    </td>
+    <td class="col-r col-pct" title="% da meta atingida: ${Math.round(d.pct * 100)}%">
+      <div class="pct-top">
+        <span class="pc">${Math.round(d.pct * 100)}%</span>
+        ${renderStatus(d.fa)}
+      </div>
+      <div class="pb" title="${Math.round(d.pct * 100)}% atingido"><i class="${barCls}" style="width:${barWidth}%"></i></div>
+    </td>
+    <td class="col-r" title="Gap: ${gap <= 0 ? '+' + R(-gap) + ' acima' : R(gap) + ' faltam'}">
+      <span class="val-hero ${gapCls}">${gapHero}</span>
+      <span class="val-sub">${gapSub}</span>
+    </td>
+    <td class="col-r" title="Esperado até o mês: ${R(d.esp)}">
+      <span class="val-hero ${d.meta <= 0 ? '' : espCls}">${espHero}</span>
+      <span class="val-sub">${espSub}</span>
+    </td>
+    <td title="${d.mem ? d.eng + ' de ' + d.ealvo + ' engajados' : 'Sem membros'}">
+      ${renderStatus(d.ecm)}
+    </td>
+    <td title="${d.ctr ? 'Nota ' + N1(d.nota) + ' · Meta ' + N1(d.calvo) : 'Sem contratos avaliados'}">
+      ${renderStatus(d.cs)}
+    </td>
+    <td title="${d.cm > 0 ? RC(d.colab) + ' de ' + RC(d.cm) : RC(d.colab) + ' sem meta'}">
+      <span class="val-hero colab-val">${RC(d.colab)}</span>
+      ${renderStatus(d.co)}
+    </td>
+    <td title="${d.cl > 0 ? 'Cluster ' + d.cl + ' · Índice ' + RC(d.idx) : 'Sem cluster'}">
+      ${renderStatus(d.cu)}
+    </td>
+  </tr>
+  <tr class="exp-row${isExp ? ' open' : ''}" data-ej-exp="${esc(d.nome)}">
+    <td colspan="11">
+      <div class="exp-card">
+        <div class="exp-sec">
+          <div class="exp-sec-title">
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+            Faturamento & Metas
+          </div>
+          <div class="exp-sec-grid">
+            <span class="k">Realizado</span><span class="v">${R(d.fat)}</span>
+            <span class="k">Meta anual</span><span class="v">${R(d.meta)}</span>
+            <span class="k">% Realizada</span><span class="v">${Math.round(d.pct * 100)}%</span>
+            <span class="k">Gap restante</span><span class="v ${gapCls}">${gap <= 0 ? '+' + R(-gap) + ' (superada)' : R(gap) + ' faltam'}</span>
+            <span class="k">Esperado até o mês</span><span class="v">${R(d.esp)}</span>
+            <span class="k">vs. Esperado</span><span class="v ${espCls}">${d.meta <= 0 ? '–' : (eg >= 0 ? '+' : '−') + R(Math.abs(eg))}</span>
+          </div>
+        </div>
+
+        <div class="exp-sec">
+          <div class="exp-sec-title">
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            ECM (Engajamento)
+          </div>
+          <div class="exp-sec-grid">
+            <span class="k">Situação</span><span class="v">${renderStatus(d.ecm)}</span>
+            <span class="k">Membros engajados</span><span class="v">${d.eng} de ${d.mem || 0}</span>
+            <span class="k">Meta de engajados</span><span class="v">${d.ealvo} (${d.ecmP || 0}%)</span>
+            <span class="k">Diferença</span><span class="v ${d.eng >= d.ealvo ? 'gt' : 'rt'}">${d.eng >= d.ealvo ? '+' + (d.eng - d.ealvo) + ' acima' : (d.ealvo - d.eng) + ' faltam'}</span>
+          </div>
+        </div>
+
+        <div class="exp-sec">
+          <div class="exp-sec-title">
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+            CSAT & Clientes
+          </div>
+          <div class="exp-sec-grid">
+            <span class="k">Situação</span><span class="v">${renderStatus(d.cs)}</span>
+            <span class="k">Nota média</span><span class="v">${d.ctr ? N1(d.nota) : '–'}</span>
+            <span class="k">Meta de nota</span><span class="v">${N1(d.calvo)}</span>
+            <span class="k">Contratos respondidos</span><span class="v">${d.ctr || 0}</span>
+            <span class="k">Taxa de coleta</span><span class="v">${d.coleta != null ? d.coleta + '%' : '–'}</span>
+          </div>
+        </div>
+
+        <div class="exp-sec">
+          <div class="exp-sec-title">
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+            Colaborativo
+          </div>
+          <div class="exp-sec-grid">
+            <span class="k">Situação</span><span class="v">${renderStatus(d.co)}</span>
+            <span class="k">Faturado colab.</span><span class="v">${R(d.colab)}</span>
+            <span class="k">Meta anual colab.</span><span class="v">${d.cm > 0 ? R(d.cm) : 'Sem meta'}</span>
+            <span class="k">Esperado (${$('trk').value || 6} meses)</span><span class="v">${d.cm > 0 ? R(d.cesp) : '–'}</span>
+            <span class="k">Diferença</span><span class="v ${d.cm > 0 && d.colab >= d.cm ? 'gt' : ''}">${d.cm > 0 ? (d.colab >= d.cm ? 'Meta batida' : R(d.cm - d.colab) + ' faltam') : '–'}</span>
+          </div>
+        </div>
+
+        <div class="exp-sec">
+          <div class="exp-sec-title">
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>
+            Cluster & Projeção
+          </div>
+          <div class="exp-sec-grid">
+            <span class="k">Cluster atual</span><span class="v">${d.cl > 0 ? 'Cluster ' + d.cl : 'Sem cluster'}</span>
+            <span class="k">Projeção</span><span class="v">${renderStatus(d.cu)}</span>
+            <span class="k">Índice atual</span><span class="v">${RC(d.idx)}</span>
+            <span class="k">P/ Subir</span><span class="v">${d.cl < 5 && d.cl >= 1 && d.idx < LOW[d.cl] ? RC(LOW[d.cl] - d.idx) + ' faltam' : (d.cl === 5 ? 'Cluster 5 (Máximo)' : 'Patamar atingido')}</span>
+          </div>
+        </div>
+      </div>
+    </td>
   </tr>`;
 }
 
@@ -832,6 +1471,19 @@ function render() {
   $('cnt').textContent = v.length + ' de ' + D.length + ' EJs';
 }
 
+// Evento de clique para expandir/recolher linhas
+$('tb').addEventListener('click', e => {
+  const mainRow = e.target.closest('tr.main-row');
+  if (!mainRow) return;
+  if (e.target.closest('button.btn-exp')) {
+    e.stopPropagation();
+    toggleRow(mainRow.dataset.ej);
+    return;
+  }
+  if (e.target.closest('button, a, input, select, .fb')) return;
+  toggleRow(mainRow.dataset.ej);
+});
+
 const OPTS = {};
 SUMR.forEach(x => OPTS[x[1]] = x[2].map(t => t[0]).filter((v, i, a) => a.indexOf(v) === i));
 OPTS.cl = ['C1', 'C2', 'C3', 'C4', 'C5', 'Sem cluster'];
@@ -846,14 +1498,23 @@ function mark() {
 }
 
 let PK = null;
-function closePop() { $('pop').hidden = true; PK = null; }
+function closePop() {
+  $('pop').hidden = true;
+  PK = null;
+  const pTags = $('popHelpTags');
+  if (pTags) pTags.hidden = true;
+  const pParams = $('popParams');
+  if (pParams) pParams.hidden = true;
+}
+
 function openPop(b) {
   const k = b.dataset.k;
   if (PK === k) { closePop(); return; }
+  closePop();
   PK = k;
   const cur = FL[k] || new Set(OPTS[k]);
   $('pop').innerHTML = `<label class="cb all"><input type="checkbox" data-s="*" ${cur.size === OPTS[k].length ? 'checked' : ''}><b>(Selecionar tudo)</b></label>` +
-    OPTS[k].map(v => `<label class="cb"><input type="checkbox" data-s="${v}" ${cur.has(v) ? 'checked' : ''}><span class="chip ${cc(k, v)}">${v}</span><em>${D.filter(d => val(d, k) === v).length}</em></label>`).join('');
+    OPTS[k].map(v => `<label class="cb"><input type="checkbox" data-s="${v}" ${cur.has(v) ? 'checked' : ''}>${renderStatus(v)}<em>${D.filter(d => val(d, k) === v).length}</em></label>`).join('');
   $('pop').hidden = false;
   const r = b.getBoundingClientRect();
   $('pop').style.top = r.bottom + 4 + 'px';
@@ -870,10 +1531,39 @@ $('pop').onchange = e => {
   refresh();
 };
 
+$('btnHelpTags').onclick = e => {
+  e.stopPropagation();
+  const pop = $('popHelpTags');
+  const willOpen = pop.hidden;
+  closePop();
+  if (willOpen) pop.hidden = false;
+};
+
+$('btnParams').onclick = e => {
+  e.stopPropagation();
+  const pop = $('popParams');
+  const willOpen = pop.hidden;
+  closePop();
+  if (willOpen) pop.hidden = false;
+};
+
+['popHelpTags', 'popParams'].forEach(id => {
+  const el = $(id);
+  if (el) el.onclick = e => e.stopPropagation();
+});
+
 document.addEventListener('click', e => {
   const b = e.target.closest('.fb');
   if (b) openPop(b);
   else if (PK && !e.target.closest('#pop')) closePop();
+  if (!e.target.closest('#popHelpTags') && !e.target.closest('#btnHelpTags')) {
+    const p = $('popHelpTags');
+    if (p) p.hidden = true;
+  }
+  if (!e.target.closest('#popParams') && !e.target.closest('#btnParams')) {
+    const p = $('popParams');
+    if (p) p.hidden = true;
+  }
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closePop(); });
 window.addEventListener('scroll', e => { if (PK && !(e.target.closest && e.target.closest('#pop'))) closePop(); }, true);
@@ -1010,7 +1700,7 @@ const IC = {
 };
 
 const ico = k => `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${IC[k]}</svg>`;
-const TT = { geral: "DADOS DAS EJ'S", fa: 'Faturamento', ecm: 'ECM', cs: 'CSAT', co: 'Colaborativo', cu: 'Cluster', upd: 'Atualizar dados' };
+const TT = { geral: "MONITORAMENTO", fa: 'Faturamento', ecm: 'ECM', cs: 'CSAT', co: 'Colaborativo', cu: 'Cluster', upd: 'Atualizar dados' };
 let OPEN = true;
 
 function nav() {
@@ -1020,7 +1710,7 @@ function nav() {
     return (y ? `<span class="bg y" title="Amarelo">${y}</span>` : '') + (r ? `<span class="bg r" title="Vermelho / ruim">${r}</span>` : '');
   };
   const sub = [['fa', 'Faturamento'], ['ecm', 'ECM'], ['cs', 'CSAT'], ['co', 'Colaborativo'], ['cu', 'Cluster']];
-  $('nav').innerHTML = `<button class="nv${VW === 'geral' ? ' on' : ''}" data-v="geral">${ico('geral')}<span class="lb">DADOS DAS EJ'S</span><span class="car${OPEN ? '' : ' cl'}">${ico('chev')}</span></button>` +
+  $('nav').innerHTML = `<button class="nv${VW === 'geral' ? ' on' : ''}" data-v="geral">${ico('geral')}<span class="lb">MONITORAMENTO</span><span class="car${OPEN ? '' : ' cl'}">${ico('chev')}</span></button>` +
     (OPEN ? sub.map(([k, l]) => `<button class="nv sub${k === VW ? ' on' : ''}" data-v="${k}">${ico(k)}<span class="lb">${l}</span><span class="bw">${badge(k)}</span></button>`).join('') : '') +
     `<div class="sep"></div><button class="nv${VW === 'upd' ? ' on' : ''}" data-v="upd">${ico('upd')}<span class="lb">Atualizar dados</span></button>`;
 }
