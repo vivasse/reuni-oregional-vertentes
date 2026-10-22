@@ -3186,6 +3186,168 @@ aside.collapsed .btn-collapse-desktop .sb-footer-ic{
   </div>
 </div>
 
+<!-- Modal de Reuniões Quinzenais de Squad -->
+<div id="modalReunioes" class="modal-overlay" style="display:none" aria-hidden="true">
+  <div class="modal-box" style="max-width:720px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;padding:0">
+    <div style="padding:20px 24px;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:22px">📋</span>
+        <div>
+          <h3 style="margin:0;font-size:17px">Atas de Reuniões Quinzenais dos Squads</h3>
+          <p style="margin:2px 0 0;font-size:12px;color:var(--mut)">Registre pautas, encaminhamentos e decisões do acompanhamento quinzenal</p>
+        </div>
+      </div>
+      <button class="btn-close" id="btnCloseReunioesModal" style="padding:6px 10px;font-size:16px;line-height:1">✕</button>
+    </div>
+
+    <!-- Seletor de Squad -->
+    <div style="padding:12px 24px;background:var(--in);border-bottom:1px solid var(--bd);display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      <span style="font-size:12px;font-weight:700;color:var(--mut)">SQUAD:</span>
+      <div id="reunioesSquadTabs" style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="g-btn g-btn-primary" data-sq="1" type="button">Squad Yann</button>
+        <button class="g-btn" data-sq="2" type="button">Squad Guilherme</button>
+        <button class="g-btn" data-sq="3" type="button">Squad Castanha</button>
+      </div>
+    </div>
+
+    <!-- Conteúdo Rolável: Formulário + Lista -->
+    <div style="padding:20px 24px;overflow-y:auto;display:flex;flex-direction:column;gap:18px">
+      <!-- Formulário de Nova Reunião -->
+      <div style="background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px;box-shadow:var(--sh-sm)">
+        <h4 style="margin:0 0 12px;font-size:13.5px;font-weight:700;display:flex;align-items:center;gap:6px">
+          <span>➕</span> Registrar Nova Reunião Quinzenal
+        </h4>
+        <div style="display:grid;grid-template-columns:150px 1fr;gap:10px;margin-bottom:10px">
+          <label style="display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:600">
+            <span>Data da Reunião</span>
+            <input type="date" id="mReuniaoData" class="g-select" style="padding:7px 10px;font-size:12px" />
+          </label>
+          <label style="display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:600">
+            <span>Pauta Principal</span>
+            <input type="text" id="mReuniaoPauta" placeholder="Ex: Alinhamento de metas, ECM e diagnóstico de gaps" class="g-select" style="padding:7px 10px;font-size:12px" />
+          </label>
+        </div>
+        <label style="display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:600;margin-bottom:12px">
+          <span>Encaminhamentos &amp; Decisões</span>
+          <textarea id="mReuniaoEncaminhamentos" placeholder="Registre os combinados, metas para a próxima quinzena e responsáveis..." rows="3" style="width:100%;border-radius:8px;border:1px solid var(--bd);background:var(--in);color:var(--tx);font:inherit;font-size:12.5px;padding:8px 10px;outline:none;resize:vertical"></textarea>
+        </label>
+        <div style="display:flex;justify-content:flex-end">
+          <button id="btnSalvarReuniao" class="g-btn g-btn-primary" type="button">
+            <span>Salvar Ata Quinzenal</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Histórico de Atas -->
+      <div>
+        <h4 style="margin:0 0 10px;font-size:13.5px;font-weight:700;display:flex;justify-content:space-between;align-items:center">
+          <span id="reunioesListTitle">Histórico de Atas do Squad</span>
+          <span id="reunioesCountBadge" style="font-size:11.5px;font-weight:500;color:var(--mut)">0 atas registradas</span>
+        </h4>
+        <div id="reunioesList" style="display:flex;flex-direction:column;gap:10px"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Perfil & Transferência de EJs do Guardião -->
+<div id="modalGuardiao" class="modal-overlay" style="display:none" aria-hidden="true">
+  <div class="modal-box" style="max-width:680px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;padding:0">
+    <div style="padding:20px 24px;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:22px">👤</span>
+        <div>
+          <h3 id="mGuardiaoTitle" style="margin:0;font-size:17px">Perfil do Guardião</h3>
+          <p id="mGuardiaoSubtitle" style="margin:2px 0 0;font-size:12px;color:var(--mut)">Gestão de responsabilidades e acompanhamento</p>
+        </div>
+      </div>
+      <button class="btn-close" id="btnCloseGuardiaoModal" style="padding:6px 10px;font-size:16px;line-height:1">✕</button>
+    </div>
+
+    <div style="padding:20px 24px;overflow-y:auto;display:flex;flex-direction:column;gap:18px">
+      <!-- KPIs do Guardião -->
+      <div id="mGuardiaoKpis" style="display:grid;grid-template-columns:repeat(3, 1fr);gap:10px"></div>
+
+      <!-- Transferência de EJs em Lote -->
+      <div style="background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px;box-shadow:var(--sh-sm)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <h4 style="margin:0;font-size:13.5px;font-weight:700">EJs Acompanhadas &amp; Transferência em Lote</h4>
+          <label style="font-size:12px;color:var(--mut);display:inline-flex;align-items:center;gap:4px;cursor:pointer">
+            <input type="checkbox" id="mTransferSelectAll" /> Selecionar todas
+          </label>
+        </div>
+
+        <div id="mGuardiaoEjsList" style="max-height:200px;overflow-y:auto;border:1px solid var(--bd);border-radius:8px;padding:8px;background:var(--in);display:flex;flex-direction:column;gap:4px;margin-bottom:12px"></div>
+
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <span style="font-size:12px;font-weight:600">Transferir selecionadas para:</span>
+          <select id="mTransferTargetSelect" class="g-select" style="flex:1;min-width:180px"></select>
+          <button id="btnConfirmTransfer" class="g-btn g-btn-primary" type="button">Confirmar Transferência</button>
+        </div>
+      </div>
+
+      <!-- Editar Dados do Guardião -->
+      <div style="background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px;box-shadow:var(--sh-sm)">
+        <h4 style="margin:0 0 12px;font-size:13.5px;font-weight:700">Editar Cadastro do Guardião</h4>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+          <label style="display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:600">
+            <span>Nome do Guardião</span>
+            <input type="text" id="mEditGuardiaoNome" class="g-select" />
+          </label>
+          <label style="display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:600">
+            <span>Squad</span>
+            <select id="mEditGuardiaoSquad" class="g-select">
+              <option value="1">Squad Yann</option>
+              <option value="2">Squad Guilherme</option>
+              <option value="3">Squad Castanha</option>
+            </select>
+          </label>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <button id="btnDeleteGuardiao" class="g-btn" style="color:var(--rf);border-color:var(--rf)" type="button">Excluir Guardião</button>
+          <button id="btnSaveEditGuardiao" class="g-btn g-btn-primary" type="button">Salvar Alterações</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Novo Guardião -->
+<div id="modalNovoGuardiao" class="modal-overlay" style="display:none" aria-hidden="true">
+  <div class="modal-box" style="max-width:480px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h3 style="margin:0;font-size:17px">➕ Cadastrar Novo Guardião</h3>
+      <button class="btn-close" id="btnCloseNovoGuardiaoModal" style="padding:6px 10px;font-size:16px;line-height:1">✕</button>
+    </div>
+
+    <form id="formNovoGuardiao" onsubmit="return false;" style="display:flex;flex-direction:column;gap:14px">
+      <label style="display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:600">
+        <span>Nome Completo do Guardião</span>
+        <input type="text" id="mNovoGuardiaoNome" placeholder="Ex: Gabriel Silva" class="g-select" required />
+      </label>
+
+      <label style="display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:600">
+        <span>Squad de Atuação</span>
+        <select id="mNovoGuardiaoSquad" class="g-select" required>
+          <option value="1">Squad Yann (Líder Yann)</option>
+          <option value="2">Squad Guilherme (Líder Guilherme)</option>
+          <option value="3">Squad Castanha (Líder Castanha)</option>
+        </select>
+      </label>
+
+      <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;cursor:pointer">
+        <input type="checkbox" id="mNovoGuardiaoLider" />
+        <span>Definir como Líder do Squad</span>
+      </label>
+
+      <div class="modal-actions" style="margin-top:8px">
+        <button class="btn-close" type="button" id="btnCancelNovoGuardiao">Cancelar</button>
+        <button class="g-btn g-btn-primary" type="submit" id="btnSubmitNovoGuardiao">Cadastrar Guardião</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script>
 // Configuração Oficial do Firebase
 const firebaseConfig = {
@@ -5582,7 +5744,7 @@ function renderGuardioesView() {
         <div class="squad-guardians-list">
           ${squadGuardioes.map(g => {
             const ejCount = squadEjs.filter(d => getEjGuardiao(d)?.id === g.id).length;
-            return `<span class="guardian-chip-pill${g.isLider ? ' is-lider' : ''}" title="${esc(g.nome)}: ${ejCount} EJs acompanhadas">
+            return `<span class="guardian-chip-pill${g.isLider ? ' is-lider' : ''}" data-gid="${g.id}" style="cursor:pointer" title="${esc(g.nome)}: ${ejCount} EJs acompanhadas (clique para perfil)">
               ${g.isLider ? '👑 ' : '👤 '}${esc(g.nome)} <small style="opacity:0.75">(${ejCount})</small>
             </span>`;
           }).join('')}
@@ -5740,7 +5902,7 @@ function renderGuardioesView() {
             ${sq ? `<span class="squad-pill-tag squad-pill-${sq.id}">${esc(sq.nome)}</span>` : `<span class="squad-pill-tag squad-pill-none">Sem Squad</span>`}
           </td>
           <td>
-            ${guardiao ? `<span class="chip-guardiao">👤 ${esc(guardiao.nome)}</span>` : `<span class="chip-unassigned">Sem guardião</span>`}
+            ${guardiao ? `<span class="chip-guardiao" data-gid="${guardiao.id}" style="cursor:pointer" title="Clique para gerenciar o perfil do Guardião">👤 ${esc(guardiao.nome)}</span>` : `<span class="chip-unassigned">Sem guardião</span>`}
           </td>
           <td style="text-align:right">
             <div style="font-weight:700">${R(d.fat)}</div>
@@ -5796,29 +5958,13 @@ function renderGuardioesView() {
 
   const btnNewG = $('btnGNewGuardian');
   if (btnNewG) {
-    btnNewG.onclick = () => {
-      const nome = prompt("Nome do novo Guardião:");
-      if (!nome || !nome.trim()) return;
-      const squadId = prompt("Selecione o Squad do Guardião:\n1 - Squad Yann\n2 - Squad Guilherme\n3 - Squad Castanha", "1");
-      if (!squadId || !['1', '2', '3'].includes(squadId.trim())) {
-        alert("Squad inválido. Guardião não adicionado.");
-        return;
-      }
-      const gid = 'g_' + nome.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
-      guardioesSet(`guardioes/${gid}`, {
-        id: gid,
-        nome: nome.trim(),
-        squad: squadId.trim(),
-        isLider: false
-      });
-      alert(`Guardião ${nome.trim()} adicionado com sucesso ao Squad!`);
-    };
+    btnNewG.onclick = openNovoGuardiaoModal;
   }
 
   const btnMeetings = $('btnGMeetings');
   if (btnMeetings) {
     btnMeetings.onclick = () => {
-      alert("Módulo de Atas Quinzenais: configure as pautas e encaminhamentos quinzenais na próxima etapa de governança.");
+      openReunioesModal(G_FILTERS.squad && G_FILTERS.squad !== 'none' ? G_FILTERS.squad : '1');
     };
   }
 
@@ -5901,6 +6047,15 @@ function renderGuardioesView() {
       renderGuardioesView();
     };
   }
+
+  // Clique em chips de guardião abre o Perfil / Transferência do Guardião
+  container.querySelectorAll('.chip-guardiao, .guardian-chip-pill').forEach(el => {
+    el.onclick = e => {
+      e.stopPropagation();
+      const gid = el.dataset.gid;
+      if (gid) openGuardianProfileModal(gid);
+    };
+  });
 
   // Clique em EJs ou botão Acompanhar abre o Drawer
   container.querySelectorAll('.ej-table-name, .btn-open-ej').forEach(el => {
@@ -5999,7 +6154,7 @@ function renderGuardioesViewFast() {
           ${sq ? `<span class="squad-pill-tag squad-pill-${sq.id}">${esc(sq.nome)}</span>` : `<span class="squad-pill-tag squad-pill-none">Sem Squad</span>`}
         </td>
         <td>
-          ${guardiao ? `<span class="chip-guardiao">👤 ${esc(guardiao.nome)}</span>` : `<span class="chip-unassigned">Sem guardião</span>`}
+          ${guardiao ? `<span class="chip-guardiao" data-gid="${guardiao.id}" style="cursor:pointer" title="Clique para gerenciar o perfil do Guardião">👤 ${esc(guardiao.nome)}</span>` : `<span class="chip-unassigned">Sem guardião</span>`}
         </td>
         <td style="text-align:right">
           <div style="font-weight:700">${R(d.fat)}</div>
@@ -6042,6 +6197,371 @@ function renderGuardioesViewFast() {
       }
     };
   });
+
+  tbody.querySelectorAll('.chip-guardiao').forEach(el => {
+    el.onclick = e => {
+      e.stopPropagation();
+      const gid = el.dataset.gid;
+      if (gid) openGuardianProfileModal(gid);
+    };
+  });
+}
+
+// ==========================================================================
+// MÓDULO GUARDIÕES: ATAS QUINZENAIS E GESTÃO DE GUARDIÕES (ETAPA 4)
+// ==========================================================================
+
+let ACTIVE_REUNIAO_SQUAD = '1';
+let ACTIVE_PROFILE_GUARDIAN_ID = null;
+
+function openReunioesModal(squadId = '1') {
+  ACTIVE_REUNIAO_SQUAD = String(squadId);
+  const modal = $('modalReunioes');
+  if (!modal) return;
+  modal.style.display = 'flex';
+
+  // Configurar tabs de squad
+  const tabs = $('reunioesSquadTabs');
+  if (tabs) {
+    tabs.querySelectorAll('button').forEach(btn => {
+      const isAct = btn.dataset.sq === ACTIVE_REUNIAO_SQUAD;
+      btn.className = 'g-btn' + (isAct ? ' g-btn-primary' : '');
+      btn.onclick = () => {
+        ACTIVE_REUNIAO_SQUAD = btn.dataset.sq;
+        openReunioesModal(ACTIVE_REUNIAO_SQUAD);
+      };
+    });
+  }
+
+  // Preencher data padrão de hoje se vazio
+  const dateInput = $('mReuniaoData');
+  if (dateInput && !dateInput.value) {
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.value = today;
+  }
+
+  const pautaInput = $('mReuniaoPauta');
+  if (pautaInput) pautaInput.value = '';
+  const encInput = $('mReuniaoEncaminhamentos');
+  if (encInput) encInput.value = '';
+
+  renderReunioesList(ACTIVE_REUNIAO_SQUAD);
+
+  // Vincular salvar
+  const btnSalvar = $('btnSalvarReuniao');
+  if (btnSalvar) {
+    btnSalvar.onclick = async () => {
+      const dataVal = dateInput.value;
+      const pautaVal = pautaInput.value.trim();
+      const encVal = encInput.value.trim();
+
+      if (!dataVal) {
+        alert("Por favor, informe a data da reunião.");
+        return;
+      }
+      if (!pautaVal) {
+        alert("Por favor, descreva a pauta principal da reunião.");
+        return;
+      }
+
+      const mId = 'r_' + Date.now();
+      const autor = G_CURRENT_USER ? (G_CURRENT_USER.displayName || G_CURRENT_USER.email) : 'Líder do Squad';
+      const novaAta = {
+        id: mId,
+        squadId: ACTIVE_REUNIAO_SQUAD,
+        data: dataVal,
+        pauta: pautaVal,
+        encaminhamentos: encVal,
+        autor: autor,
+        criadoEm: Date.now()
+      };
+
+      await guardioesSet(`reunioes/${ACTIVE_REUNIAO_SQUAD}/${mId}`, novaAta);
+      pautaInput.value = '';
+      encInput.value = '';
+      renderReunioesList(ACTIVE_REUNIAO_SQUAD);
+    };
+  }
+
+  // Vincular fechar
+  const btnClose = $('btnCloseReunioesModal');
+  if (btnClose) btnClose.onclick = () => { modal.style.display = 'none'; };
+  modal.onclick = e => { if (e.target === modal) modal.style.display = 'none'; };
+}
+
+function renderReunioesList(squadId) {
+  const container = $('reunioesList');
+  const countBadge = $('reunioesCountBadge');
+  const title = $('reunioesListTitle');
+  if (!container) return;
+
+  const sq = (G_DATA.squads && G_DATA.squads[squadId]) || { nome: 'Squad ' + squadId };
+  if (title) title.textContent = `Histórico de Atas · ${sq.nome}`;
+
+  const reunioesMap = (G_DATA.reunioes && G_DATA.reunioes[squadId]) || {};
+  const list = Object.values(reunioesMap).sort((a, b) => {
+    const da = a.data ? new Date(a.data).getTime() : (a.criadoEm || 0);
+    const db = b.data ? new Date(b.data).getTime() : (b.criadoEm || 0);
+    return db - da;
+  });
+
+  if (countBadge) {
+    countBadge.textContent = `${list.length} ata${list.length !== 1 ? 's' : ''} registrada${list.length !== 1 ? 's' : ''}`;
+  }
+
+  if (list.length === 0) {
+    container.innerHTML = `
+      <div style="padding:24px;text-align:center;color:var(--mut);background:var(--in);border-radius:10px;font-size:12.5px">
+        Nenhuma ata quinzenal registrada ainda para o <b>${esc(sq.nome)}</b>.<br>
+        Utilize o formulário acima para registrar a primeira reunião quinzenal.
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = list.map(item => {
+    const dataFmt = item.data ? item.data.split('-').reverse().join('/') : 'Data não informada';
+    return `
+      <div style="background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:14px;box-shadow:var(--sh-sm);display:flex;flex-direction:column;gap:6px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="chip-status-days alert-ok" style="font-size:11.5px">📅 ${dataFmt}</span>
+            <b style="font-size:13.5px;color:var(--tx)">${esc(item.pauta)}</b>
+          </div>
+          <button class="btn-close btn-del-reuniao" data-mid="${item.id}" style="padding:2px 7px;font-size:11px;color:var(--rf)" title="Excluir ata">Excluir</button>
+        </div>
+        ${item.encaminhamentos ? `
+          <div style="font-size:12.5px;color:var(--tx);background:var(--in);padding:8px 10px;border-radius:6px;line-height:1.45;white-space:pre-wrap;margin-top:4px">
+            <b style="font-size:11px;color:var(--mut);text-transform:uppercase;display:block;margin-bottom:2px">Encaminhamentos &amp; Decisões:</b>
+            ${esc(item.encaminhamentos)}
+          </div>
+        ` : ''}
+        <div style="font-size:11px;color:var(--mut);margin-top:2px">
+          Registrado por: <b>${esc(item.autor || 'Líder')}</b>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  container.querySelectorAll('.btn-del-reuniao').forEach(btn => {
+    btn.onclick = async () => {
+      const mid = btn.dataset.mid;
+      if (confirm("Deseja realmente excluir esta ata de reunião?")) {
+        await guardioesRemove(`reunioes/${squadId}/${mid}`);
+        renderReunioesList(squadId);
+      }
+    };
+  });
+}
+
+function openGuardianProfileModal(guardianId) {
+  ACTIVE_PROFILE_GUARDIAN_ID = guardianId;
+  const g = G_DATA.guardioes && G_DATA.guardioes[guardianId];
+  if (!g) return;
+
+  const modal = $('modalGuardiao');
+  if (!modal) return;
+  modal.style.display = 'flex';
+
+  const sq = G_DATA.squads && G_DATA.squads[g.squad];
+  $('mGuardiaoTitle').textContent = `Perfil do Guardião · ${g.nome}`;
+  $('mGuardiaoSubtitle').textContent = `${sq ? sq.nome : 'Sem squad'}${g.isLider ? ' · 👑 Líder do Squad' : ''}`;
+
+  // EJs vinculadas
+  const ejs = D.filter(d => getEjGuardiao(d)?.id === guardianId);
+  const redCount = ejs.filter(d => d.fa[1] === 'r').length;
+  let openPend = 0;
+  ejs.forEach(d => { openPend += getEjOpenPendenciasCount(d); });
+
+  // KPIs
+  $('mGuardiaoKpis').innerHTML = `
+    <div class="g-kpi-card" style="padding:10px 14px">
+      <span class="g-kpi-label">EJs Sob Responsabilidade</span>
+      <b class="g-kpi-val" style="font-size:20px">${ejs.length}</b>
+    </div>
+    <div class="g-kpi-card" style="padding:10px 14px">
+      <span class="g-kpi-label">EJs em Risco (Vermelho)</span>
+      <b class="g-kpi-val" style="font-size:20px;color:${redCount > 0 ? 'var(--r)' : 'var(--g)'}">${redCount}</b>
+    </div>
+    <div class="g-kpi-card" style="padding:10px 14px">
+      <span class="g-kpi-label">Pendências Abertas</span>
+      <b class="g-kpi-val" style="font-size:20px;color:${openPend > 0 ? 'var(--y)' : 'var(--g)'}">${openPend}</b>
+    </div>
+  `;
+
+  // Lista de EJs com checkboxes
+  const ejsContainer = $('mGuardiaoEjsList');
+  if (ejs.length === 0) {
+    ejsContainer.innerHTML = `<span style="font-size:12px;color:var(--mut);padding:8px">Nenhuma EJ atribuída a este guardião no momento.</span>`;
+  } else {
+    ejsContainer.innerHTML = ejs.map(d => {
+      const c = getEjCode(d);
+      return `
+        <label style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 8px;border-radius:6px;background:var(--card);cursor:pointer;font-size:12px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <input type="checkbox" class="m-transfer-chk" value="${esc(c)}" />
+            <b style="color:var(--tx)">${esc(d.nome)}</b>
+            ${c ? `<span class="ej-code-badge">#${esc(c)}</span>` : ''}
+          </div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="font-weight:600">${R(d.fat)}</span>
+            ${renderStatus(d.fa)}
+          </div>
+        </label>
+      `;
+    }).join('');
+  }
+
+  // Checkbox Selecionar todas
+  const selectAll = $('mTransferSelectAll');
+  if (selectAll) {
+    selectAll.checked = false;
+    selectAll.onchange = () => {
+      ejsContainer.querySelectorAll('.m-transfer-chk').forEach(chk => {
+        chk.checked = selectAll.checked;
+      });
+    };
+  }
+
+  // Select de Destino da Transferência
+  const targetSelect = $('mTransferTargetSelect');
+  if (targetSelect) {
+    let optsHtml = `<option value="">Escolher destino...</option><option value="none">⚠️ Sem guardião (Desvincular)</option>`;
+    const otherGuardians = Object.values(G_DATA.guardioes || {}).filter(item => item.id !== guardianId);
+    otherGuardians.sort((a, b) => a.nome.localeCompare(b.nome));
+    otherGuardians.forEach(item => {
+      const itemSq = G_DATA.squads && G_DATA.squads[item.squad];
+      optsHtml += `<option value="${item.id}">👤 ${esc(item.nome)} (${itemSq ? itemSq.nome : 'Sem squad'})</option>`;
+    });
+    targetSelect.innerHTML = optsHtml;
+  }
+
+  // Botão Confirmar Transferência em Lote
+  const btnTransfer = $('btnConfirmTransfer');
+  if (btnTransfer) {
+    btnTransfer.onclick = async () => {
+      const checkedChks = ejsContainer.querySelectorAll('.m-transfer-chk:checked');
+      if (!checkedChks.length) {
+        alert("Selecione ao menos uma EJ para realizar a transferência.");
+        return;
+      }
+      const targetVal = targetSelect.value;
+      if (!targetVal) {
+        alert("Selecione para qual Guardião deseja transferir as EJs.");
+        return;
+      }
+      const newGid = targetVal === 'none' ? null : targetVal;
+      const targetName = targetVal === 'none' ? 'Sem guardião' : (G_DATA.guardioes[targetVal]?.nome || 'novo guardião');
+
+      if (!confirm(`Confirma a transferência de ${checkedChks.length} EJ(s) para "${targetName}"?`)) {
+        return;
+      }
+
+      for (const chk of checkedChks) {
+        const code = chk.value;
+        await guardioesSet(`vinculos/${code}/guardiaoId`, newGid);
+      }
+
+      alert("Transferência realizada com sucesso!");
+      openGuardianProfileModal(guardianId);
+      renderGuardioesView();
+    };
+  }
+
+  // Preencher formulário de edição
+  const editNome = $('mEditGuardiaoNome');
+  if (editNome) editNome.value = g.nome;
+  const editSquad = $('mEditGuardiaoSquad');
+  if (editSquad) editSquad.value = g.squad || '1';
+
+  // Botão Salvar Edição
+  const btnSaveEdit = $('btnSaveEditGuardiao');
+  if (btnSaveEdit) {
+    btnSaveEdit.onclick = async () => {
+      const novoNome = editNome.value.trim();
+      if (!novoNome) {
+        alert("O nome do guardião não pode ficar vazio.");
+        return;
+      }
+      g.nome = novoNome;
+      g.squad = editSquad.value;
+      await guardioesSet(`guardioes/${guardianId}`, g);
+      alert("Cadastro do guardião atualizado com sucesso!");
+      openGuardianProfileModal(guardianId);
+      renderGuardioesView();
+    };
+  }
+
+  // Botão Excluir Guardião
+  const btnDelete = $('btnDeleteGuardiao');
+  if (btnDelete) {
+    btnDelete.onclick = async () => {
+      if (!confirm(`Deseja realmente excluir o guardião "${g.nome}"?\nAs ${ejs.length} EJ(s) sob sua responsabilidade passarão para "Sem guardião" sem perda de dados.`)) {
+        return;
+      }
+      for (const ej of ejs) {
+        const code = getEjCode(ej);
+        await guardioesSet(`vinculos/${code}/guardiaoId`, null);
+      }
+      await guardioesRemove(`guardioes/${guardianId}`);
+      modal.style.display = 'none';
+      alert(`Guardião "${g.nome}" excluído. Suas EJs agora constam como "Sem guardião".`);
+      renderGuardioesView();
+    };
+  }
+
+  // Fechar modal
+  const btnClose = $('btnCloseGuardiaoModal');
+  if (btnClose) btnClose.onclick = () => { modal.style.display = 'none'; };
+  modal.onclick = e => { if (e.target === modal) modal.style.display = 'none'; };
+}
+
+function openNovoGuardiaoModal() {
+  const modal = $('modalNovoGuardiao');
+  if (!modal) return;
+  modal.style.display = 'flex';
+
+  const nomeInput = $('mNovoGuardiaoNome');
+  if (nomeInput) nomeInput.value = '';
+  const squadSelect = $('mNovoGuardiaoSquad');
+  if (squadSelect) squadSelect.value = '1';
+  const liderChk = $('mNovoGuardiaoLider');
+  if (liderChk) liderChk.checked = false;
+
+  const btnClose = $('btnCloseNovoGuardiaoModal');
+  if (btnClose) btnClose.onclick = () => { modal.style.display = 'none'; };
+  const btnCancel = $('btnCancelNovoGuardiao');
+  if (btnCancel) btnCancel.onclick = () => { modal.style.display = 'none'; };
+  modal.onclick = e => { if (e.target === modal) modal.style.display = 'none'; };
+
+  const form = $('formNovoGuardiao');
+  if (form) {
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      const nomeVal = nomeInput.value.trim();
+      if (!nomeVal) {
+        alert("Por favor, digite o nome do guardião.");
+        return;
+      }
+      const squadVal = squadSelect.value;
+      const isLider = liderChk ? liderChk.checked : false;
+
+      const slug = nomeVal.toLowerCase().replace(/[^a-z0-9]/g, '');
+      const gid = 'g_' + slug + '_' + Date.now().toString(36);
+
+      const novoG = {
+        id: gid,
+        nome: nomeVal,
+        squad: squadVal,
+        isLider: isLider
+      };
+
+      await guardioesSet(`guardioes/${gid}`, novoG);
+      modal.style.display = 'none';
+      alert(`Guardião "${nomeVal}" cadastrado com sucesso!`);
+      renderGuardioesView();
+    };
+  }
 }
 
 // Inicialização Principal
