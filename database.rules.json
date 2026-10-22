@@ -1,0 +1,12 @@
+{
+  "rules": {
+    "monitor": {
+      ".read": true,
+      ".write": "auth != null"
+    },
+    "guardioes_mod": {
+      ".read": true,
+      ".write": "auth != null"
+    }
+  }
+}
