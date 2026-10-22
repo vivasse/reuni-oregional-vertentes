@@ -1041,6 +1041,348 @@ tr.exp-row td{
   color:var(--tx);
 }
 
+/* ==========================================================================
+   DESIGN DOS GRÁFICOS NAS ABAS DE INDICADORES (#ind)
+   ========================================================================== */
+
+.rowb {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+/* Donut aprimorado */
+.dn-hero {
+  width: 170px;
+  height: 170px;
+  margin: 4px auto;
+}
+.dn-hero .dn-num {
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -.03em;
+  color: var(--tx);
+  line-height: 1;
+}
+.dn-hero .dn-lbl {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  margin-top: 4px;
+  color: var(--mut);
+  text-transform: uppercase;
+  max-width: 120px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dn-slice.dimmed {
+  opacity: 0.28;
+}
+.dn-slice.active {
+  opacity: 1 !important;
+  stroke-width: 6.8 !important;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.18));
+}
+.dn-slice.hover-highlight {
+  stroke-width: 7px !important;
+  opacity: 1 !important;
+  filter: drop-shadow(0 2px 8px rgba(99,102,241,0.3));
+}
+
+/* Header Card da Aba */
+.ind-header-card {
+  margin-bottom: 16px;
+}
+.ind-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+.ind-tag-pill {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--ac);
+  background: var(--ac-light);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  padding: 4px 10px;
+  border-radius: 99px;
+}
+
+/* Estilos de tom nos KPIs da aba */
+.kp-card.tone-g {
+  border-color: rgba(16, 185, 129, 0.25);
+}
+.kp-card.tone-g:hover {
+  box-shadow: 0 8px 24px -4px rgba(16, 185, 129, 0.15), 0 0 0 1px var(--g);
+}
+.kp-card.tone-r {
+  border-color: rgba(239, 68, 68, 0.25);
+}
+.kp-card.tone-r:hover {
+  box-shadow: 0 8px 24px -4px rgba(239, 68, 68, 0.15), 0 0 0 1px var(--r);
+}
+.kp-card.tone-y {
+  border-color: rgba(245, 158, 11, 0.25);
+}
+.kp-card.tone-y:hover {
+  box-shadow: 0 8px 24px -4px rgba(245, 158, 11, 0.15), 0 0 0 1px var(--y);
+}
+
+/* Card Principal do Gráfico */
+.ind-chart-card {
+  margin-bottom: 16px;
+  padding: 22px 24px;
+  background: var(--card);
+  border: 1px solid var(--bd);
+  border-radius: 18px;
+  box-shadow: var(--sh-card);
+}
+.ind-chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding-bottom: 16px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--bd);
+}
+.ind-chart-title-grp {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ind-chart-eyebrow {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--mut);
+}
+.ind-chart-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--tx);
+  letter-spacing: -.02em;
+}
+.ind-chart-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.ind-chart-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--mut);
+  font-weight: 500;
+}
+.ind-chart-hint .ic {
+  width: 15px;
+  height: 15px;
+  color: var(--ac);
+}
+.ind-filter-badge-active {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--tx);
+  background: var(--in);
+  border: 1px solid var(--ac);
+  padding: 4px 6px 4px 12px;
+  border-radius: 99px;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.12);
+}
+.ind-filter-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+}
+.btn-clear-ind-filter {
+  background: var(--card);
+  color: var(--tx);
+  border: 1px solid var(--bd);
+  border-radius: 99px;
+  padding: 3px 8px;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all .15s ease;
+}
+.btn-clear-ind-filter:hover {
+  background: var(--r);
+  color: #fff;
+  border-color: var(--r);
+}
+.btn-clear-ind-filter .ic {
+  width: 12px;
+  height: 12px;
+}
+
+/* Layout Donut + Tiles */
+.ind-chart-body {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 28px;
+  align-items: center;
+}
+@media (max-width: 900px) {
+  .ind-chart-body {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+/* Caixa do Donut Hero */
+.ind-donut-side {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.ind-hero-donut-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(99, 102, 241, 0.03) 0%, transparent 100%);
+  border: 1px solid rgba(99, 102, 241, 0.08);
+  width: 100%;
+  max-width: 240px;
+}
+.ind-donut-caption {
+  font-size: 11.5px;
+  color: var(--mut);
+  text-align: center;
+  margin-top: 10px;
+  line-height: 1.3;
+}
+.ind-donut-caption b {
+  color: var(--tx);
+}
+
+/* Lado dos Status Tiles */
+.ind-tiles-side {
+  flex: 1;
+  min-width: 0;
+}
+.ind-tiles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+.ind-stat-tile {
+  background: var(--in);
+  border: 1px solid var(--bd);
+  border-radius: 14px;
+  padding: 13px 15px;
+  cursor: pointer;
+  transition: all .2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+  user-select: none;
+  position: relative;
+  overflow: hidden;
+}
+.ind-stat-tile:hover,
+.ind-stat-tile.hover-highlight {
+  background: var(--card);
+  border-color: var(--ac);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px -3px rgba(15, 23, 42, 0.08), 0 0 0 1px var(--ac);
+}
+.ind-stat-tile.active {
+  background: var(--card);
+  border-color: var(--ac);
+  box-shadow: 0 0 0 2px var(--ac), 0 8px 20px -4px rgba(99, 102, 241, 0.2);
+  transform: translateY(-2px);
+}
+.ind-stat-tile.muted {
+  opacity: 0.42;
+}
+.ind-stat-tile.muted:hover {
+  opacity: 0.85;
+}
+.ind-tile-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.ind-tile-chip-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.ind-tile-pct {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--mut);
+  background: var(--card);
+  padding: 2px 7px;
+  border-radius: 99px;
+  border: 1px solid var(--bd);
+  font-variant-numeric: tabular-nums;
+}
+.ind-stat-tile.active .ind-tile-pct {
+  color: var(--ac);
+  border-color: rgba(99, 102, 241, 0.3);
+  background: var(--ac-light);
+}
+.ind-tile-main {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.ind-tile-num {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -.03em;
+  color: var(--tx);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.ind-tile-unit {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--mut);
+}
+.ind-tile-bar-track {
+  width: 100%;
+  height: 6px;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 99px;
+  overflow: hidden;
+}
+:root[data-theme="dark"] .ind-tile-bar-track,
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .ind-tile-bar-track {
+    background: rgba(255, 255, 255, 0.08);
+  }
+}
+.ind-tile-bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width .4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 /* Ranking de Maiores Gaps */
 .gl{
   display:grid;
@@ -3104,11 +3446,15 @@ $('sum').onkeydown = e => {
   }
 };
 
+const pluralEjs = n => n === 1 ? '1 EJ' : n + ' EJs';
 const COL = { m: '#047857', g: '#10b981', y: '#f59e0b', r: '#ef4444', n: '#9aa3b2' }, COLN = { 'Mantém': '#9aa3b2' };
 
-function donut(T, c, k) {
+function donut(T, c, k, isHero = false) {
   const tot = c.reduce((a, b) => a + b, 0) || 1;
   let acc = 0;
+  const activeStatus = (FL[k] && FL[k].size === 1) ? [...FL[k]][0] : null;
+  const hasFilter = !!activeStatus;
+
   const slices = T.map((t, i) => {
     const val = c[i];
     if (val <= 0) return '';
@@ -3117,11 +3463,29 @@ function donut(T, c, k) {
     const offset = 25 - acc;
     acc += pct;
     const color = COLN[t[0]] || COL[t[1]] || '#9aa3b2';
-    const isActive = FL[k] && FL[k].has(t[0]);
-    const tip = `${t[0]}: ${val} EJs (${Math.round(pct)}%)`;
-    return `<circle class="dn-slice${isActive ? ' active' : ''}" cx="21" cy="21" r="15.9155" fill="transparent" stroke="${color}" stroke-width="4.8" stroke-dasharray="${strokeDash}" stroke-dashoffset="${offset}" data-k="${k}" data-s="${esc(t[0])}" role="button" tabindex="0"><title>${esc(tip)}</title></circle>`;
+    const isAct = activeStatus === t[0] || (FL[k] && FL[k].has(t[0]));
+    const isDimmed = hasFilter && !isAct;
+    const strokeWidth = isHero ? (isAct ? 6.8 : 5.2) : (isAct ? 6.2 : 4.8);
+    const tip = `${t[0]}: ${val} ${val === 1 ? 'EJ' : 'EJs'} (${Math.round(pct)}%)`;
+    return `<circle class="dn-slice${isAct ? ' active' : ''}${isDimmed ? ' dimmed' : ''}" cx="21" cy="21" r="15.9155" fill="transparent" stroke="${color}" stroke-width="${strokeWidth}" stroke-dasharray="${strokeDash}" stroke-dashoffset="${offset}" data-k="${k}" data-s="${esc(t[0])}" role="button" tabindex="0"><title>${esc(tip)}</title></circle>`;
   }).join('');
-  return `<div class="dn"><svg class="dn-svg" viewBox="0 0 42 42">${slices}</svg><div class="dn-center"><span class="dn-num">${D.length}</span><small class="dn-lbl">EJs</small></div></div>`;
+
+  let centerNum = D.length;
+  let centerLbl = 'EJs';
+  if (isHero) {
+    if (activeStatus) {
+      const idx = T.findIndex(t => t[0] === activeStatus);
+      centerNum = idx >= 0 ? c[idx] : D.length;
+      centerLbl = esc(activeStatus);
+    } else {
+      centerNum = D.length;
+      centerLbl = 'TOTAL EJs';
+    }
+  }
+
+  const bgTrack = `<circle class="dn-track" cx="21" cy="21" r="15.9155" fill="transparent" stroke="var(--bd)" stroke-width="${isHero ? 5.2 : 4.8}" opacity="0.3"></circle>`;
+
+  return `<div class="dn${isHero ? ' dn-hero' : ''}"><svg class="dn-svg" viewBox="0 0 42 42">${bgTrack}${slices}</svg><div class="dn-center"><span class="dn-num">${centerNum}</span><small class="dn-lbl">${centerLbl}</small></div></div>`;
 }
 
 function board(lab, k, T) {
@@ -3166,12 +3530,13 @@ const IND = {
     cells: d => d.meta > 0 ? [R(d.fat), R(d.meta), pb(d.pct, d.pct >= 1), gp(d.meta - d.fat, RC, 'acima da meta', 'faltam'), RC(d.esp), df(d.fat - d.esp, RC)] : [R(d.fat), '–', '–', '–', '–', '–'],
     kpis: () => {
       const tf = sm(d => d.fat), tm = sm(d => d.meta), te = sm(d => d.esp);
+      const below = D.filter(d => d.meta > d.fat).length;
       return [
         ['Realizado', RC(tf), R(tf)],
         ['Meta anual', RC(tm), 'soma das EJs'],
         ['% da meta', pc(tf, tm), 'esperado até o mês: ' + pc(te, tm)],
-        ['Gap p/ meta anual', RC(sm(d => Math.max(0, d.meta - d.fat))), D.filter(d => d.meta > d.fat).length + ' EJs abaixo da meta'],
-        ['Meta batida', cn('fa', 'Meta batida') + ' EJs', '100% da meta']
+        ['Gap p/ meta anual', RC(sm(d => Math.max(0, d.meta - d.fat))), below === 1 ? '1 EJ abaixo da meta' : below + ' EJs abaixo da meta'],
+        ['Meta batida', pluralEjs(cn('fa', 'Meta batida')), '100% da meta atingida']
       ];
     }
   },
@@ -3183,9 +3548,9 @@ const IND = {
     kpis: () => [
       ['Membros no núcleo', sm(d => d.mem), 'soma das EJs'],
       ['Engajados', sm(d => d.eng), 'soma das EJs'],
-      ['Meta batida', cn('ecm', 'Batida') + ' EJs', ''],
-      ['Meta não batida', cn('ecm', 'Não batida') + ' EJs', ''],
-      ['Sem membros', cn('ecm', 'Sem membros') + ' EJs', '']
+      ['Meta batida', pluralEjs(cn('ecm', 'Batida')), 'engajamento atingido'],
+      ['Não batida', pluralEjs(cn('ecm', 'Não batida')), 'abaixo do alvo'],
+      ['Sem membros', pluralEjs(cn('ecm', 'Sem membros')), 'sem membros cadastrados']
     ]
   },
   cs: {
@@ -3196,12 +3561,12 @@ const IND = {
     kpis: () => {
       const w = D.filter(d => d.ctr > 0), c = w.filter(d => d.coleta > 0);
       return [
-        ['Nota média', w.length ? N1(w.reduce((a, d) => a + d.nota, 0) / w.length) : '–', 'EJs com CSAT: ' + w.length],
-        ['Contratos finalizados', sm(d => d.ctr), ''],
-        ['Coleta média', c.length ? N1(c.reduce((a, d) => a + d.coleta, 0) / c.length) + '%' : '–', ''],
-        ['Meta batida', cn('cs', 'Batido') + ' EJs', ''],
-        ['Abaixo da meta', cn('cs', 'Baixo') + ' EJs', ''],
-        ['Sem CSAT', cn('cs', 'Sem CSAT') + ' EJs', '']
+        ['Nota média', w.length ? N1(w.reduce((a, d) => a + d.nota, 0) / w.length) : '–', w.length === 1 ? '1 EJ avaliada' : w.length + ' EJs avaliadas'],
+        ['Contratos respondidos', sm(d => d.ctr), 'total avaliado'],
+        ['Coleta média', c.length ? N1(c.reduce((a, d) => a + d.coleta, 0) / c.length) + '%' : '–', 'taxa de resposta'],
+        ['Meta batida', pluralEjs(cn('cs', 'Batido')), 'nota ≥ meta'],
+        ['Abaixo da meta', pluralEjs(cn('cs', 'Baixo')), 'nota < meta'],
+        ['Sem CSAT', pluralEjs(cn('cs', 'Sem CSAT')), 'sem avaliação']
       ];
     }
   },
@@ -3212,12 +3577,13 @@ const IND = {
     cells: d => d.cm > 0 ? [RC(d.colab), RC(d.cm), pb(d.colab / d.cm, d.colab >= d.cm), gp(d.cm - d.colab, RC, 'acima da meta', 'faltam'), RC(d.cesp), df(d.colab - d.cesp, RC)] : [RC(d.colab), '–', '–', '–', '–', '–'],
     kpis: () => {
       const tc = sm(d => d.colab), tm = sm(d => d.cm);
+      const below = D.filter(d => d.cm > d.colab).length;
       return [
         ['Realizado', RC(tc), R(tc)],
         ['Meta anual', RC(tm), 'soma das EJs'],
-        ['% da meta', pc(tc, tm), ''],
-        ['Gap p/ meta anual', RC(sm(d => Math.max(0, d.cm - d.colab))), ''],
-        ['Meta batida', cn('co', 'Meta batida') + ' EJs', '100% da meta']
+        ['% da meta', pc(tc, tm), 'faturado / meta colab.'],
+        ['Gap p/ meta anual', RC(sm(d => Math.max(0, d.cm - d.colab))), below === 1 ? '1 EJ abaixo da meta' : below + ' EJs abaixo da meta'],
+        ['Meta batida', pluralEjs(cn('co', 'Meta batida')), '100% da meta']
       ];
     }
   },
@@ -3227,10 +3593,10 @@ const IND = {
     cols: ['Cluster atual', 'Faturamento', 'Índice', 'Mínimo p/ manter', 'Mínimo p/ subir', 'Gap p/ subir'],
     cells: d => d.cl >= 1 && d.cl <= 5 ? ['C' + d.cl, R(d.fat), formatClusterIdx(d.idx), formatClusterIdx(LOW[d.cl - 1]), d.cl < 5 ? formatClusterIdx(LOW[d.cl]) : 'topo', d.cl < 5 ? (d.idx < LOW[d.cl] ? `<b class="rt">${formatClusterIdx(LOW[d.cl] - d.idx)}</b>` : '<b class="gt">atingido</b>') : '–'] : ['–', R(d.fat), '–', '–', '–', '–'],
     kpis: () => [
-      ['Sobem', cn('cu', 'Sobe') + ' EJs', 'projeção'],
-      ['Mantêm', cn('cu', 'Mantém') + ' EJs', 'projeção'],
-      ['Caem', cn('cu', 'Cai') + ' EJs', 'projeção'],
-      ['Sem cluster', cn('cu', 'Sem cluster') + ' EJs', '']
+      ['Sobem', pluralEjs(cn('cu', 'Sobe')), 'projeção de subida'],
+      ['Mantêm', pluralEjs(cn('cu', 'Mantém')), 'projeção de permanência'],
+      ['Caem', pluralEjs(cn('cu', 'Cai')), 'risco de queda'],
+      ['Sem cluster', pluralEjs(cn('cu', 'Sem cluster')), 'sem classificação']
     ]
   }
 };
@@ -3300,42 +3666,300 @@ function go(v, keep) {
   mark();
 }
 
+function renderIndKpis(c) {
+  const kpis = c.kpis();
+  return kpis.map(x => {
+    const titleLow = x[0].toLowerCase();
+    let toneCls = '';
+    let valCls = '';
+    if (titleLow.includes('sobe') || titleLow.includes('batid') || titleLow.includes('atingid') || titleLow.includes('em dia')) {
+      toneCls = 'tone-g';
+      valCls = 'gt';
+    } else if (titleLow.includes('cai') || titleLow.includes('não') || titleLow.includes('baixo') || titleLow.includes('gap') || titleLow.includes('risco')) {
+      toneCls = 'tone-r';
+      valCls = 'rt';
+    } else if (titleLow.includes('amarel') || titleLow.includes('perto')) {
+      toneCls = 'tone-y';
+    }
+    return `
+      <div class="kp-card ${toneCls}">
+        <div class="kp-top-row">
+          <small>${esc(x[0])}</small>
+        </div>
+        <b class="${valCls}">${esc(x[1])}</b>
+        <span class="kp-sub">${esc(x[2])}</span>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderIndBreakdown(T, n, k) {
+  const tot = n.reduce((a, b) => a + b, 0) || 1;
+  const activeStatus = (FL[k] && FL[k].size === 1) ? [...FL[k]][0] : null;
+  const hasFilter = !!activeStatus;
+
+  return `<div class="ind-tiles-grid">` +
+    T.map((t, i) => {
+      const val = n[i];
+      const pct = Math.round((val / tot) * 100);
+      const isAct = activeStatus === t[0];
+      const isMuted = hasFilter && !isAct;
+      const color = COLN[t[0]] || COL[t[1]] || '#9aa3b2';
+
+      return `
+        <div class="ind-stat-tile${isAct ? ' active' : ''}${isMuted ? ' muted' : ''}" 
+             data-k="${k}" data-s="${esc(t[0])}" 
+             role="button" tabindex="0" 
+             title="Filtrar por ${esc(t[0])} (${val} ${val === 1 ? 'EJ' : 'EJs'})">
+          <div class="ind-tile-top">
+            <div class="ind-tile-chip-wrap">
+              <span class="chip ${t[1]}">${esc(t[0])}</span>
+            </div>
+            <span class="ind-tile-pct">${pct}%</span>
+          </div>
+          <div class="ind-tile-main">
+            <span class="ind-tile-num">${val}</span>
+            <span class="ind-tile-unit">${val === 1 ? 'EJ' : 'EJs'}</span>
+          </div>
+          <div class="ind-tile-bar-track">
+            <div class="ind-tile-bar-fill" style="width:${pct}%;background:${color}"></div>
+          </div>
+        </div>
+      `;
+    }).join('') +
+    `</div>`;
+}
+
+function renderIndChartOnly() {
+  const indEl = $('ind');
+  if (!indEl) return;
+  const chartCard = indEl.querySelector('.ind-chart-card');
+  if (!chartCard) {
+    renderInd();
+    return;
+  }
+  const k = VW, c = IND[k], T = SUMR.find(x => x[1] === k)[2], n = T.map(t => D.filter(d => d[k][0] === t[0]).length);
+  const activeStatus = (FL[k] && FL[k].size === 1) ? [...FL[k]][0] : null;
+  const hasFilter = !!activeStatus;
+  const activeCount = hasFilter ? n[T.findIndex(t => t[0] === activeStatus)] : D.length;
+
+  const actionsEl = chartCard.querySelector('.ind-chart-actions');
+  if (actionsEl) {
+    actionsEl.innerHTML = hasFilter ? `
+      <div class="ind-filter-badge-active">
+        <span class="ind-filter-dot" style="background:${COLN[activeStatus] || COL[SUMR.find(x => x[1] === k)[2].find(x => x[0] === activeStatus)?.[1]] || '#9aa3b2'}"></span>
+        <span>Filtrado: <b>${esc(activeStatus)}</b> (${activeCount} ${activeCount === 1 ? 'EJ' : 'EJs'})</span>
+        <button type="button" class="btn-clear-ind-filter" id="btnClearIndFilter" title="Remover filtro e mostrar todas as EJs">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          Limpar
+        </button>
+      </div>
+    ` : `
+      <span class="ind-chart-hint">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+        Clique no gráfico ou nos cartões para filtrar a tabela
+      </span>
+    `;
+  }
+
+  const donutBox = chartCard.querySelector('.ind-hero-donut-box');
+  if (donutBox) {
+    donutBox.innerHTML = `
+      ${donut(T, n, k, true)}
+      <div class="ind-donut-caption">
+        ${hasFilter ? `Filtro ativo · <b>${activeCount}</b> de <b>${D.length}</b> EJs` : `Total do núcleo: <b>${D.length}</b> EJs`}
+      </div>
+    `;
+  }
+
+  const tilesSide = chartCard.querySelector('.ind-tiles-side');
+  if (tilesSide) {
+    tilesSide.innerHTML = renderIndBreakdown(T, n, k);
+  }
+
+  attachIndInteractions();
+}
+
+function attachIndInteractions() {
+  const indEl = $('ind');
+  if (!indEl) return;
+
+  const donutBox = indEl.querySelector('.ind-hero-donut-box');
+  const numEl = donutBox ? donutBox.querySelector('.dn-num') : null;
+  const lblEl = donutBox ? donutBox.querySelector('.dn-lbl') : null;
+  if (!numEl || !lblEl) return;
+
+  const k = VW;
+  const T = SUMR.find(x => x[1] === k)?.[2] || [];
+  const n = T.map(t => D.filter(d => d[k][0] === t[0]).length);
+  const activeStatus = (FL[k] && FL[k].size === 1) ? [...FL[k]][0] : null;
+
+  const resetCenter = () => {
+    if (activeStatus) {
+      const idx = T.findIndex(t => t[0] === activeStatus);
+      numEl.textContent = idx >= 0 ? n[idx] : D.length;
+      lblEl.textContent = activeStatus;
+    } else {
+      numEl.textContent = D.length;
+      lblEl.textContent = 'TOTAL EJs';
+    }
+    indEl.querySelectorAll('.ind-stat-tile.hover-highlight').forEach(el => el.classList.remove('hover-highlight'));
+    indEl.querySelectorAll('.dn-slice.hover-highlight').forEach(el => el.classList.remove('hover-highlight'));
+  };
+
+  indEl.querySelectorAll('.ind-chart-body [data-s]').forEach(el => {
+    el.onmouseenter = () => {
+      const s = el.dataset.s;
+      if (!s) return;
+      const idx = T.findIndex(t => t[0] === s);
+      if (idx >= 0) {
+        numEl.textContent = n[idx];
+        lblEl.textContent = s;
+      }
+      indEl.querySelectorAll(`.ind-chart-body [data-s="${CSS.escape(s)}"]`).forEach(m => m.classList.add('hover-highlight'));
+    };
+    el.onmouseleave = resetCenter;
+  });
+}
+
 function renderInd() {
   const k = VW, c = IND[k], T = SUMR.find(x => x[1] === k)[2], n = T.map(t => D.filter(d => d[k][0] === t[0]).length);
-  $('ind').innerHTML = `<div class="card"><h2 class="ttl">${ico(k)}${c.t}</h2><p class="dsc">${c.d}</p><div class="kp">` +
-    c.kpis().map(x => `<div><small>${x[0]}</small><b>${x[1]}</b><span>${x[2]}</span></div>`).join('') +
-    `</div></div>
-    <div class="card"><h2>Situação das EJs · clique para filtrar</h2><div class="rowb">` +
-    donut(T, n) +
-    `<div class="dl" style="flex:1">` +
-    T.map((t, i) => `<div data-s="${t[0]}"><span class="chip ${t[1]}">${t[0]}</span><b>${n[i]}</b></div>`).join('') +
-    `</div></div></div>
-    <div class="card"><div class="row"><label style="flex:1;min-width:150px">Buscar EJ<input id="iq" placeholder="Digite o nome…" style="width:100%"></label><span id="icnt"></span><button class="ghost" id="iclr">Mostrar todas</button></div>
-    <div class="scroll-hint">👉 Deslize para o lado para ver todas as colunas</div>
-    <div class="tw"><table style="min-width:720px"><thead><tr><th class="nm">EJ</th><th>Cl.</th>` +
-    c.cols.map(x => `<th>${x}</th>`).join('') +
-    `<th>Situação<button class="fb" data-k="${k}">▾</button></th></tr></thead><tbody id="itb"></tbody></table></div></div>`;
+  const activeStatus = (FL[k] && FL[k].size === 1) ? [...FL[k]][0] : null;
+  const hasFilter = !!activeStatus;
+  const activeCount = hasFilter ? n[T.findIndex(t => t[0] === activeStatus)] : D.length;
+
+  $('ind').innerHTML = `
+    <!-- (1) Card de Cabeçalho e KPIs da Aba -->
+    <div class="card ind-header-card">
+      <div class="ind-title-row">
+        <h2 class="ttl">${ico(k)}<span>${c.t}</span></h2>
+        <span class="ind-tag-pill">Visão por Indicador</span>
+      </div>
+      <p class="dsc">${c.d}</p>
+      <div class="kp">
+        ${renderIndKpis(c)}
+      </div>
+    </div>
+
+    <!-- (2) Card Moderno do Gráfico e Distribuição -->
+    <div class="card ind-chart-card">
+      <div class="ind-chart-header">
+        <div class="ind-chart-title-grp">
+          <span class="ind-chart-eyebrow">DISTRIBUIÇÃO ANALÍTICA</span>
+          <h3 class="ind-chart-title">Situação das EJs no Indicador</h3>
+        </div>
+        <div class="ind-chart-actions">
+          ${hasFilter ? `
+            <div class="ind-filter-badge-active">
+              <span class="ind-filter-dot" style="background:${COLN[activeStatus] || COL[SUMR.find(x => x[1] === k)[2].find(x => x[0] === activeStatus)?.[1]] || '#9aa3b2'}"></span>
+              <span>Filtrado: <b>${esc(activeStatus)}</b> (${activeCount} ${activeCount === 1 ? 'EJ' : 'EJs'})</span>
+              <button type="button" class="btn-clear-ind-filter" id="btnClearIndFilter" title="Remover filtro e mostrar todas as EJs">
+                <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                Limpar
+              </button>
+            </div>
+          ` : `
+            <span class="ind-chart-hint">
+              <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+              Clique no gráfico ou nos cartões para filtrar a tabela
+            </span>
+          `}
+        </div>
+      </div>
+
+      <div class="ind-chart-body">
+        <div class="ind-donut-side">
+          <div class="ind-hero-donut-box">
+            ${donut(T, n, k, true)}
+            <div class="ind-donut-caption">
+              ${hasFilter ? `Filtro ativo · <b>${activeCount}</b> de <b>${D.length}</b> EJs` : `Total do núcleo: <b>${D.length}</b> EJs`}
+            </div>
+          </div>
+        </div>
+        <div class="ind-tiles-side">
+          ${renderIndBreakdown(T, n, k)}
+        </div>
+      </div>
+    </div>
+
+    <!-- (3) Planilha de EJs filtrada -->
+    <div class="card">
+      <div class="row" style="align-items:center;margin-bottom:12px;gap:12px">
+        <div class="search-box" style="flex:1;min-width:200px">
+          <svg class="search-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input id="iq" placeholder="Buscar EJ por nome nesta aba…" style="width:100%" aria-label="Buscar EJ por nome">
+        </div>
+        <span id="icnt" class="table-count-text"></span>
+        <button class="ghost" id="iclr" type="button">Mostrar todas</button>
+      </div>
+      <div class="scroll-hint">👉 Deslize para o lado para ver todas as colunas</div>
+      <div class="tw"><table style="min-width:720px"><thead><tr><th class="nm">EJ</th><th>Cl.</th>` +
+      c.cols.map(x => `<th>${x}</th>`).join('') +
+      `<th>Situação<button class="fb" data-k="${k}">▾</button></th></tr></thead><tbody id="itb"></tbody></table></div>
+    </div>
+  `;
+
   $('iq').oninput = indRows;
-  $('iclr').onclick = () => { FL = {}; $('iq').value = ''; closePop(); mark(); indRows(); };
+  $('iclr').onclick = () => { 
+    delete FL[VW]; 
+    $('iq').value = ''; 
+    closePop(); 
+    mark(); 
+    renderIndChartOnly(); 
+    indRows(); 
+  };
+
   indRows();
   mark();
+  attachIndInteractions();
 }
 
 function indRows() {
   const c = IND[VW], q = ($('iq').value || '').trim().toLowerCase();
   const v = D.filter(d => d.nome.toLowerCase().includes(q) && sel(VW, d[VW][0]));
-  $('itb').innerHTML = v.map(d => `<tr><td class="nm">${esc(d.nome)}</td><td class="k">${d.cl > 0 ? 'C' + d.cl : '–'}</td>` +
+  $('itb').innerHTML = v.map(d => `<tr><td class="nm"><button type="button" class="btn-ej-profile" data-ej="${esc(d.nome)}" title="Abrir perfil de ${esc(d.nome)}">${esc(d.nome)}</button></td><td class="k">${d.cl > 0 ? 'C' + d.cl : '–'}</td>` +
     c.cells(d).map(x => `<td>${x}</td>`).join('') +
     `<td>${ch(d[VW])}</td></tr>`).join('') || `<tr><td colspan="${c.cols.length + 3}" style="text-align:center;color:var(--mut);padding:26px">Nenhuma EJ com esses filtros.</td></tr>`;
   $('icnt').textContent = v.length + ' de ' + D.length + ' EJs';
 }
 
 $('ind').onclick = e => {
+  if (e.target.closest('#btnClearIndFilter')) {
+    delete FL[VW];
+    mark();
+    renderIndChartOnly();
+    indRows();
+    return;
+  }
+  const profileBtn = e.target.closest('.btn-ej-profile');
+  if (profileBtn) {
+    e.stopPropagation();
+    if (typeof openProfile === 'function') openProfile(profileBtn.dataset.ej);
+    else if (typeof openEjProfile === 'function') openEjProfile(profileBtn.dataset.ej);
+    return;
+  }
   const t = e.target.closest('[data-s]');
   if (!t) return;
-  FL[VW] = new Set([t.dataset.s]);
+  const s = t.dataset.s;
+  if (!s) return;
+  if (FL[VW] && FL[VW].size === 1 && FL[VW].has(s)) {
+    delete FL[VW];
+  } else {
+    FL[VW] = new Set([s]);
+  }
   mark();
+  renderIndChartOnly();
   indRows();
+};
+
+$('ind').onkeydown = e => {
+  if (e.key === 'Enter' || e.key === ' ') {
+    const t = e.target.closest('[data-s]');
+    if (t) {
+      e.preventDefault();
+      t.click();
+    }
+  }
 };
 
 nav();
