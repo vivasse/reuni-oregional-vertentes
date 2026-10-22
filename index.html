@@ -3511,6 +3511,15 @@ const ch = a => renderStatus(a);
 
 let D = [];
 let EXP = new Set();
+var G_DATA = {
+  squads: {},
+  guardioes: {},
+  vinculos: {},
+  acompanhamentos: {},
+  pendencias: {},
+  reunioes: {}
+};
+var G_CURRENT_USER = null;
 
 function toggleRow(ejName) {
   if (EXP.has(ejName)) EXP.delete(ejName);
@@ -5501,18 +5510,7 @@ function startAutoReconnect() {
 // MÓDULO GUARDIÕES: MODELO DE DADOS, SINCRONIZAÇÃO E AUTENTICAÇÃO
 // ==========================================================================
 
-const G_DATA = {
-  squads: {},
-  guardioes: {},
-  vinculos: {},
-  acompanhamentos: {},
-  pendencias: {},
-  reunioes: {}
-};
-
-let G_CURRENT_USER = null;
-
-const INITIAL_GUARDIÕES_DATA = {
+const INITIAL_GUARDIOES_DATA = {
   squads: {
     "1": { id: "1", nome: "Squad Yann", lider: "Yann" },
     "2": { id: "2", nome: "Squad Guilherme", lider: "Guilherme" },
@@ -5657,10 +5655,10 @@ async function seedGuardioesIfNeeded(force = false) {
   if (hasSquads && !force) return false;
 
   console.log("Executando carga inicial idempotente do módulo Guardiões...");
-  G_DATA.squads = JSON.parse(JSON.stringify(INITIAL_GUARDIÕES_DATA.squads));
-  G_DATA.guardioes = JSON.parse(JSON.stringify(INITIAL_GUARDIÕES_DATA.guardioes));
-  G_DATA.vinculos = JSON.parse(JSON.stringify(INITIAL_GUARDIÕES_DATA.vinculos));
-  G_DATA.pendencias = JSON.parse(JSON.stringify(INITIAL_GUARDIÕES_DATA.pendencias));
+  G_DATA.squads = JSON.parse(JSON.stringify(INITIAL_GUARDIOES_DATA.squads));
+  G_DATA.guardioes = JSON.parse(JSON.stringify(INITIAL_GUARDIOES_DATA.guardioes));
+  G_DATA.vinculos = JSON.parse(JSON.stringify(INITIAL_GUARDIOES_DATA.vinculos));
+  G_DATA.pendencias = JSON.parse(JSON.stringify(INITIAL_GUARDIOES_DATA.pendencias));
   try { localStorage.setItem('vert_guardioes_cache', JSON.stringify(G_DATA)); } catch(e){}
 
   if (RTDB) {
@@ -5798,14 +5796,18 @@ function getEjDaysSinceUpdate(d) {
 
 function guardioesNavBadge() {
   let count = 0;
-  if (G_DATA && G_DATA.pendencias) {
-    for (const code in G_DATA.pendencias) {
-      const items = G_DATA.pendencias[code];
-      for (const pid in items) {
-        if (!items[pid].concluida) count++;
+  try {
+    if (typeof G_DATA !== 'undefined' && G_DATA && G_DATA.pendencias) {
+      for (const code in G_DATA.pendencias) {
+        const items = G_DATA.pendencias[code];
+        if (items) {
+          for (const pid in items) {
+            if (items[pid] && !items[pid].concluida) count++;
+          }
+        }
       }
     }
-  }
+  } catch(e) {}
   return count > 0 ? `<span class="bg y" title="${count} pendência(s) aberta(s)">${count}</span>` : '';
 }
 
