@@ -365,6 +365,25 @@ tr.main-row.expanded .btn-exp .exp-ic{
   letter-spacing:0.02em;
   line-height:1.2;
 }
+.ej-code-badge{
+  display:inline-block;
+  font-size:10px;
+  font-weight:700;
+  color:var(--mut);
+  background:var(--in);
+  border:1px solid var(--bd);
+  padding:1px 5px;
+  border-radius:4px;
+  letter-spacing:0.03em;
+  margin-left:4px;
+  vertical-align:middle;
+  font-variant-numeric:tabular-nums;
+  text-decoration:none !important;
+}
+.btn-ej-profile:hover .ej-code-badge{
+  border-color:var(--ac);
+  color:var(--ac);
+}
 
 /* Cabeçalhos Ordenáveis */
 th.sortable{
@@ -2659,7 +2678,11 @@ function calc(rows, P) {
       cu = b === 'SOBE' ? ['Sobe', 'g'] : b === 'PERMANECE' ? ['Mantém', 'g'] : ['Cai', 'r'];
     }
 
+    const idVal = num(r[0]);
+    const codVal = String(r[0] != null ? r[0] : '').trim();
+
     out.push({
+      cod: codVal, id: idVal,
       nome: String(r[1]).trim(), cl, fat, meta, esp,
       pct: meta ? fat / meta : 0, fa, ecm, eng, ealvo, mem,
       cs, nota, calvo, ctr: g(55), ecmP: g(22), coleta: g(96),
@@ -2669,6 +2692,12 @@ function calc(rows, P) {
   if (!out.length) throw new Error('Nenhuma EJ encontrada abaixo do cabeçalho.');
   return out.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' }));
 }
+
+const findEj = q => {
+  if (!q) return null;
+  const s = String(q).trim().toLowerCase();
+  return D.find(d => (d.cod && String(d.cod).toLowerCase() === s) || d.nome.toLowerCase() === s) || null;
+};
 
 const TAGS5 = [['Meta batida', 'm'], ['Verde', 'g'], ['Amarelo', 'y'], ['Vermelho', 'r'], ['Zerado', 'n']];
 const SUMR = [
@@ -2765,7 +2794,7 @@ function row(d, rowIdx) {
     </td>
     <td class="nm">
       <div class="ej-cell-wrap">
-        <button type="button" class="btn-ej-profile" data-ej="${esc(d.nome)}" title="Abrir perfil de ${esc(d.nome)}">${esc(d.nome)}</button>
+        <button type="button" class="btn-ej-profile" data-ej="${esc(d.nome)}" title="Abrir perfil de ${esc(d.nome)}">${esc(d.nome)}${d.cod ? ` <span class="ej-code-badge">${esc(d.cod)}</span>` : ''}</button>
         <span class="ej-sub-classe">${d.cl > 0 ? 'Classe C' + d.cl : 'Sem classe'}</span>
       </div>
     </td>
@@ -2894,7 +2923,7 @@ let SORT_KEY = null;
 let SORT_DIR = 'desc';
 
 function openEjProfile(ejName) {
-  const d = D.find(x => x.nome === ejName);
+  const d = findEj(ejName) || D.find(x => x.nome === ejName);
   if (!d) return;
 
   const overlay = $('ejDrawerOverlay');
@@ -2920,6 +2949,7 @@ function openEjProfile(ejName) {
 
   $('drawerEjName').textContent = d.nome;
   $('drawerEjBadges').innerHTML = `
+    ${d.cod ? `<span class="ej-drawer-pill" style="font-weight:700">Cód. ${esc(d.cod)}</span>` : ''}
     <span class="ej-drawer-pill">${d.cl > 0 ? 'Classe C' + d.cl : 'Sem classe'}</span>
     ${renderStatus(d.cu)}
     <span class="txt-muted" style="font-size:11.5px">Posição #${rank} de ${D.length} EJs</span>
@@ -3179,7 +3209,7 @@ function updateSortHeaders() {
 
 function render() {
   const f = $('q').value.trim().toLowerCase();
-  let v = D.filter(d => d.nome.toLowerCase().includes(f) && okF(d));
+  let v = D.filter(d => (d.nome.toLowerCase().includes(f) || String(d.cod || '').toLowerCase().includes(f)) && okF(d));
 
   if (SORT_KEY) {
     v = [...v].sort((a, b) => {
@@ -3916,8 +3946,8 @@ function renderInd() {
 
 function indRows() {
   const c = IND[VW], q = ($('iq').value || '').trim().toLowerCase();
-  const v = D.filter(d => d.nome.toLowerCase().includes(q) && sel(VW, d[VW][0]));
-  $('itb').innerHTML = v.map(d => `<tr><td class="nm"><button type="button" class="btn-ej-profile" data-ej="${esc(d.nome)}" title="Abrir perfil de ${esc(d.nome)}">${esc(d.nome)}</button></td><td class="k">${d.cl > 0 ? 'C' + d.cl : '–'}</td>` +
+  const v = D.filter(d => (d.nome.toLowerCase().includes(q) || String(d.cod || '').toLowerCase().includes(q)) && sel(VW, d[VW][0]));
+  $('itb').innerHTML = v.map(d => `<tr><td class="nm"><button type="button" class="btn-ej-profile" data-ej="${esc(d.nome)}" title="Abrir perfil de ${esc(d.nome)}">${esc(d.nome)}${d.cod ? ` <span class="ej-code-badge">${esc(d.cod)}</span>` : ''}</button></td><td class="k">${d.cl > 0 ? 'C' + d.cl : '–'}</td>` +
     c.cells(d).map(x => `<td>${x}</td>`).join('') +
     `<td>${ch(d[VW])}</td></tr>`).join('') || `<tr><td colspan="${c.cols.length + 3}" style="text-align:center;color:var(--mut);padding:26px">Nenhuma EJ com esses filtros.</td></tr>`;
   $('icnt').textContent = v.length + ' de ' + D.length + ' EJs';
