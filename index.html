@@ -1786,13 +1786,13 @@ aside.collapsed .btn-collapse-desktop .sb-footer-ic{
   transform:rotate(180deg);
 }
 
-/* Drawer Lateral: Perfil Completo da EJ */
+/* Drawer Lateral: Perfil Completo da EJ (Largo & Bem Diagramado) */
 .ej-drawer-overlay{
   position:fixed;
   inset:0;
-  background:rgba(15, 23, 42, 0.55);
-  backdrop-filter:blur(6px);
-  -webkit-backdrop-filter:blur(6px);
+  background:rgba(15, 23, 42, 0.58);
+  backdrop-filter:blur(7px);
+  -webkit-backdrop-filter:blur(7px);
   z-index:90;
   opacity:0;
   transition:opacity .25s ease;
@@ -1806,10 +1806,10 @@ aside.collapsed .btn-collapse-desktop .sb-footer-ic{
   top:0;
   right:0;
   bottom:0;
-  width:min(530px, 100vw);
+  width:min(880px, 95vw);
   background:var(--card);
   border-left:1px solid var(--bd);
-  box-shadow:-16px 0 48px -12px rgba(15, 23, 42, 0.28);
+  box-shadow:-24px 0 64px -12px rgba(15, 23, 42, 0.32);
   z-index:95;
   display:flex;
   flex-direction:column;
@@ -1821,12 +1821,12 @@ aside.collapsed .btn-collapse-desktop .sb-footer-ic{
 }
 
 .ej-drawer-header{
-  padding:20px 22px 18px;
+  padding:22px 28px 18px;
   border-bottom:1px solid var(--bd);
   display:flex;
   align-items:flex-start;
   justify-content:space-between;
-  gap:14px;
+  gap:16px;
   background:var(--card);
   position:sticky;
   top:0;
@@ -1839,37 +1839,37 @@ aside.collapsed .btn-collapse-desktop .sb-footer-ic{
 .ej-drawer-kicker{
   display:inline-flex;
   align-items:center;
-  gap:5px;
-  font-size:10.5px;
-  font-weight:700;
+  gap:6px;
+  font-size:11px;
+  font-weight:800;
   text-transform:uppercase;
-  letter-spacing:.07em;
+  letter-spacing:.08em;
   color:var(--ac);
   background:var(--ac-light);
-  padding:3px 8px;
-  border-radius:6px;
-  margin-bottom:6px;
+  padding:4px 10px;
+  border-radius:7px;
+  margin-bottom:8px;
 }
 .ej-drawer-title{
-  margin:0 0 10px;
-  font-size:21px;
+  margin:0 0 12px;
+  font-size:24px;
   font-weight:800;
   color:var(--tx);
-  letter-spacing:-.02em;
-  line-height:1.25;
+  letter-spacing:-.025em;
+  line-height:1.2;
   word-break:break-word;
 }
 .ej-drawer-badges{
   display:flex;
   align-items:center;
-  gap:6px;
+  gap:8px;
   flex-wrap:wrap;
 }
 .ej-drawer-pill{
-  font-size:11.5px;
+  font-size:12px;
   font-weight:600;
-  padding:3px 9px;
-  border-radius:6px;
+  padding:4px 11px;
+  border-radius:8px;
   background:var(--in);
   border:1px solid var(--bd);
   color:var(--tx);
@@ -1877,11 +1877,11 @@ aside.collapsed .btn-collapse-desktop .sb-footer-ic{
   align-items:center;
   gap:5px;
   white-space:nowrap;
-  line-height:1.2;
+  line-height:1.25;
 }
 .ej-drawer-pill.pill-rank{
-  background:rgba(245, 158, 11, 0.1);
-  border-color:rgba(245, 158, 11, 0.3);
+  background:rgba(245, 158, 11, 0.12);
+  border-color:rgba(245, 158, 11, 0.32);
   color:var(--yf);
   font-weight:700;
 }
@@ -1890,8 +1890,8 @@ aside.collapsed .btn-collapse-desktop .sb-footer-ic{
   border:1px solid var(--bd) !important;
   color:var(--tx) !important;
   border-radius:10px !important;
-  width:36px !important;
-  height:36px !important;
+  width:38px !important;
+  height:38px !important;
   padding:0 !important;
   margin:0 !important;
   display:inline-flex !important;
@@ -1905,7 +1905,7 @@ aside.collapsed .btn-collapse-desktop .sb-footer-ic{
 .btn-drawer-close:hover{
   background:var(--table-hover) !important;
   border-color:var(--mut-light) !important;
-  transform:scale(1.05);
+  transform:scale(1.06);
 }
 .btn-drawer-close svg{
   width:18px;
@@ -1917,75 +1917,83 @@ aside.collapsed .btn-collapse-desktop .sb-footer-ic{
 .ej-drawer-body{
   flex:1;
   overflow-y:auto;
+  overflow-x:hidden;
   -webkit-overflow-scrolling:touch;
-  padding:18px 20px 24px;
+  padding:22px 28px 32px;
   display:flex;
   flex-direction:column;
-  gap:16px;
+  gap:18px;
 }
 
 /* Visão Rápida / Raio-X Executivo em 3s */
 .drawer-health-card{
-  background:linear-gradient(135deg, rgba(99,102,241,0.05) 0%, rgba(6,182,212,0.04) 100%), var(--in);
+  background:linear-gradient(135deg, rgba(99,102,241,0.06) 0%, rgba(6,182,212,0.05) 100%), var(--in);
   border:1px solid var(--bd);
-  border-radius:14px;
-  padding:12px 14px;
+  border-radius:16px;
+  padding:16px 18px;
   box-shadow:var(--sh-sm);
 }
 .drawer-health-header{
-  font-size:11px;
+  font-size:11.5px;
   font-weight:800;
   text-transform:uppercase;
   letter-spacing:.06em;
   color:var(--mut);
-  margin-bottom:10px;
+  margin-bottom:12px;
   display:flex;
   align-items:center;
   justify-content:space-between;
 }
 .drawer-health-badge-cluster{
-  font-size:11px;
+  font-size:11.5px;
   font-weight:700;
   color:var(--ac);
   background:var(--card);
   border:1px solid var(--bd);
-  padding:2px 8px;
-  border-radius:6px;
+  padding:3px 10px;
+  border-radius:7px;
 }
 .drawer-health-grid{
   display:grid;
-  grid-template-columns:repeat(5, 1fr);
-  gap:6px;
+  grid-template-columns:repeat(5, minmax(0, 1fr));
+  gap:10px;
+}
+@media (max-width:680px){
+  .drawer-health-grid{
+    grid-template-columns:repeat(3, minmax(0, 1fr));
+  }
 }
 @media (max-width:440px){
   .drawer-health-grid{
-    grid-template-columns:repeat(3, 1fr);
+    grid-template-columns:repeat(2, minmax(0, 1fr));
   }
 }
 .drawer-health-item{
   background:var(--card);
   border:1px solid var(--bd);
-  border-radius:10px;
-  padding:8px 4px 7px;
+  border-radius:12px;
+  padding:12px 8px 10px;
   display:flex;
   flex-direction:column;
   align-items:center;
   justify-content:center;
-  gap:5px;
+  gap:7px;
   text-align:center;
   transition:all .15s ease;
-  min-height:56px;
-  box-shadow:0 1px 2px rgba(0,0,0,0.02);
+  min-height:66px;
+  min-width:0;
+  box-shadow:0 1px 3px rgba(0,0,0,0.02);
 }
 .drawer-health-item:hover{
   border-color:var(--ac);
   transform:translateY(-1px);
+  box-shadow:var(--sh-sm);
 }
 .drawer-health-item small{
-  font-size:9.5px;
+  font-size:10.5px;
   font-weight:800;
   text-transform:uppercase;
-  letter-spacing:.04em;
+  letter-spacing:.05em;
   color:var(--mut);
   white-space:nowrap;
   overflow:hidden;
@@ -1993,21 +2001,37 @@ aside.collapsed .btn-collapse-desktop .sb-footer-ic{
   max-width:100%;
 }
 .drawer-health-item .chip{
-  font-size:10px;
+  font-size:11.5px;
   font-weight:700;
-  padding:2px 6px;
+  padding:3px 10px;
   border-radius:99px;
   white-space:nowrap;
-  line-height:1.2;
+  line-height:1.25;
+}
+
+/* Grid 2x2 para as Seções de Indicadores */
+.drawer-sections-grid-2x2{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:16px;
+}
+@media (max-width:680px){
+  .drawer-sections-grid-2x2{
+    grid-template-columns:1fr;
+  }
 }
 
 /* Seções de Indicadores no Drawer */
 .drawer-section{
   background:var(--card);
   border:1px solid var(--bd);
-  border-radius:14px;
-  padding:16px 18px;
+  border-radius:16px;
+  padding:18px 20px;
   box-shadow:var(--sh-card);
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  min-width:0;
 }
 .drawer-sec-header{
   display:flex;
@@ -2021,57 +2045,81 @@ aside.collapsed .btn-collapse-desktop .sb-footer-ic{
 .drawer-sec-title{
   display:flex;
   align-items:center;
-  gap:9px;
-  font-size:13.5px;
+  gap:10px;
+  font-size:14.5px;
   font-weight:800;
   color:var(--tx);
   letter-spacing:-.01em;
 }
 .drawer-sec-icon-box{
-  width:28px;
-  height:28px;
-  border-radius:8px;
+  width:32px;
+  height:32px;
+  border-radius:9px;
   display:inline-flex;
   align-items:center;
   justify-content:center;
   flex:none;
 }
 .drawer-sec-icon-box svg{
-  width:15px;
-  height:15px;
+  width:16px;
+  height:16px;
 }
-.drawer-sec-icon-fat{ background:rgba(16,185,129,0.1); color:var(--gf); }
-.drawer-sec-icon-ecm{ background:rgba(99,102,241,0.1); color:var(--ac); }
-.drawer-sec-icon-csat{ background:rgba(245,158,11,0.1); color:var(--yf); }
-.drawer-sec-icon-colab{ background:rgba(6,182,212,0.1); color:#0891b2; }
-.drawer-sec-icon-cluster{ background:rgba(139,92,246,0.1); color:#7c3aed; }
-.drawer-sec-icon-gov{ background:rgba(99,102,241,0.1); color:var(--ac); }
+.drawer-sec-icon-fat{ background:rgba(16,185,129,0.12); color:var(--gf); }
+.drawer-sec-icon-ecm{ background:rgba(99,102,241,0.12); color:var(--ac); }
+.drawer-sec-icon-csat{ background:rgba(245,158,11,0.12); color:var(--yf); }
+.drawer-sec-icon-colab{ background:rgba(6,182,212,0.12); color:#0891b2; }
+.drawer-sec-icon-cluster{ background:rgba(139,92,246,0.12); color:#7c3aed; }
+.drawer-sec-icon-gov{ background:rgba(99,102,241,0.12); color:var(--ac); }
 
-/* Hero Metrics Box (Realizado vs Meta) */
+/* Strip de 4 KPIs no Faturamento */
+.drawer-kpi-strip-4{
+  display:grid;
+  grid-template-columns:repeat(4, minmax(0, 1fr));
+  gap:12px;
+  margin-bottom:14px;
+}
+@media (max-width:680px){
+  .drawer-kpi-strip-4{
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+  }
+}
+.drawer-kpi-stat-card{
+  background:var(--in);
+  border:1px solid var(--bd);
+  border-radius:12px;
+  padding:12px 14px;
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+  min-width:0;
+}
+
+/* Hero Metrics Box (2 colunas dentro de cada card do grid 2x2) */
 .drawer-kpi-hero-box{
   background:var(--in);
   border:1px solid var(--bd);
-  border-radius:10px;
-  padding:10px 14px;
+  border-radius:12px;
+  padding:12px 16px;
   display:grid;
   grid-template-columns:1fr 1fr;
-  gap:12px;
+  gap:14px;
   margin-bottom:12px;
 }
 .drawer-kpi-col{
   display:flex;
   flex-direction:column;
-  gap:2px;
+  gap:3px;
+  min-width:0;
 }
 .drawer-kpi-col-label{
-  font-size:10px;
+  font-size:10.5px;
   font-weight:700;
   text-transform:uppercase;
   letter-spacing:.05em;
   color:var(--mut);
 }
 .drawer-kpi-col-val{
-  font-size:19px;
+  font-size:21px;
   font-weight:800;
   color:var(--tx);
   font-variant-numeric:tabular-nums;
@@ -2082,33 +2130,39 @@ aside.collapsed .btn-collapse-desktop .sb-footer-ic{
   font-weight:700;
 }
 
-/* Barra de Progresso Executiva */
-.drawer-progress-box{
-  margin-bottom:12px;
+/* Barra de Progresso Executiva + Callout Integrado */
+.drawer-progress-panel{
+  background:var(--in);
+  border:1px solid var(--bd);
+  border-radius:12px;
+  padding:12px 16px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
 }
 .drawer-progress-info{
   display:flex;
   justify-content:space-between;
   align-items:center;
-  margin-bottom:6px;
-  font-size:11.5px;
+  font-size:12px;
 }
 .drawer-progress-title{
   color:var(--mut);
-  font-weight:600;
+  font-weight:700;
 }
 .drawer-progress-pct{
   font-weight:800;
   color:var(--tx);
+  font-size:13px;
   font-variant-numeric:tabular-nums;
 }
-.drawer-progress-box .pb{
-  height:8px;
+.drawer-progress-panel .pb{
+  height:9px;
   border-radius:99px;
-  background:rgba(148, 163, 184, 0.22);
+  background:rgba(148, 163, 184, 0.24);
   margin:0;
 }
-.drawer-progress-box .pb i{
+.drawer-progress-panel .pb i{
   border-radius:99px;
 }
 
@@ -2116,23 +2170,24 @@ aside.collapsed .btn-collapse-desktop .sb-footer-ic{
 .drawer-grid{
   display:grid;
   grid-template-columns:1fr 1fr;
-  gap:8px 12px;
+  gap:10px 14px;
 }
 .drawer-item{
   display:flex;
   flex-direction:column;
-  gap:2px;
+  gap:3px;
+  min-width:0;
 }
 .drawer-item.full{
   grid-column:1 / -1;
 }
 .drawer-item-k{
-  font-size:11px;
+  font-size:11.5px;
   color:var(--mut);
   font-weight:600;
 }
 .drawer-item-v{
-  font-size:13px;
+  font-size:13.5px;
   font-weight:700;
   color:var(--tx);
   font-variant-numeric:tabular-nums;
@@ -2143,22 +2198,22 @@ aside.collapsed .btn-collapse-desktop .sb-footer-ic{
   display:flex;
   align-items:center;
   justify-content:space-between;
-  gap:8px;
-  padding:8px 12px;
-  border-radius:8px;
-  font-size:12px;
+  gap:10px;
+  padding:9px 14px;
+  border-radius:10px;
+  font-size:12.5px;
   font-weight:600;
-  margin-top:6px;
+  margin-top:auto;
 }
 .drawer-callout-pill.danger{
   background:var(--rb);
   color:var(--rf);
-  border:1px solid rgba(239,68,68,0.2);
+  border:1px solid rgba(239,68,68,0.22);
 }
 .drawer-callout-pill.success{
   background:var(--gb);
   color:var(--gf);
-  border:1px solid rgba(16,185,129,0.2);
+  border:1px solid rgba(16,185,129,0.22);
 }
 .drawer-callout-pill.neutral{
   background:var(--in);
@@ -2166,9 +2221,29 @@ aside.collapsed .btn-collapse-desktop .sb-footer-ic{
   border:1px solid var(--bd);
 }
 
+/* Grids da Seção de Governança */
+.drawer-gov-config-grid{
+  display:grid;
+  grid-template-columns:1.5fr 1fr 0.7fr;
+  gap:12px;
+  margin-bottom:16px;
+}
+.drawer-gov-panels-grid{
+  display:grid;
+  grid-template-columns:1fr 1.15fr;
+  gap:16px;
+  align-items:stretch;
+}
+@media (max-width:680px){
+  .drawer-gov-config-grid,
+  .drawer-gov-panels-grid{
+    grid-template-columns:1fr;
+  }
+}
+
 /* Footer do Drawer */
 .ej-drawer-footer{
-  padding:14px 20px;
+  padding:16px 28px;
   border-top:1px solid var(--bd);
   background:var(--card);
   display:flex;
@@ -2182,9 +2257,9 @@ aside.collapsed .btn-collapse-desktop .sb-footer-ic{
 .btn-drawer-filter{
   display:inline-flex;
   align-items:center;
-  gap:7px;
-  padding:9px 16px;
-  font-size:12.5px;
+  gap:8px;
+  padding:10px 20px;
+  font-size:13px;
   font-weight:700;
   border-radius:10px;
   background:linear-gradient(120deg,var(--ac),#7c3aed);
@@ -2192,7 +2267,7 @@ aside.collapsed .btn-collapse-desktop .sb-footer-ic{
   border:0;
   cursor:pointer;
   transition:all .15s ease;
-  box-shadow:0 2px 6px rgba(99,102,241,0.25);
+  box-shadow:0 3px 8px rgba(99,102,241,0.28);
 }
 .btn-drawer-filter:hover{
   filter:brightness(1.08);
@@ -2203,8 +2278,8 @@ aside.collapsed .btn-collapse-desktop .sb-footer-ic{
   color:var(--tx) !important;
   border:1px solid var(--bd) !important;
   border-radius:10px !important;
-  padding:9px 18px !important;
-  font-size:12.5px !important;
+  padding:10px 22px !important;
+  font-size:13px !important;
   font-weight:600 !important;
   cursor:pointer !important;
   transition:all .15s ease !important;
@@ -3960,7 +4035,7 @@ function openEjProfile(ejName) {
       </div>
     </div>
 
-    <!-- 1. Faturamento & Metas -->
+    <!-- 1. Faturamento & Metas (Hero Full-Width) -->
     <div class="drawer-section">
       <div class="drawer-sec-header">
         <div class="drawer-sec-title">
@@ -3969,178 +4044,177 @@ function openEjProfile(ejName) {
           </div>
           <span>Faturamento &amp; Metas</span>
         </div>
-        ${renderStatus(d.fa)}
+        ${renderHealthStatus(d.fa)}
       </div>
 
-      <div class="drawer-kpi-hero-box">
-        <div class="drawer-kpi-col">
+      <div class="drawer-kpi-strip-4">
+        <div class="drawer-kpi-stat-card">
           <span class="drawer-kpi-col-label">Realizado</span>
           <span class="drawer-kpi-col-val">${R(d.fat)}</span>
         </div>
-        <div class="drawer-kpi-col">
+        <div class="drawer-kpi-stat-card">
           <span class="drawer-kpi-col-label">Meta Anual</span>
           <span class="drawer-kpi-col-val muted">${R(d.meta)}</span>
         </div>
+        <div class="drawer-kpi-stat-card">
+          <span class="drawer-kpi-col-label">Esperado até ${mesNome}</span>
+          <span class="drawer-kpi-col-val" style="font-size:18px">${R(d.esp)}</span>
+        </div>
+        <div class="drawer-kpi-stat-card">
+          <span class="drawer-kpi-col-label">Gap Restante</span>
+          <span class="drawer-kpi-col-val ${gapCls}" style="font-size:18px">${gap <= 0 ? '+' + R(-gap) : R(gap)}</span>
+          <small style="font-size:10.5px;color:var(--mut);font-weight:600">${gap <= 0 ? 'Meta superada' : 'Faltam p/ meta anual'}</small>
+        </div>
       </div>
 
-      <div class="drawer-progress-box">
+      <div class="drawer-progress-panel">
         <div class="drawer-progress-info">
           <span class="drawer-progress-title">Progresso da meta anual</span>
-          <span class="drawer-progress-pct">${Math.round(d.pct * 100)}%</span>
+          <span class="drawer-progress-pct">${Math.round(d.pct * 100)}% atingido</span>
         </div>
         <div class="pb" title="${Math.round(d.pct * 100)}% atingido"><i class="${barCls}" style="width:${barWidth}%"></i></div>
-      </div>
-
-      <div class="drawer-grid">
-        <div class="drawer-item">
-          <span class="drawer-item-k">Gap Restante</span>
-          <span class="drawer-item-v ${gapCls}">${gap <= 0 ? '+' + R(-gap) + ' (superada)' : R(gap) + ' faltam'}</span>
+        <div class="drawer-callout-pill ${d.meta <= 0 ? 'neutral' : (eg >= 0 ? 'success' : 'danger')}" style="margin-top:4px">
+          <span style="font-size:12px;color:var(--mut)">Desempenho vs. Esperado (${mesNome})</span>
+          <span style="font-weight:800">
+            ${d.meta <= 0 ? '–' : (eg >= 0 ? '↑ +' : '↓ −') + R(Math.abs(eg)) + ' ' + (eg >= 0 ? 'acima do esperado' : 'abaixo do esperado')}
+          </span>
         </div>
-        <div class="drawer-item">
-          <span class="drawer-item-k">Esperado até ${mesNome}</span>
-          <span class="drawer-item-v">${R(d.esp)}</span>
-        </div>
-      </div>
-
-      <div class="drawer-callout-pill ${d.meta <= 0 ? 'neutral' : (eg >= 0 ? 'success' : 'danger')}">
-        <span style="font-size:11.5px;color:var(--mut)">vs. Esperado (${mesNome})</span>
-        <span style="font-weight:700">
-          ${d.meta <= 0 ? '–' : (eg >= 0 ? '↑ +' : '↓ −') + R(Math.abs(eg)) + ' ' + (eg >= 0 ? 'acima do esperado' : 'abaixo do esperado')}
-        </span>
       </div>
     </div>
 
-    <!-- 2. ECM (Engajamento) -->
-    <div class="drawer-section">
-      <div class="drawer-sec-header">
-        <div class="drawer-sec-title">
-          <div class="drawer-sec-icon-box drawer-sec-icon-ecm">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    <!-- Grid 2x2: ECM, CSAT, Colaborativo e Cluster -->
+    <div class="drawer-sections-grid-2x2">
+      <!-- 2. ECM (Engajamento) -->
+      <div class="drawer-section">
+        <div>
+          <div class="drawer-sec-header">
+            <div class="drawer-sec-title">
+              <div class="drawer-sec-icon-box drawer-sec-icon-ecm">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              </div>
+              <span>ECM (Engajamento)</span>
+            </div>
+            ${renderHealthStatus(d.ecm)}
           </div>
-          <span>ECM (Engajamento)</span>
-        </div>
-        ${renderStatus(d.ecm)}
-      </div>
 
-      <div class="drawer-kpi-hero-box">
-        <div class="drawer-kpi-col">
-          <span class="drawer-kpi-col-label">Membros Engajados</span>
-          <span class="drawer-kpi-col-val">${d.eng} <small style="font-size:13px;color:var(--mut);font-weight:600">/ ${d.mem || 0}</small></span>
-        </div>
-        <div class="drawer-kpi-col">
-          <span class="drawer-kpi-col-label">Meta de Engajamento</span>
-          <span class="drawer-kpi-col-val muted">${d.ealvo} <small style="font-size:13px;font-weight:600">(${d.ecmP || 0}%)</small></span>
-        </div>
-      </div>
-
-      <div class="drawer-callout-pill ${d.eng >= d.ealvo ? 'success' : 'danger'}">
-        <span style="font-size:11.5px;color:var(--mut)">Diferença para meta</span>
-        <span style="font-weight:700">
-          ${d.eng >= d.ealvo ? '↑ +' + (d.eng - d.ealvo) + ' acima da meta' : '↓ ' + (d.ealvo - d.eng) + ' membros faltantes'}
-        </span>
-      </div>
-    </div>
-
-    <!-- 3. CSAT & Clientes -->
-    <div class="drawer-section">
-      <div class="drawer-sec-header">
-        <div class="drawer-sec-title">
-          <div class="drawer-sec-icon-box drawer-sec-icon-csat">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          <div class="drawer-kpi-hero-box">
+            <div class="drawer-kpi-col">
+              <span class="drawer-kpi-col-label">Membros Engajados</span>
+              <span class="drawer-kpi-col-val">${d.eng} <small style="font-size:13px;color:var(--mut);font-weight:600">/ ${d.mem || 0}</small></span>
+            </div>
+            <div class="drawer-kpi-col">
+              <span class="drawer-kpi-col-label">Meta de Engajamento</span>
+              <span class="drawer-kpi-col-val muted">${d.ealvo} <small style="font-size:13px;font-weight:600">(${d.ecmP || 0}%)</small></span>
+            </div>
           </div>
-          <span>CSAT &amp; Satisfação</span>
         </div>
-        ${renderStatus(d.cs)}
-      </div>
 
-      <div class="drawer-kpi-hero-box">
-        <div class="drawer-kpi-col">
-          <span class="drawer-kpi-col-label">Nota Média</span>
-          <span class="drawer-kpi-col-val">${d.ctr ? N1(d.nota) : '–'}</span>
-        </div>
-        <div class="drawer-kpi-col">
-          <span class="drawer-kpi-col-label">Meta de Nota</span>
-          <span class="drawer-kpi-col-val muted">${N1(d.calvo)}</span>
+        <div class="drawer-callout-pill ${d.eng >= d.ealvo ? 'success' : 'danger'}">
+          <span style="font-size:11.5px;color:var(--mut)">Diferença para meta</span>
+          <span style="font-weight:700">
+            ${d.eng >= d.ealvo ? '↑ +' + (d.eng - d.ealvo) + ' acima da meta' : '↓ ' + (d.ealvo - d.eng) + ' membros faltantes'}
+          </span>
         </div>
       </div>
 
-      <div class="drawer-grid">
-        <div class="drawer-item">
-          <span class="drawer-item-k">Contratos Avaliados</span>
-          <span class="drawer-item-v">${d.ctr || 0} avaliações</span>
-        </div>
-        <div class="drawer-item">
-          <span class="drawer-item-k">Taxa de Coleta</span>
-          <span class="drawer-item-v ${d.coleta != null && d.coleta < 80 ? 'rt' : 'gt'}">${d.coleta != null ? d.coleta + '%' : '–'}</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- 4. Colaborativo -->
-    <div class="drawer-section">
-      <div class="drawer-sec-header">
-        <div class="drawer-sec-title">
-          <div class="drawer-sec-icon-box drawer-sec-icon-colab">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      <!-- 3. CSAT & Clientes -->
+      <div class="drawer-section">
+        <div>
+          <div class="drawer-sec-header">
+            <div class="drawer-sec-title">
+              <div class="drawer-sec-icon-box drawer-sec-icon-csat">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              </div>
+              <span>CSAT &amp; Satisfação</span>
+            </div>
+            ${renderHealthStatus(d.cs)}
           </div>
-          <span>Faturamento Colaborativo</span>
-        </div>
-        ${renderStatus(d.co)}
-      </div>
 
-      <div class="drawer-kpi-hero-box">
-        <div class="drawer-kpi-col">
-          <span class="drawer-kpi-col-label">Realizado</span>
-          <span class="drawer-kpi-col-val">${R(d.colab)}</span>
-        </div>
-        <div class="drawer-kpi-col">
-          <span class="drawer-kpi-col-label">Meta Anual</span>
-          <span class="drawer-kpi-col-val muted">${d.cm > 0 ? R(d.cm) : 'Sem meta'}</span>
-        </div>
-      </div>
-
-      <div class="drawer-grid">
-        <div class="drawer-item">
-          <span class="drawer-item-k">Esperado (${trk}m)</span>
-          <span class="drawer-item-v">${d.cm > 0 ? R(d.cesp) : '–'}</span>
-        </div>
-        <div class="drawer-item">
-          <span class="drawer-item-k">Situação vs Meta</span>
-          <span class="drawer-item-v ${d.cm > 0 && d.colab >= d.cm ? 'gt' : ''}">${d.cm > 0 ? (d.colab >= d.cm ? 'Meta batida' : R(d.cm - d.colab) + ' faltam') : '–'}</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- 5. Cluster & Projeção -->
-    <div class="drawer-section">
-      <div class="drawer-sec-header">
-        <div class="drawer-sec-title">
-          <div class="drawer-sec-icon-box drawer-sec-icon-cluster">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+          <div class="drawer-kpi-hero-box">
+            <div class="drawer-kpi-col">
+              <span class="drawer-kpi-col-label">Nota Média</span>
+              <span class="drawer-kpi-col-val">${d.ctr ? N1(d.nota) : '–'}</span>
+            </div>
+            <div class="drawer-kpi-col">
+              <span class="drawer-kpi-col-label">Meta de Nota</span>
+              <span class="drawer-kpi-col-val muted">${N1(d.calvo)}</span>
+            </div>
           </div>
-          <span>Cluster &amp; Projeção</span>
         </div>
-        ${renderStatus(d.cu)}
-      </div>
 
-      <div class="drawer-kpi-hero-box">
-        <div class="drawer-kpi-col">
-          <span class="drawer-kpi-col-label">Cluster Atual</span>
-          <span class="drawer-kpi-col-val">${d.cl > 0 ? 'Cluster ' + d.cl : 'Sem cluster'}</span>
-        </div>
-        <div class="drawer-kpi-col">
-          <span class="drawer-kpi-col-label">Índice Atual</span>
-          <span class="drawer-kpi-col-val muted">${formatClusterIdx(d.idx)}</span>
+        <div class="drawer-callout-pill neutral">
+          <span style="font-size:11.5px;color:var(--mut)">Avaliações: <b style="color:var(--tx)">${d.ctr || 0} contratos</b></span>
+          <span style="font-size:11.5px;color:var(--mut)">Coleta: <b class="${d.coleta != null && d.coleta < 80 ? 'rt' : 'gt'}">${d.coleta != null ? d.coleta + '%' : '–'}</b></span>
         </div>
       </div>
 
-      <div class="drawer-callout-pill ${d.cl < 5 && d.cl >= 1 && d.idx < LOW[d.cl] ? 'danger' : 'success'}">
-        <span style="font-size:11.5px;color:var(--mut)">P/ Subir de Cluster</span>
-        <span style="font-weight:700">
-          ${d.cl < 5 && d.cl >= 1 && d.idx < LOW[d.cl] ? formatClusterIdx(LOW[d.cl] - d.idx) + ' faltam (mín. ' + formatClusterIdx(LOW[d.cl]) + ')' : (d.cl === 5 ? 'Cluster 5 (Máximo atingido)' : 'Patamar atingido')}
-        </span>
+      <!-- 4. Colaborativo -->
+      <div class="drawer-section">
+        <div>
+          <div class="drawer-sec-header">
+            <div class="drawer-sec-title">
+              <div class="drawer-sec-icon-box drawer-sec-icon-colab">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+              </div>
+              <span>Faturamento Colaborativo</span>
+            </div>
+            ${renderHealthStatus(d.co)}
+          </div>
+
+          <div class="drawer-kpi-hero-box">
+            <div class="drawer-kpi-col">
+              <span class="drawer-kpi-col-label">Realizado</span>
+              <span class="drawer-kpi-col-val">${R(d.colab)}</span>
+            </div>
+            <div class="drawer-kpi-col">
+              <span class="drawer-kpi-col-label">Meta Anual</span>
+              <span class="drawer-kpi-col-val muted">${d.cm > 0 ? R(d.cm) : 'Sem meta'}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="drawer-callout-pill ${d.cm > 0 ? (d.colab >= d.cm ? 'success' : 'neutral') : 'neutral'}">
+          <span style="font-size:11.5px;color:var(--mut)">Esperado (${trk}m): <b style="color:var(--tx)">${d.cm > 0 ? R(d.cesp) : '–'}</b></span>
+          <span style="font-weight:700">
+            ${d.cm > 0 ? (d.colab >= d.cm ? '✓ Meta batida' : R(d.cm - d.colab) + ' faltam') : 'Sem meta anual'}
+          </span>
+        </div>
+      </div>
+
+      <!-- 5. Cluster & Projeção -->
+      <div class="drawer-section">
+        <div>
+          <div class="drawer-sec-header">
+            <div class="drawer-sec-title">
+              <div class="drawer-sec-icon-box drawer-sec-icon-cluster">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+              </div>
+              <span>Cluster &amp; Projeção</span>
+            </div>
+            ${renderHealthStatus(d.cu)}
+          </div>
+
+          <div class="drawer-kpi-hero-box">
+            <div class="drawer-kpi-col">
+              <span class="drawer-kpi-col-label">Cluster Atual</span>
+              <span class="drawer-kpi-col-val">${d.cl > 0 ? 'Cluster ' + d.cl : 'Sem cluster'}</span>
+            </div>
+            <div class="drawer-kpi-col">
+              <span class="drawer-kpi-col-label">Índice Atual</span>
+              <span class="drawer-kpi-col-val muted">${formatClusterIdx(d.idx)}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="drawer-callout-pill ${d.cl < 5 && d.cl >= 1 && d.idx < LOW[d.cl] ? 'danger' : 'success'}">
+          <span style="font-size:11.5px;color:var(--mut)">P/ Subir de Cluster</span>
+          <span style="font-weight:700">
+            ${d.cl < 5 && d.cl >= 1 && d.idx < LOW[d.cl] ? formatClusterIdx(LOW[d.cl] - d.idx) + ' faltam (mín. ' + formatClusterIdx(LOW[d.cl]) + ')' : (d.cl === 5 ? 'Cluster 5 (Máximo)' : 'Patamar atingido')}
+          </span>
+        </div>
       </div>
     </div>
+
     <!-- 6. Governança, Guardião & Acompanhamentos -->
     <div class="drawer-section" id="drawerSecGuardioes">
       <div class="drawer-sec-header">
@@ -4155,11 +4229,11 @@ function openEjProfile(ejName) {
         </span>
       </div>
 
-      <!-- Configuração da EJ: Guardião, Contato/Presidente, Código -->
-      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px">
-        <div class="drawer-item full">
-          <span class="drawer-item-k">Guardião Responsável (o Squad decorre do guardião)</span>
-          <select id="drawerSelectGuardiao" class="g-select" style="width:100%;margin-top:2px">
+      <!-- Configuração da EJ em 3 colunas: Guardião, Presidente/Contato, Código -->
+      <div class="drawer-gov-config-grid">
+        <div class="drawer-item">
+          <span class="drawer-item-k">Guardião Responsável</span>
+          <select id="drawerSelectGuardiao" class="g-select" style="width:100%;margin-top:2px;font-size:12px;padding:7px 10px">
             <option value="">⚠️ Sem guardião atribuído</option>
             ${Object.values(G_DATA.guardioes || {}).map(item => {
               const itemSq = G_DATA.squads && G_DATA.squads[item.squad];
@@ -4169,93 +4243,97 @@ function openEjProfile(ejName) {
           </select>
         </div>
 
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-          <div class="drawer-item">
-            <span class="drawer-item-k">Presidente / Contato</span>
-            <input type="text" id="drawerInputPresidente" value="${v ? esc(v.presidente || '') : ''}" placeholder="Nome ou contato..." class="g-select" style="margin-top:2px;font-size:12px;padding:6px 10px" />
-          </div>
-          <div class="drawer-item">
-            <span class="drawer-item-k">Código da EJ ${code.startsWith('temp_') ? '<small style="color:var(--yf)">(provisório)</small>' : ''}</span>
-            <input type="text" id="drawerInputCod" value="${esc(code || '')}" placeholder="Ex: 242" class="g-select" style="margin-top:2px;font-size:12px;padding:6px 10px" />
-          </div>
+        <div class="drawer-item">
+          <span class="drawer-item-k">Presidente / Contato</span>
+          <input type="text" id="drawerInputPresidente" value="${v ? esc(v.presidente || '') : ''}" placeholder="Nome ou contato..." class="g-select" style="margin-top:2px;font-size:12px;padding:7px 10px" />
+        </div>
+
+        <div class="drawer-item">
+          <span class="drawer-item-k">Código da EJ ${code.startsWith('temp_') ? '<small style="color:var(--yf)">(prov.)</small>' : ''}</span>
+          <input type="text" id="drawerInputCod" value="${esc(code || '')}" placeholder="Ex: 242" class="g-select" style="margin-top:2px;font-size:12px;padding:7px 10px" />
         </div>
       </div>
 
-      <!-- Checklist de Pendências da EJ -->
-      <div style="background:var(--in);border:1px solid var(--bd);border-radius:10px;padding:12px;margin-bottom:14px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <b style="font-size:12.5px;color:var(--tx);display:flex;align-items:center;gap:6px">
-            <span>⚡ Pendências da EJ</span>
-            <span class="badge-pend ${openPendenciasCount > 0 ? 'badge-pend-open' : 'badge-pend-none'}" style="font-size:10.5px">
-              ${openPendenciasCount} aberta${openPendenciasCount !== 1 ? 's' : ''}
-            </span>
-          </b>
-        </div>
+      <!-- Painéis Lado a Lado: Pendências (Esquerda) e Acompanhamentos (Direita) -->
+      <div class="drawer-gov-panels-grid">
+        <!-- Checklist de Pendências da EJ -->
+        <div style="background:var(--in);border:1px solid var(--bd);border-radius:12px;padding:14px;display:flex;flex-direction:column;justify-content:space-between">
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+              <b style="font-size:13px;color:var(--tx);display:flex;align-items:center;gap:6px">
+                <span>⚡ Pendências da EJ</span>
+                <span class="badge-pend ${openPendenciasCount > 0 ? 'badge-pend-open' : 'badge-pend-none'}" style="font-size:10.5px">
+                  ${openPendenciasCount} aberta${openPendenciasCount !== 1 ? 's' : ''}
+                </span>
+              </b>
+            </div>
 
-        <!-- Lista de Pendências -->
-        <div id="drawerPendenciasList" style="display:flex;flex-direction:column;gap:6px;max-height:180px;overflow-y:auto;margin-bottom:10px">
-          ${pendencias.length === 0 ? `<div style="font-size:11.5px;color:var(--mut);text-align:center;padding:8px">Nenhuma pendência para esta EJ.</div>` :
-            pendencias.map(p => `
-              <div class="drawer-pend-item" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 10px;border-radius:6px;background:var(--card);border:1px solid var(--bd);font-size:12px">
-                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;flex:1;min-width:0;${p.concluida ? 'text-decoration:line-through;opacity:0.6' : ''}">
-                  <input type="checkbox" class="drawer-pend-chk" data-pid="${p.id}" ${p.concluida ? 'checked' : ''} />
-                  <span style="word-break:break-word">${esc(p.texto)}</span>
-                  ${p.prazo ? `<small style="color:var(--yf);font-weight:600;white-space:nowrap">(${esc(p.prazo)})</small>` : ''}
-                </label>
-                <button class="btn-del-pend" data-pid="${p.id}" style="border:none;background:transparent;color:var(--mut);cursor:pointer;padding:2px 6px;font-size:13px" title="Excluir pendência">✕</button>
-              </div>
-            `).join('')
-          }
-        </div>
-
-        <!-- Formulário Adicionar Pendência -->
-        <div style="display:flex;gap:6px">
-          <input type="text" id="drawerNewPendText" placeholder="Nova pendência ou ação..." class="g-select" style="flex:1;font-size:11.5px;padding:5px 8px" />
-          <input type="text" id="drawerNewPendPrazo" placeholder="Prazo..." class="g-select" style="width:75px;font-size:11.5px;padding:5px 8px" />
-          <button id="drawerBtnAddPend" class="g-btn g-btn-primary" type="button" style="padding:4px 10px;font-size:11.5px">+</button>
-        </div>
-      </div>
-
-      <!-- Histórico de Acompanhamentos Registrados -->
-      <div style="background:var(--in);border:1px solid var(--bd);border-radius:10px;padding:12px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <b style="font-size:12.5px;color:var(--tx)">📝 Registros de Acompanhamento</b>
-          <span style="font-size:11px;color:var(--mut)">${acompanhamentos.length} registro${acompanhamentos.length !== 1 ? 's' : ''}</span>
-        </div>
-
-        <!-- Formulário Novo Registro de Acompanhamento -->
-        <div style="background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:10px;margin-bottom:10px;display:flex;flex-direction:column;gap:6px">
-          <div style="display:grid;grid-template-columns:120px 1fr;gap:6px">
-            <input type="date" id="drawerNewAcompDate" class="g-select" style="font-size:11.5px;padding:4px 6px" />
-            <input type="text" id="drawerNewAcompResumo" placeholder="Resumo do alinhamento ou contato..." class="g-select" style="font-size:11.5px;padding:4px 8px" />
-          </div>
-          <textarea id="drawerNewAcompEnc" placeholder="Encaminhamentos / Próximos passos combinados..." rows="2" style="width:100%;border-radius:6px;border:1px solid var(--bd);background:var(--in);color:var(--tx);font:inherit;font-size:11.5px;padding:6px;outline:none;resize:vertical"></textarea>
-          <div style="display:flex;justify-content:flex-end">
-            <button id="drawerBtnAddAcomp" class="g-btn g-btn-primary" type="button" style="padding:4px 10px;font-size:11.5px">Registrar Acompanhamento</button>
-          </div>
-        </div>
-
-        <!-- Histórico Lista -->
-        <div id="drawerAcompList" style="display:flex;flex-direction:column;gap:8px;max-height:220px;overflow-y:auto">
-          ${acompanhamentos.length === 0 ? `<div style="font-size:11.5px;color:var(--mut);text-align:center;padding:8px">Nenhum acompanhamento registrado ainda para esta EJ.</div>` :
-            acompanhamentos.map(a => {
-              const aDateFmt = a.data ? a.data.split('-').reverse().join('/') : (a.criadoEm ? new Date(a.criadoEm).toLocaleDateString('pt-BR') : '');
-              return `
-                <div style="background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:4px">
-                  <div style="display:flex;justify-content:space-between;align-items:center">
-                    <span class="chip-status-days alert-ok" style="font-size:10.5px">📅 ${aDateFmt}</span>
-                    <button class="btn-del-acomp" data-aid="${a.id}" style="border:none;background:transparent;color:var(--rf);cursor:pointer;font-size:11px" title="Excluir registro">Excluir</button>
+            <!-- Lista de Pendências -->
+            <div id="drawerPendenciasList" style="display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto;margin-bottom:12px">
+              ${pendencias.length === 0 ? `<div style="font-size:12px;color:var(--mut);text-align:center;padding:18px 8px">Nenhuma pendência aberta para esta EJ.</div>` :
+                pendencias.map(p => `
+                  <div class="drawer-pend-item" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 10px;border-radius:8px;background:var(--card);border:1px solid var(--bd);font-size:12px">
+                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;flex:1;min-width:0;${p.concluida ? 'text-decoration:line-through;opacity:0.6' : ''}">
+                      <input type="checkbox" class="drawer-pend-chk" data-pid="${p.id}" ${p.concluida ? 'checked' : ''} />
+                      <span style="word-break:break-word">${esc(p.texto)}</span>
+                      ${p.prazo ? `<small style="color:var(--yf);font-weight:600;white-space:nowrap">(${esc(p.prazo)})</small>` : ''}
+                    </label>
+                    <button class="btn-del-pend" data-pid="${p.id}" style="border:none;background:transparent;color:var(--mut);cursor:pointer;padding:2px 6px;font-size:13px" title="Excluir pendência">✕</button>
                   </div>
-                  <div style="font-weight:600;font-size:12px;color:var(--tx);margin-top:2px">${esc(a.resumo || 'Sem resumo')}</div>
-                  ${a.encaminhamentos ? `
-                    <div style="font-size:11.5px;color:var(--mut);background:var(--in);padding:6px 8px;border-radius:6px;line-height:1.4">
-                      <b>Encaminhamentos:</b> ${esc(a.encaminhamentos)}
+                `).join('')
+              }
+            </div>
+          </div>
+
+          <!-- Formulário Adicionar Pendência -->
+          <div style="display:flex;gap:6px;margin-top:auto">
+            <input type="text" id="drawerNewPendText" placeholder="Nova pendência ou ação..." class="g-select" style="flex:1;font-size:12px;padding:6px 10px" />
+            <input type="text" id="drawerNewPendPrazo" placeholder="Prazo..." class="g-select" style="width:80px;font-size:12px;padding:6px 8px" />
+            <button id="drawerBtnAddPend" class="g-btn g-btn-primary" type="button" style="padding:6px 12px;font-size:12px">+</button>
+          </div>
+        </div>
+
+        <!-- Histórico de Acompanhamentos Registrados -->
+        <div style="background:var(--in);border:1px solid var(--bd);border-radius:12px;padding:14px;display:flex;flex-direction:column">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <b style="font-size:13px;color:var(--tx)">📝 Registros de Acompanhamento</b>
+            <span style="font-size:11.5px;color:var(--mut);font-weight:600">${acompanhamentos.length} registro${acompanhamentos.length !== 1 ? 's' : ''}</span>
+          </div>
+
+          <!-- Formulário Novo Registro de Acompanhamento -->
+          <div style="background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:10px;margin-bottom:10px;display:flex;flex-direction:column;gap:7px">
+            <div style="display:grid;grid-template-columns:125px 1fr;gap:6px">
+              <input type="date" id="drawerNewAcompDate" class="g-select" style="font-size:11.5px;padding:5px 7px" />
+              <input type="text" id="drawerNewAcompResumo" placeholder="Resumo do alinhamento ou contato..." class="g-select" style="font-size:11.5px;padding:5px 9px" />
+            </div>
+            <textarea id="drawerNewAcompEnc" placeholder="Encaminhamentos / Próximos passos combinados..." rows="2" style="width:100%;border-radius:7px;border:1px solid var(--bd);background:var(--in);color:var(--tx);font:inherit;font-size:11.5px;padding:7px;outline:none;resize:vertical"></textarea>
+            <div style="display:flex;justify-content:flex-end">
+              <button id="drawerBtnAddAcomp" class="g-btn g-btn-primary" type="button" style="padding:5px 12px;font-size:11.5px">Registrar Acompanhamento</button>
+            </div>
+          </div>
+
+          <!-- Histórico Lista -->
+          <div id="drawerAcompList" style="display:flex;flex-direction:column;gap:8px;max-height:200px;overflow-y:auto">
+            ${acompanhamentos.length === 0 ? `<div style="font-size:12px;color:var(--mut);text-align:center;padding:12px 8px">Nenhum acompanhamento registrado ainda para esta EJ.</div>` :
+              acompanhamentos.map(a => {
+                const aDateFmt = a.data ? a.data.split('-').reverse().join('/') : (a.criadoEm ? new Date(a.criadoEm).toLocaleDateString('pt-BR') : '');
+                return `
+                  <div style="background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:4px">
+                    <div style="display:flex;justify-content:space-between;align-items:center">
+                      <span class="chip-status-days alert-ok" style="font-size:10.5px">📅 ${aDateFmt}</span>
+                      <button class="btn-del-acomp" data-aid="${a.id}" style="border:none;background:transparent;color:var(--rf);cursor:pointer;font-size:11px" title="Excluir registro">Excluir</button>
                     </div>
-                  ` : ''}
-                </div>
-              `;
-            }).join('')
-          }
+                    <div style="font-weight:600;font-size:12px;color:var(--tx);margin-top:2px">${esc(a.resumo || 'Sem resumo')}</div>
+                    ${a.encaminhamentos ? `
+                      <div style="font-size:11.5px;color:var(--mut);background:var(--in);padding:6px 8px;border-radius:6px;line-height:1.4">
+                        <b>Encaminhamentos:</b> ${esc(a.encaminhamentos)}
+                      </div>
+                    ` : ''}
+                  </div>
+                `;
+              }).join('')
+            }
+          </div>
         </div>
       </div>
     </div>
