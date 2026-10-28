@@ -1790,9 +1790,9 @@ aside.collapsed .btn-collapse-desktop .sb-footer-ic{
 .ej-drawer-overlay{
   position:fixed;
   inset:0;
-  background:rgba(15, 23, 42, 0.45);
-  backdrop-filter:blur(4px);
-  -webkit-backdrop-filter:blur(4px);
+  background:rgba(15, 23, 42, 0.55);
+  backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
   z-index:90;
   opacity:0;
   transition:opacity .25s ease;
@@ -1806,15 +1806,15 @@ aside.collapsed .btn-collapse-desktop .sb-footer-ic{
   top:0;
   right:0;
   bottom:0;
-  width:min(520px, 100vw);
+  width:min(530px, 100vw);
   background:var(--card);
   border-left:1px solid var(--bd);
-  box-shadow:-12px 0 38px rgba(15, 23, 42, 0.22);
+  box-shadow:-16px 0 48px -12px rgba(15, 23, 42, 0.28);
   z-index:95;
   display:flex;
   flex-direction:column;
   transform:translateX(100%);
-  transition:transform .3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition:transform .32s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .ej-drawer.active{
   transform:translateX(0);
@@ -1830,89 +1830,111 @@ aside.collapsed .btn-collapse-desktop .sb-footer-ic{
   background:var(--card);
   position:sticky;
   top:0;
-  z-index:2;
+  z-index:10;
 }
 .ej-drawer-title-grp{
   flex:1;
   min-width:0;
 }
 .ej-drawer-kicker{
-  display:block;
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
   font-size:10.5px;
   font-weight:700;
   text-transform:uppercase;
-  letter-spacing:.08em;
+  letter-spacing:.07em;
   color:var(--ac);
-  margin-bottom:4px;
+  background:var(--ac-light);
+  padding:3px 8px;
+  border-radius:6px;
+  margin-bottom:6px;
 }
 .ej-drawer-title{
-  margin:0 0 8px;
-  font-size:20px;
+  margin:0 0 10px;
+  font-size:21px;
   font-weight:800;
   color:var(--tx);
-  letter-spacing:-.01em;
+  letter-spacing:-.02em;
   line-height:1.25;
   word-break:break-word;
 }
 .ej-drawer-badges{
   display:flex;
   align-items:center;
-  gap:8px;
+  gap:6px;
   flex-wrap:wrap;
 }
 .ej-drawer-pill{
-  font-size:11px;
-  font-weight:700;
-  padding:2px 8px;
+  font-size:11.5px;
+  font-weight:600;
+  padding:3px 9px;
   border-radius:6px;
   background:var(--in);
   border:1px solid var(--bd);
   color:var(--tx);
-}
-.btn-drawer-close{
-  background:var(--in);
-  border:1px solid var(--bd);
-  color:var(--mut);
-  border-radius:10px;
-  width:34px;
-  height:34px;
   display:inline-flex;
   align-items:center;
-  justify-content:center;
-  cursor:pointer;
-  transition:all .15s ease;
-  flex:none;
+  gap:5px;
+  white-space:nowrap;
+  line-height:1.2;
+}
+.ej-drawer-pill.pill-rank{
+  background:rgba(245, 158, 11, 0.1);
+  border-color:rgba(245, 158, 11, 0.3);
+  color:var(--yf);
+  font-weight:700;
+}
+.btn-drawer-close{
+  background:var(--in) !important;
+  border:1px solid var(--bd) !important;
+  color:var(--tx) !important;
+  border-radius:10px !important;
+  width:36px !important;
+  height:36px !important;
+  padding:0 !important;
+  margin:0 !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  cursor:pointer !important;
+  transition:all .15s ease !important;
+  flex:none !important;
+  box-shadow:none !important;
 }
 .btn-drawer-close:hover{
-  color:var(--tx);
-  background:var(--table-hover);
-  border-color:var(--tx);
+  background:var(--table-hover) !important;
+  border-color:var(--mut-light) !important;
+  transform:scale(1.05);
 }
 .btn-drawer-close svg{
-  width:16px;
-  height:16px;
+  width:18px;
+  height:18px;
+  stroke:var(--tx);
+  stroke-width:2.4;
 }
 
 .ej-drawer-body{
   flex:1;
   overflow-y:auto;
   -webkit-overflow-scrolling:touch;
-  padding:20px 22px;
+  padding:18px 20px 24px;
   display:flex;
   flex-direction:column;
-  gap:18px;
+  gap:16px;
 }
 
 /* Visão Rápida / Raio-X Executivo em 3s */
 .drawer-health-card{
-  background:linear-gradient(135deg, rgba(79,70,229,.05) 0%, rgba(6,182,212,.05) 100%), var(--in);
+  background:linear-gradient(135deg, rgba(99,102,241,0.05) 0%, rgba(6,182,212,0.04) 100%), var(--in);
   border:1px solid var(--bd);
   border-radius:14px;
-  padding:14px 16px;
+  padding:12px 14px;
+  box-shadow:var(--sh-sm);
 }
 .drawer-health-header{
   font-size:11px;
-  font-weight:700;
+  font-weight:800;
   text-transform:uppercase;
   letter-spacing:.06em;
   color:var(--mut);
@@ -1921,27 +1943,62 @@ aside.collapsed .btn-collapse-desktop .sb-footer-ic{
   align-items:center;
   justify-content:space-between;
 }
+.drawer-health-badge-cluster{
+  font-size:11px;
+  font-weight:700;
+  color:var(--ac);
+  background:var(--card);
+  border:1px solid var(--bd);
+  padding:2px 8px;
+  border-radius:6px;
+}
 .drawer-health-grid{
   display:grid;
-  grid-template-columns:repeat(auto-fit, minmax(78px, 1fr));
-  gap:8px;
+  grid-template-columns:repeat(5, 1fr);
+  gap:6px;
+}
+@media (max-width:440px){
+  .drawer-health-grid{
+    grid-template-columns:repeat(3, 1fr);
+  }
 }
 .drawer-health-item{
   background:var(--card);
   border:1px solid var(--bd);
   border-radius:10px;
-  padding:8px 8px 6px;
+  padding:8px 4px 7px;
   display:flex;
   flex-direction:column;
   align-items:center;
-  gap:4px;
+  justify-content:center;
+  gap:5px;
   text-align:center;
+  transition:all .15s ease;
+  min-height:56px;
+  box-shadow:0 1px 2px rgba(0,0,0,0.02);
+}
+.drawer-health-item:hover{
+  border-color:var(--ac);
+  transform:translateY(-1px);
 }
 .drawer-health-item small{
   font-size:9.5px;
-  font-weight:700;
+  font-weight:800;
   text-transform:uppercase;
+  letter-spacing:.04em;
   color:var(--mut);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width:100%;
+}
+.drawer-health-item .chip{
+  font-size:10px;
+  font-weight:700;
+  padding:2px 6px;
+  border-radius:99px;
+  white-space:nowrap;
+  line-height:1.2;
 }
 
 /* Seções de Indicadores no Drawer */
@@ -1949,35 +2006,117 @@ aside.collapsed .btn-collapse-desktop .sb-footer-ic{
   background:var(--card);
   border:1px solid var(--bd);
   border-radius:14px;
-  padding:16px;
-  box-shadow:0 1px 3px rgba(0,0,0,.03);
+  padding:16px 18px;
+  box-shadow:var(--sh-card);
 }
 .drawer-sec-header{
   display:flex;
   align-items:center;
   justify-content:space-between;
-  margin-bottom:12px;
-  padding-bottom:10px;
+  margin-bottom:14px;
+  padding-bottom:12px;
   border-bottom:1px solid var(--bd);
+  gap:10px;
 }
 .drawer-sec-title{
   display:flex;
   align-items:center;
-  gap:8px;
-  font-size:13px;
+  gap:9px;
+  font-size:13.5px;
   font-weight:800;
   color:var(--tx);
-  letter-spacing:.01em;
+  letter-spacing:-.01em;
 }
-.drawer-sec-title svg{
-  width:16px;
-  height:16px;
-  color:var(--ac);
+.drawer-sec-icon-box{
+  width:28px;
+  height:28px;
+  border-radius:8px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  flex:none;
 }
+.drawer-sec-icon-box svg{
+  width:15px;
+  height:15px;
+}
+.drawer-sec-icon-fat{ background:rgba(16,185,129,0.1); color:var(--gf); }
+.drawer-sec-icon-ecm{ background:rgba(99,102,241,0.1); color:var(--ac); }
+.drawer-sec-icon-csat{ background:rgba(245,158,11,0.1); color:var(--yf); }
+.drawer-sec-icon-colab{ background:rgba(6,182,212,0.1); color:#0891b2; }
+.drawer-sec-icon-cluster{ background:rgba(139,92,246,0.1); color:#7c3aed; }
+.drawer-sec-icon-gov{ background:rgba(99,102,241,0.1); color:var(--ac); }
+
+/* Hero Metrics Box (Realizado vs Meta) */
+.drawer-kpi-hero-box{
+  background:var(--in);
+  border:1px solid var(--bd);
+  border-radius:10px;
+  padding:10px 14px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  margin-bottom:12px;
+}
+.drawer-kpi-col{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+.drawer-kpi-col-label{
+  font-size:10px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+  color:var(--mut);
+}
+.drawer-kpi-col-val{
+  font-size:19px;
+  font-weight:800;
+  color:var(--tx);
+  font-variant-numeric:tabular-nums;
+  line-height:1.2;
+}
+.drawer-kpi-col-val.muted{
+  color:var(--mut);
+  font-weight:700;
+}
+
+/* Barra de Progresso Executiva */
+.drawer-progress-box{
+  margin-bottom:12px;
+}
+.drawer-progress-info{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:6px;
+  font-size:11.5px;
+}
+.drawer-progress-title{
+  color:var(--mut);
+  font-weight:600;
+}
+.drawer-progress-pct{
+  font-weight:800;
+  color:var(--tx);
+  font-variant-numeric:tabular-nums;
+}
+.drawer-progress-box .pb{
+  height:8px;
+  border-radius:99px;
+  background:rgba(148, 163, 184, 0.22);
+  margin:0;
+}
+.drawer-progress-box .pb i{
+  border-radius:99px;
+}
+
+/* Grid de Métricas Secundárias */
 .drawer-grid{
   display:grid;
   grid-template-columns:1fr 1fr;
-  gap:10px 14px;
+  gap:8px 12px;
 }
 .drawer-item{
   display:flex;
@@ -1998,21 +2137,38 @@ aside.collapsed .btn-collapse-desktop .sb-footer-ic{
   color:var(--tx);
   font-variant-numeric:tabular-nums;
 }
-.drawer-item-v.large{
-  font-size:18px;
-  font-weight:800;
-}
 
-.drawer-progress-box{
+/* Callouts de Alerta / Status */
+.drawer-callout-pill{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  padding:8px 12px;
+  border-radius:8px;
+  font-size:12px;
+  font-weight:600;
   margin-top:6px;
 }
-.drawer-progress-box .pb{
-  height:7px;
-  margin:4px 0 3px;
+.drawer-callout-pill.danger{
+  background:var(--rb);
+  color:var(--rf);
+  border:1px solid rgba(239,68,68,0.2);
+}
+.drawer-callout-pill.success{
+  background:var(--gb);
+  color:var(--gf);
+  border:1px solid rgba(16,185,129,0.2);
+}
+.drawer-callout-pill.neutral{
+  background:var(--in);
+  color:var(--tx);
+  border:1px solid var(--bd);
 }
 
+/* Footer do Drawer */
 .ej-drawer-footer{
-  padding:14px 22px;
+  padding:14px 20px;
   border-top:1px solid var(--bd);
   background:var(--card);
   display:flex;
@@ -2021,7 +2177,7 @@ aside.collapsed .btn-collapse-desktop .sb-footer-ic{
   gap:12px;
   position:sticky;
   bottom:0;
-  z-index:2;
+  z-index:10;
 }
 .btn-drawer-filter{
   display:inline-flex;
@@ -2030,6 +2186,32 @@ aside.collapsed .btn-collapse-desktop .sb-footer-ic{
   padding:9px 16px;
   font-size:12.5px;
   font-weight:700;
+  border-radius:10px;
+  background:linear-gradient(120deg,var(--ac),#7c3aed);
+  color:#fff;
+  border:0;
+  cursor:pointer;
+  transition:all .15s ease;
+  box-shadow:0 2px 6px rgba(99,102,241,0.25);
+}
+.btn-drawer-filter:hover{
+  filter:brightness(1.08);
+  transform:translateY(-1px);
+}
+.btn-drawer-close-foot{
+  background:var(--in) !important;
+  color:var(--tx) !important;
+  border:1px solid var(--bd) !important;
+  border-radius:10px !important;
+  padding:9px 18px !important;
+  font-size:12.5px !important;
+  font-weight:600 !important;
+  cursor:pointer !important;
+  transition:all .15s ease !important;
+}
+.btn-drawer-close-foot:hover{
+  background:var(--table-hover) !important;
+  border-color:var(--mut-light) !important;
 }
 
 /* Modal de Ativação do Firestore */
@@ -3125,21 +3307,24 @@ aside.collapsed .btn-collapse-desktop .sb-footer-ic{
 <aside id="ejDrawer" class="ej-drawer" style="display:none" aria-label="Perfil detalhado da EJ" aria-hidden="true">
   <div class="ej-drawer-header">
     <div class="ej-drawer-title-grp">
-      <span class="ej-drawer-kicker">Perfil da EJ</span>
+      <span class="ej-drawer-kicker">
+        <svg style="width:12px;height:12px;flex:none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 21h18M3 7v14M21 7v14M6 11h2M6 15h2M11 11h2M11 15h2M16 11h2M16 15h2M9 3l3-2 3 2v4H9V3z"/></svg>
+        Perfil da EJ
+      </span>
       <h2 id="drawerEjName" class="ej-drawer-title">–</h2>
       <div class="ej-drawer-badges" id="drawerEjBadges"></div>
     </div>
     <button id="btnDrawerClose" class="btn-drawer-close" type="button" aria-label="Fechar perfil da EJ" title="Fechar perfil (Esc)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
     </button>
   </div>
   <div class="ej-drawer-body" id="drawerEjBody"></div>
   <div class="ej-drawer-footer">
     <button id="btnDrawerFilterEj" class="btn-drawer-filter" type="button">
-      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
       <span>Filtrar na planilha</span>
     </button>
-    <button id="btnDrawerCloseFoot" class="ghost" type="button">Fechar</button>
+    <button id="btnDrawerCloseFoot" class="btn-drawer-close-foot" type="button">Fechar</button>
   </div>
 </aside>
 
@@ -3729,12 +3914,22 @@ function openEjProfile(ejName) {
 
   $('drawerEjName').textContent = d.nome;
   $('drawerEjBadges').innerHTML = `
+    <span class="ej-drawer-pill pill-rank">🏆 #${rank} de ${D.length} EJs</span>
     ${code ? `<span class="ej-drawer-pill" style="font-weight:700">Cód. ${esc(code)}</span>` : ''}
     <span class="ej-drawer-pill">${d.cl > 0 ? 'Classe C' + d.cl : 'Sem classe'}</span>
     ${renderStatus(d.cu)}
-    ${guardiao ? `<span class="ej-drawer-pill" style="background:var(--in);color:var(--tx)">👤 ${esc(guardiao.nome)}</span>` : `<span class="ej-drawer-pill" style="opacity:0.7">Sem guardião</span>`}
-    <span class="txt-muted" style="font-size:11.5px">Posição #${rank} de ${D.length} EJs</span>
+    ${guardiao ? `<span class="ej-drawer-pill" style="color:var(--tx)">👤 ${esc(guardiao.nome)}</span>` : `<span class="ej-drawer-pill" style="color:var(--mut)">Sem guardião</span>`}
   `;
+
+  // Helper para renderizar pílula padronizada nos 5 itens do Raio-X
+  const renderHealthStatus = st => {
+    const label = Array.isArray(st) ? st[0] : String(st || '');
+    const cfg = STATUS_CFG[label];
+    if (cfg && cfg.isChip) {
+      return `<span class="${cfg.cls}">${esc(cfg.text)}</span>`;
+    }
+    return `<span class="chip n">${esc(label || '–')}</span>`;
+  };
 
   // Itens do Diagnóstico Rápido em 3s
   const healthItems = [
@@ -3749,14 +3944,17 @@ function openEjProfile(ejName) {
     <!-- Raio-X Rápido -->
     <div class="drawer-health-card">
       <div class="drawer-health-header">
-        <span>Diagnóstico em 3s</span>
-        <span>${d.cl > 0 ? 'Cluster ' + d.cl : 'Sem cluster'}</span>
+        <span style="display:inline-flex;align-items:center;gap:6px">
+          <svg style="width:13px;height:13px;color:var(--ac)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          Diagnóstico em 3s
+        </span>
+        <span class="drawer-health-badge-cluster">${d.cl > 0 ? 'Cluster ' + d.cl : 'Sem cluster'}</span>
       </div>
       <div class="drawer-health-grid">
         ${healthItems.map(item => `
           <div class="drawer-health-item">
-            <small>${item.label}</small>
-            ${renderStatus(item.st)}
+            <small title="${item.label}">${item.label}</small>
+            ${renderHealthStatus(item.st)}
           </div>
         `).join('')}
       </div>
@@ -3766,27 +3964,34 @@ function openEjProfile(ejName) {
     <div class="drawer-section">
       <div class="drawer-sec-header">
         <div class="drawer-sec-title">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-          <span>Faturamento & Metas</span>
+          <div class="drawer-sec-icon-box drawer-sec-icon-fat">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+          <span>Faturamento &amp; Metas</span>
         </div>
         ${renderStatus(d.fa)}
       </div>
+
+      <div class="drawer-kpi-hero-box">
+        <div class="drawer-kpi-col">
+          <span class="drawer-kpi-col-label">Realizado</span>
+          <span class="drawer-kpi-col-val">${R(d.fat)}</span>
+        </div>
+        <div class="drawer-kpi-col">
+          <span class="drawer-kpi-col-label">Meta Anual</span>
+          <span class="drawer-kpi-col-val muted">${R(d.meta)}</span>
+        </div>
+      </div>
+
+      <div class="drawer-progress-box">
+        <div class="drawer-progress-info">
+          <span class="drawer-progress-title">Progresso da meta anual</span>
+          <span class="drawer-progress-pct">${Math.round(d.pct * 100)}%</span>
+        </div>
+        <div class="pb" title="${Math.round(d.pct * 100)}% atingido"><i class="${barCls}" style="width:${barWidth}%"></i></div>
+      </div>
+
       <div class="drawer-grid">
-        <div class="drawer-item">
-          <span class="drawer-item-k">Realizado</span>
-          <span class="drawer-item-v large">${R(d.fat)}</span>
-        </div>
-        <div class="drawer-item">
-          <span class="drawer-item-k">Meta Anual</span>
-          <span class="drawer-item-v large">${R(d.meta)}</span>
-        </div>
-        <div class="drawer-item full drawer-progress-box">
-          <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:700">
-            <span>Progresso da meta anual</span>
-            <span>${Math.round(d.pct * 100)}%</span>
-          </div>
-          <div class="pb"><i class="${barCls}" style="width:${barWidth}%"></i></div>
-        </div>
         <div class="drawer-item">
           <span class="drawer-item-k">Gap Restante</span>
           <span class="drawer-item-v ${gapCls}">${gap <= 0 ? '+' + R(-gap) + ' (superada)' : R(gap) + ' faltam'}</span>
@@ -3795,10 +4000,13 @@ function openEjProfile(ejName) {
           <span class="drawer-item-k">Esperado até ${mesNome}</span>
           <span class="drawer-item-v">${R(d.esp)}</span>
         </div>
-        <div class="drawer-item full">
-          <span class="drawer-item-k">vs. Esperado do mês</span>
-          <span class="drawer-item-v ${d.meta <= 0 ? '' : espCls}">${d.meta <= 0 ? '–' : (eg >= 0 ? '+' : '−') + R(Math.abs(eg)) + ' ' + (eg >= 0 ? 'acima do esperado' : 'abaixo do esperado')}</span>
-        </div>
+      </div>
+
+      <div class="drawer-callout-pill ${d.meta <= 0 ? 'neutral' : (eg >= 0 ? 'success' : 'danger')}">
+        <span style="font-size:11.5px;color:var(--mut)">vs. Esperado (${mesNome})</span>
+        <span style="font-weight:700">
+          ${d.meta <= 0 ? '–' : (eg >= 0 ? '↑ +' : '↓ −') + R(Math.abs(eg)) + ' ' + (eg >= 0 ? 'acima do esperado' : 'abaixo do esperado')}
+        </span>
       </div>
     </div>
 
@@ -3806,24 +4014,30 @@ function openEjProfile(ejName) {
     <div class="drawer-section">
       <div class="drawer-sec-header">
         <div class="drawer-sec-title">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          <div class="drawer-sec-icon-box drawer-sec-icon-ecm">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
           <span>ECM (Engajamento)</span>
         </div>
         ${renderStatus(d.ecm)}
       </div>
-      <div class="drawer-grid">
-        <div class="drawer-item">
-          <span class="drawer-item-k">Membros Engajados</span>
-          <span class="drawer-item-v">${d.eng} de ${d.mem || 0}</span>
+
+      <div class="drawer-kpi-hero-box">
+        <div class="drawer-kpi-col">
+          <span class="drawer-kpi-col-label">Membros Engajados</span>
+          <span class="drawer-kpi-col-val">${d.eng} <small style="font-size:13px;color:var(--mut);font-weight:600">/ ${d.mem || 0}</small></span>
         </div>
-        <div class="drawer-item">
-          <span class="drawer-item-k">Meta de Engajamento</span>
-          <span class="drawer-item-v">${d.ealvo} (${d.ecmP || 0}%)</span>
+        <div class="drawer-kpi-col">
+          <span class="drawer-kpi-col-label">Meta de Engajamento</span>
+          <span class="drawer-kpi-col-val muted">${d.ealvo} <small style="font-size:13px;font-weight:600">(${d.ecmP || 0}%)</small></span>
         </div>
-        <div class="drawer-item full">
-          <span class="drawer-item-k">Diferença</span>
-          <span class="drawer-item-v ${d.eng >= d.ealvo ? 'gt' : 'rt'}">${d.eng >= d.ealvo ? '+' + (d.eng - d.ealvo) + ' acima da meta' : (d.ealvo - d.eng) + ' membros faltantes'}</span>
-        </div>
+      </div>
+
+      <div class="drawer-callout-pill ${d.eng >= d.ealvo ? 'success' : 'danger'}">
+        <span style="font-size:11.5px;color:var(--mut)">Diferença para meta</span>
+        <span style="font-weight:700">
+          ${d.eng >= d.ealvo ? '↑ +' + (d.eng - d.ealvo) + ' acima da meta' : '↓ ' + (d.ealvo - d.eng) + ' membros faltantes'}
+        </span>
       </div>
     </div>
 
@@ -3831,27 +4045,33 @@ function openEjProfile(ejName) {
     <div class="drawer-section">
       <div class="drawer-sec-header">
         <div class="drawer-sec-title">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-          <span>CSAT & Satisfação</span>
+          <div class="drawer-sec-icon-box drawer-sec-icon-csat">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </div>
+          <span>CSAT &amp; Satisfação</span>
         </div>
         ${renderStatus(d.cs)}
       </div>
+
+      <div class="drawer-kpi-hero-box">
+        <div class="drawer-kpi-col">
+          <span class="drawer-kpi-col-label">Nota Média</span>
+          <span class="drawer-kpi-col-val">${d.ctr ? N1(d.nota) : '–'}</span>
+        </div>
+        <div class="drawer-kpi-col">
+          <span class="drawer-kpi-col-label">Meta de Nota</span>
+          <span class="drawer-kpi-col-val muted">${N1(d.calvo)}</span>
+        </div>
+      </div>
+
       <div class="drawer-grid">
         <div class="drawer-item">
-          <span class="drawer-item-k">Nota Média</span>
-          <span class="drawer-item-v">${d.ctr ? N1(d.nota) : '–'}</span>
-        </div>
-        <div class="drawer-item">
-          <span class="drawer-item-k">Meta de Nota</span>
-          <span class="drawer-item-v">${N1(d.calvo)}</span>
-        </div>
-        <div class="drawer-item">
           <span class="drawer-item-k">Contratos Avaliados</span>
-          <span class="drawer-item-v">${d.ctr || 0}</span>
+          <span class="drawer-item-v">${d.ctr || 0} avaliações</span>
         </div>
         <div class="drawer-item">
           <span class="drawer-item-k">Taxa de Coleta</span>
-          <span class="drawer-item-v ${d.coleta != null && d.coleta < 80 ? 'rt' : ''}">${d.coleta != null ? d.coleta + '%' : '–'}</span>
+          <span class="drawer-item-v ${d.coleta != null && d.coleta < 80 ? 'rt' : 'gt'}">${d.coleta != null ? d.coleta + '%' : '–'}</span>
         </div>
       </div>
     </div>
@@ -3860,26 +4080,32 @@ function openEjProfile(ejName) {
     <div class="drawer-section">
       <div class="drawer-sec-header">
         <div class="drawer-sec-title">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+          <div class="drawer-sec-icon-box drawer-sec-icon-colab">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          </div>
           <span>Faturamento Colaborativo</span>
         </div>
         ${renderStatus(d.co)}
       </div>
+
+      <div class="drawer-kpi-hero-box">
+        <div class="drawer-kpi-col">
+          <span class="drawer-kpi-col-label">Realizado</span>
+          <span class="drawer-kpi-col-val">${R(d.colab)}</span>
+        </div>
+        <div class="drawer-kpi-col">
+          <span class="drawer-kpi-col-label">Meta Anual</span>
+          <span class="drawer-kpi-col-val muted">${d.cm > 0 ? R(d.cm) : 'Sem meta'}</span>
+        </div>
+      </div>
+
       <div class="drawer-grid">
-        <div class="drawer-item">
-          <span class="drawer-item-k">Realizado</span>
-          <span class="drawer-item-v">${R(d.colab)}</span>
-        </div>
-        <div class="drawer-item">
-          <span class="drawer-item-k">Meta Anual</span>
-          <span class="drawer-item-v">${d.cm > 0 ? R(d.cm) : 'Sem meta'}</span>
-        </div>
         <div class="drawer-item">
           <span class="drawer-item-k">Esperado (${trk}m)</span>
           <span class="drawer-item-v">${d.cm > 0 ? R(d.cesp) : '–'}</span>
         </div>
         <div class="drawer-item">
-          <span class="drawer-item-k">Diferença</span>
+          <span class="drawer-item-k">Situação vs Meta</span>
           <span class="drawer-item-v ${d.cm > 0 && d.colab >= d.cm ? 'gt' : ''}">${d.cm > 0 ? (d.colab >= d.cm ? 'Meta batida' : R(d.cm - d.colab) + ' faltam') : '–'}</span>
         </div>
       </div>
@@ -3889,31 +4115,39 @@ function openEjProfile(ejName) {
     <div class="drawer-section">
       <div class="drawer-sec-header">
         <div class="drawer-sec-title">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>
-          <span>Cluster & Projeção</span>
+          <div class="drawer-sec-icon-box drawer-sec-icon-cluster">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+          </div>
+          <span>Cluster &amp; Projeção</span>
         </div>
         ${renderStatus(d.cu)}
       </div>
-      <div class="drawer-grid">
-        <div class="drawer-item">
-          <span class="drawer-item-k">Cluster Atual</span>
-          <span class="drawer-item-v">${d.cl > 0 ? 'Cluster ' + d.cl : 'Sem cluster'}</span>
+
+      <div class="drawer-kpi-hero-box">
+        <div class="drawer-kpi-col">
+          <span class="drawer-kpi-col-label">Cluster Atual</span>
+          <span class="drawer-kpi-col-val">${d.cl > 0 ? 'Cluster ' + d.cl : 'Sem cluster'}</span>
         </div>
-        <div class="drawer-item">
-          <span class="drawer-item-k">Índice Atual</span>
-          <span class="drawer-item-v">${formatClusterIdx(d.idx)}</span>
+        <div class="drawer-kpi-col">
+          <span class="drawer-kpi-col-label">Índice Atual</span>
+          <span class="drawer-kpi-col-val muted">${formatClusterIdx(d.idx)}</span>
         </div>
-        <div class="drawer-item full">
-          <span class="drawer-item-k">P/ Subir de Cluster</span>
-          <span class="drawer-item-v ${d.cl < 5 && d.cl >= 1 && d.idx < LOW[d.cl] ? 'rt' : 'gt'}">${d.cl < 5 && d.cl >= 1 && d.idx < LOW[d.cl] ? formatClusterIdx(LOW[d.cl] - d.idx) + ' faltam (mín. ' + formatClusterIdx(LOW[d.cl]) + ')' : (d.cl === 5 ? 'Cluster 5 (Máximo atingido)' : 'Patamar atingido')}</span>
-        </div>
+      </div>
+
+      <div class="drawer-callout-pill ${d.cl < 5 && d.cl >= 1 && d.idx < LOW[d.cl] ? 'danger' : 'success'}">
+        <span style="font-size:11.5px;color:var(--mut)">P/ Subir de Cluster</span>
+        <span style="font-weight:700">
+          ${d.cl < 5 && d.cl >= 1 && d.idx < LOW[d.cl] ? formatClusterIdx(LOW[d.cl] - d.idx) + ' faltam (mín. ' + formatClusterIdx(LOW[d.cl]) + ')' : (d.cl === 5 ? 'Cluster 5 (Máximo atingido)' : 'Patamar atingido')}
+        </span>
       </div>
     </div>
     <!-- 6. Governança, Guardião & Acompanhamentos -->
     <div class="drawer-section" id="drawerSecGuardioes">
       <div class="drawer-sec-header">
         <div class="drawer-sec-title">
-          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--ac)"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <div class="drawer-sec-icon-box drawer-sec-icon-gov">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
           <span>Governança &amp; Guardião</span>
         </div>
         <span id="drawerSquadTag" class="squad-pill-tag ${sq ? 'squad-pill-' + sq.id : 'squad-pill-none'}">
