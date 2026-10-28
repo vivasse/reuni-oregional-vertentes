@@ -3133,6 +3133,341 @@ aside.collapsed .btn-collapse-desktop .sb-footer-ic{
   color: #fff;
   border-color: var(--ac);
 }
+
+/* ==========================================================================
+   MENU SUSPENSO DE GUARDIÕES (SIDEBAR & SELETOR TOPO) + PERFIL DO GUARDIÃO
+   ========================================================================== */
+aside .bg.g-cnt {
+  background: rgba(99, 102, 241, 0.22);
+  color: #c7d2fe;
+  border: 1px solid rgba(99, 102, 241, 0.35);
+}
+aside .nv.sub.nv-g-sub {
+  padding: 6px 10px 6px 26px;
+  font-size: 12.5px;
+}
+aside .nv.sub.nv-g-add {
+  padding: 6px 10px 6px 26px;
+  font-size: 12px;
+  color: #38bdf8;
+  opacity: 0.9;
+  border: 1px dashed rgba(56, 189, 248, 0.28);
+  margin-top: 3px;
+}
+aside .nv.sub.nv-g-add:hover {
+  background: rgba(56, 189, 248, 0.12);
+  border-color: rgba(56, 189, 248, 0.5);
+  color: #fff;
+}
+aside .nv-g-group-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: rgba(255, 255, 255, 0.4);
+  padding: 6px 12px 2px 28px;
+  user-select: none;
+}
+aside.collapsed .nv-g-group-label {
+  display: none !important;
+}
+aside .nv-g-avatar-mini {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #fff;
+  flex-shrink: 0;
+  background: rgba(99, 102, 241, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+/* Barra de Menu Suspenso Rápido de Guardiões (Topo do Módulo) */
+.g-profile-switcher-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(6, 182, 212, 0.05));
+  border: 1px solid rgba(99, 102, 241, 0.22);
+  border-radius: 14px;
+  padding: 12px 18px;
+  box-shadow: var(--sh);
+}
+.g-switcher-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  flex: 1;
+  min-width: 260px;
+}
+.g-switcher-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--ac);
+  white-space: nowrap;
+}
+.g-profile-dropdown {
+  min-width: 280px;
+  max-width: 420px;
+  flex: 1;
+  padding: 9px 14px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(99, 102, 241, 0.35);
+  background: var(--card);
+  color: var(--tx);
+  font-size: 13.5px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05);
+  transition: all 0.18s ease;
+}
+.g-profile-dropdown:hover,
+.g-profile-dropdown:focus {
+  border-color: var(--ac);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+.g-switcher-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Header Card do Perfil Individual do Guardião */
+.g-profile-hero {
+  background: var(--card);
+  border: 1px solid var(--bd);
+  border-radius: 16px;
+  padding: 20px 24px;
+  box-shadow: var(--sh);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  position: relative;
+  overflow: hidden;
+}
+.g-profile-hero::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  background: var(--g-sq-color, var(--ac));
+}
+.g-profile-identity {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.g-profile-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--g-sq-color, #6366f1), #38bdf8);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 800;
+  box-shadow: 0 6px 16px rgba(99, 102, 241, 0.25);
+  flex-shrink: 0;
+}
+.g-profile-info h2 {
+  margin: 0 0 6px 0;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--tx);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.g-profile-badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.g-assign-ej-bar {
+  background: var(--in);
+  border: 1px dashed var(--bd);
+  border-radius: 12px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.g-assign-ej-bar select {
+  flex: 1;
+  min-width: 240px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--bd);
+  background: var(--card);
+  color: var(--tx);
+  font-size: 13px;
+  font-family: inherit;
+}
+
+/* Grid de Cards das EJs do Guardião */
+.g-profile-filter-pills {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.g-pf-pill {
+  padding: 6px 13px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 700;
+  border: 1px solid var(--bd);
+  background: var(--card);
+  color: var(--mut);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+.g-pf-pill:hover {
+  border-color: var(--ac);
+  color: var(--tx);
+}
+.g-pf-pill.active {
+  background: var(--ac);
+  color: #fff;
+  border-color: var(--ac);
+}
+.g-profile-ejs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 16px;
+}
+@media (max-width: 768px) {
+  .g-profile-ejs-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.g-ej-profile-card {
+  background: var(--card);
+  border: 1px solid var(--bd);
+  border-radius: 16px;
+  padding: 18px 20px;
+  box-shadow: var(--sh);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  position: relative;
+}
+.g-ej-profile-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.1);
+  border-color: rgba(99, 102, 241, 0.4);
+}
+.g-ej-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+.g-ej-card-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--tx);
+  cursor: pointer;
+  line-height: 1.25;
+  transition: color 0.15s;
+}
+.g-ej-card-title:hover {
+  color: var(--ac);
+}
+.g-ej-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 5px;
+}
+.g-ej-card-fat-box {
+  background: var(--in);
+  border: 1px solid var(--bd);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.g-ej-card-fat-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.g-ej-card-ind-strip {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+}
+.g-ej-ind-mini {
+  background: var(--in);
+  border: 1px solid var(--bd);
+  border-radius: 8px;
+  padding: 6px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+}
+.g-ej-ind-mini small {
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--mut);
+  letter-spacing: 0.3px;
+}
+.g-ej-ind-mini .chip {
+  font-size: 10px;
+  padding: 2px 6px;
+}
+.g-ej-card-note {
+  font-size: 12px;
+  color: var(--mut);
+  background: rgba(99, 102, 241, 0.04);
+  border-left: 3px solid var(--ac);
+  padding: 8px 10px;
+  border-radius: 0 8px 8px 0;
+  line-height: 1.4;
+}
+.g-ej-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid var(--bd);
+}
 </style>
 </head>
 <body>
@@ -5002,8 +5337,10 @@ const IC = {
 const ico = k => `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${IC[k]}</svg>`;
 const TT = { geral: "MONITORAMENTO", fa: 'Faturamento', ecm: 'ECM', cs: 'CSAT', co: 'Colaborativo', cu: 'Cluster', guardioes: 'MÓDULO GUARDIÕES', upd: 'Atualizar dados' };
 let OPEN = true;
+let OPEN_G = true;
 
 function nav() {
+  if (typeof ensureGuardioesData === 'function') ensureGuardioesData();
   const badge = k => {
     if (!D.length) return '';
     const r = D.filter(d => d[k][1] === 'r').length, y = D.filter(d => d[k][1] === 'y').length;
@@ -5019,9 +5356,39 @@ function nav() {
   };
   const sub = [['fa', 'Faturamento'], ['ecm', 'ECM'], ['cs', 'CSAT'], ['co', 'Colaborativo'], ['cu', 'Cluster']];
   const gBadge = typeof guardioesNavBadge === 'function' ? guardioesNavBadge() : '';
+  const isGuardiaoProfile = typeof VW === 'string' && VW.startsWith('guardiao:');
+  const isGuardioesGeneral = VW === 'guardioes';
+
+  const guardioesList = (typeof G_DATA !== 'undefined' && G_DATA && G_DATA.guardioes)
+    ? Object.values(G_DATA.guardioes).sort((a, b) => {
+        if ((a.squad || '9') !== (b.squad || '9')) return String(a.squad || '9').localeCompare(String(b.squad || '9'));
+        if (!!b.isLider !== !!a.isLider) return b.isLider ? 1 : -1;
+        return (a.nome || '').localeCompare(b.nome || '');
+      })
+    : [];
+
+  let gSubHtml = '';
+  if (OPEN_G) {
+    gSubHtml += `<button class="nv sub nv-g-sub${isGuardioesGeneral ? ' on' : ''}" data-v="guardioes-geral" title="Visão Geral de todos os Squads e Guardiões"><span class="nv-g-avatar-mini" style="background:rgba(56,189,248,.32)">★</span><span class="lb">Visão Geral (Squads)</span><span class="bw"><span class="bg g-cnt" title="${guardioesList.length} guardiões cadastrados">${guardioesList.length}</span></span></button>`;
+    guardioesList.forEach(g => {
+      const gEjs = (D && D.length && typeof getEjGuardiao === 'function')
+        ? D.filter(d => getEjGuardiao(d)?.id === g.id)
+        : Object.values((G_DATA && G_DATA.vinculos) || {}).filter(v => v && v.guardiaoId === g.id);
+      const gRed = (D && D.length && typeof getEjGuardiao === 'function')
+        ? D.filter(d => getEjGuardiao(d)?.id === g.id && d.fa && d.fa[1] === 'r').length
+        : 0;
+      const sqColor = g.squad === '1' ? 'rgba(99,102,241,.55)' : g.squad === '2' ? 'rgba(6,182,212,.55)' : 'rgba(16,185,129,.55)';
+      const initials = (g.nome || 'G').trim().slice(0, 2).toUpperCase();
+      const sqName = (G_DATA && G_DATA.squads && G_DATA.squads[g.squad]) ? G_DATA.squads[g.squad].nome : ('Squad ' + (g.squad || ''));
+      gSubHtml += `<button class="nv sub nv-g-sub${VW === 'guardiao:' + g.id ? ' on' : ''}" data-v="guardiao:${g.id}" title="Perfil de ${esc(g.nome)} (${esc(sqName)}) · ${gEjs.length} EJ(s)"><span class="nv-g-avatar-mini" style="background:${sqColor}">${esc(initials)}</span><span class="lb">${g.isLider ? '👑 ' : ''}${esc(g.nome)}</span><span class="bw">${gRed ? `<span class="bg r" title="${gRed} EJ(s) em vermelho">${gRed}</span>` : ''}<span class="bg g-cnt" title="${gEjs.length} EJ(s) na carteira">${gEjs.length}</span></span></button>`;
+    });
+    gSubHtml += `<button class="nv sub nv-g-add" data-v="new-guardiao" title="Cadastrar novo guardião"><span class="nv-g-avatar-mini" style="background:rgba(56,189,248,.22);color:#38bdf8">+</span><span class="lb">+ Novo Guardião</span></button>`;
+  }
+
   $('nav').innerHTML = `<button class="nv${VW === 'geral' ? ' on' : ''}" data-v="geral" title="MONITORAMENTO">${ico('geral')}<span class="lb">MONITORAMENTO</span><span class="car${OPEN ? '' : ' cl'}">${ico('chev')}</span></button>` +
     (OPEN ? sub.map(([k, l]) => `<button class="nv sub${k === VW ? ' on' : ''}" data-v="${k}" title="${l}${badgeTip(k)}">${ico(k)}<span class="lb">${l}</span><span class="bw">${badge(k)}</span></button>`).join('') : '') +
-    `<button class="nv${VW === 'guardioes' ? ' on' : ''}" data-v="guardioes" title="Módulo Guardiões">${ico('guardioes')}<span class="lb">Guardiões</span><span class="bw">${gBadge}</span></button>` +
+    `<button class="nv${(isGuardioesGeneral || isGuardiaoProfile) ? ' on' : ''}" data-v="guardioes" title="Perfil dos Guardiões e Carteira de EJs">${ico('guardioes')}<span class="lb">GUARDIÕES</span><span class="bw">${gBadge}</span><span class="car${OPEN_G ? '' : ' cl'}">${ico('chev')}</span></button>` +
+    gSubHtml +
     `<div class="sep"></div><button class="nv${VW === 'upd' ? ' on' : ''}" data-v="upd" title="Atualizar dados">${ico('upd')}<span class="lb">Atualizar dados</span></button>`;
 }
 
@@ -5030,7 +5397,26 @@ $('nav').onclick = e => {
   const b = e.target.closest('.nv');
   if (!b) return;
   const v = b.dataset.v;
+  if (v === 'new-guardiao') {
+    if (typeof openNovoGuardiaoModal === 'function') openNovoGuardiaoModal();
+    return;
+  }
   if (v === 'geral') OPEN = VW === 'geral' ? !OPEN : true;
+  if (v === 'guardioes') {
+    OPEN_G = (VW === 'guardioes') ? !OPEN_G : true;
+    go('guardioes');
+    scrollTo({ top: 0 });
+    return;
+  }
+  if (v === 'guardioes-geral') {
+    OPEN_G = true;
+    go('guardioes');
+    scrollTo({ top: 0 });
+    return;
+  }
+  if (v && v.startsWith('guardiao:')) {
+    OPEN_G = true;
+  }
   go(v);
   scrollTo({ top: 0 });
 };
@@ -5038,6 +5424,7 @@ $('nav').onclick = e => {
 function refresh() { 
   if (VW === 'geral') render();
   else if (VW === 'guardioes') renderGuardioesView();
+  else if (typeof VW === 'string' && VW.startsWith('guardiao:')) renderGuardiaoProfileView(VW.split(':')[1]);
   else indRows();
 }
 
@@ -5046,16 +5433,27 @@ function go(v, keep) {
   closePop();
   VW = v;
   const has = D.length > 0;
+  const isGuardiaoProfile = typeof v === 'string' && v.startsWith('guardiao:');
+  const isGuardioesMod = v === 'guardioes' || isGuardiaoProfile;
   $('out').hidden = !(v === 'geral' && has);
   $('ind').hidden = !(IND[v] && has);
-  if ($('guardioes')) $('guardioes').hidden = v !== 'guardioes';
+  if ($('guardioes')) $('guardioes').hidden = !isGuardioesMod;
   $('upd').hidden = v !== 'upd';
-  $('empty').hidden = has || v === 'upd' || v === 'guardioes';
+  $('empty').hidden = has || v === 'upd' || isGuardioesMod;
   if (v === 'geral' && has) render();
   if (IND[v] && has) renderInd();
   if (v === 'guardioes') renderGuardioesView();
-  $('pt').textContent = TT[v] || 'MONITORAMENTO';
-  $('ps').textContent = IND[v] ? IND[v].d : v === 'upd' ? 'Envie a planilha da ALIMENTAÇÃO para atualizar todos os links em tempo real' : v === 'guardioes' ? 'Acompanhamento por squads, líderes, guardiões e reuniões quinzenais' : 'Planilha completa, boards por indicador e maiores gaps do núcleo';
+  if (isGuardiaoProfile) {
+    if (typeof ensureGuardioesData === 'function') ensureGuardioesData();
+    const gid = v.split(':')[1];
+    renderGuardiaoProfileView(gid);
+    const gObj = G_DATA && G_DATA.guardioes && G_DATA.guardioes[gid];
+    $('pt').textContent = gObj ? `PERFIL DO GUARDIÃO · ${gObj.nome.toUpperCase()}` : 'PERFIL DO GUARDIÃO';
+    $('ps').textContent = gObj ? `Carteira de EJs, metas, diagnóstico e acompanhamento individual de ${gObj.nome}` : 'Carteira de EJs do guardião';
+  } else {
+    $('pt').textContent = TT[v] || 'MONITORAMENTO';
+    $('ps').textContent = IND[v] ? IND[v].d : v === 'upd' ? 'Envie a planilha da ALIMENTAÇÃO para atualizar todos os links em tempo real' : v === 'guardioes' ? 'Acompanhamento por squads, líderes, guardiões e reuniões quinzenais' : 'Planilha completa, boards por indicador e maiores gaps do núcleo';
+  }
   nav();
   mark();
 }
@@ -6123,8 +6521,124 @@ function guardioesNavBadge() {
   return count > 0 ? `<span class="bg y" title="${count} pendência(s) aberta(s)">${count}</span>` : '';
 }
 
+function ensureGuardioesData() {
+  if (typeof G_DATA === 'undefined' || !G_DATA) return;
+  if (!G_DATA.guardioes || Object.keys(G_DATA.guardioes).length === 0) {
+    try {
+      const cachedG = JSON.parse(localStorage.getItem('vert_guardioes_cache') || 'null');
+      if (cachedG && cachedG.guardioes && Object.keys(cachedG.guardioes).length > 0) {
+        Object.assign(G_DATA, cachedG);
+        return;
+      }
+    } catch(e) {}
+    if (typeof INITIAL_GUARDIOES_DATA !== 'undefined') {
+      G_DATA.squads = JSON.parse(JSON.stringify(INITIAL_GUARDIOES_DATA.squads));
+      G_DATA.guardioes = JSON.parse(JSON.stringify(INITIAL_GUARDIOES_DATA.guardioes));
+      G_DATA.vinculos = JSON.parse(JSON.stringify(INITIAL_GUARDIOES_DATA.vinculos));
+      G_DATA.pendencias = JSON.parse(JSON.stringify(INITIAL_GUARDIOES_DATA.pendencias));
+    }
+  }
+}
+
+function renderGuardioesDropdownBar(activeGid = '') {
+  ensureGuardioesData();
+  const guardioesList = Object.values((G_DATA && G_DATA.guardioes) || {}).sort((a, b) => {
+    if ((a.squad || '9') !== (b.squad || '9')) return String(a.squad || '9').localeCompare(String(b.squad || '9'));
+    if (!!b.isLider !== !!a.isLider) return b.isLider ? 1 : -1;
+    return (a.nome || '').localeCompare(b.nome || '');
+  });
+
+  const squadsIds = ['1', '2', '3'];
+  let optGroupsHtml = '';
+  squadsIds.forEach(sqId => {
+    const sq = (G_DATA.squads && G_DATA.squads[sqId]) || { id: sqId, nome: 'Squad ' + sqId };
+    const sqMembers = guardioesList.filter(g => String(g.squad) === sqId);
+    if (sqMembers.length) {
+      optGroupsHtml += `<optgroup label="🛡️ ${esc(sq.nome)}">`;
+      sqMembers.forEach(g => {
+        const ejCount = (D && D.length)
+          ? D.filter(d => getEjGuardiao(d)?.id === g.id).length
+          : Object.values((G_DATA && G_DATA.vinculos) || {}).filter(v => v && v.guardiaoId === g.id).length;
+        optGroupsHtml += `<option value="${esc(g.id)}" ${activeGid === g.id ? 'selected' : ''}>👤 ${esc(g.nome)}${g.isLider ? ' 👑 (Líder)' : ''} — ${ejCount} EJ${ejCount === 1 ? '' : 's'}</option>`;
+      });
+      optGroupsHtml += `</optgroup>`;
+    }
+  });
+
+  const otherMembers = guardioesList.filter(g => !squadsIds.includes(String(g.squad)));
+  if (otherMembers.length) {
+    optGroupsHtml += `<optgroup label="Outros Guardiões">`;
+    otherMembers.forEach(g => {
+      const ejCount = (D && D.length) ? D.filter(d => getEjGuardiao(d)?.id === g.id).length : 0;
+      optGroupsHtml += `<option value="${esc(g.id)}" ${activeGid === g.id ? 'selected' : ''}>👤 ${esc(g.nome)} — ${ejCount} EJ${ejCount === 1 ? '' : 's'}</option>`;
+    });
+    optGroupsHtml += `</optgroup>`;
+  }
+
+  return `
+    <div class="g-profile-switcher-bar">
+      <div class="g-switcher-left">
+        <span class="g-switcher-label">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:16px;height:16px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Perfil do Guardião:
+        </span>
+        <select id="gQuickProfileSelect" class="g-profile-dropdown" title="Selecione um Guardião para abrir seu perfil e ver todas as suas EJs">
+          <option value="geral" ${!activeGid ? 'selected' : ''}>📊 Visão Geral — Todos os Guardiões (${guardioesList.length})</option>
+          ${optGroupsHtml}
+        </select>
+      </div>
+      <div class="g-switcher-right">
+        ${activeGid ? `
+          <button type="button" class="g-btn" id="btnGBackToGeneral" title="Voltar para a visão geral de todos os squads e guardiões">
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+            <span>Visão Geral</span>
+          </button>
+          <button type="button" class="g-btn" id="btnGOpenEditModal" data-gid="${esc(activeGid)}" title="Editar nome, squad ou transferir EJs em lote">
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            <span>Editar / Transferir Carteira</span>
+          </button>
+        ` : ''}
+        <button type="button" class="g-btn g-btn-primary" id="btnGQuickNewGuardian" title="Cadastrar novo guardião (atualiza o menu automaticamente)">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+          <span>+ Novo Guardião</span>
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+function bindGuardioesDropdownBar() {
+  const sel = $('gQuickProfileSelect');
+  if (sel) {
+    sel.onchange = e => {
+      const val = e.target.value;
+      if (!val || val === 'geral') {
+        go('guardioes');
+      } else {
+        go('guardiao:' + val);
+      }
+    };
+  }
+  const btnBack = $('btnGBackToGeneral');
+  if (btnBack) {
+    btnBack.onclick = () => go('guardioes');
+  }
+  const btnEdit = $('btnGOpenEditModal');
+  if (btnEdit) {
+    btnEdit.onclick = () => {
+      const gid = btnEdit.dataset.gid;
+      if (gid) openGuardianProfileModal(gid);
+    };
+  }
+  const btnNew = $('btnGQuickNewGuardian');
+  if (btnNew) {
+    btnNew.onclick = openNovoGuardiaoModal;
+  }
+}
+
 function refreshGuardioesViews() {
   if (VW === 'guardioes') renderGuardioesView();
+  else if (typeof VW === 'string' && VW.startsWith('guardiao:')) renderGuardiaoProfileView(VW.split(':')[1]);
   nav();
 }
 
@@ -6136,18 +6650,26 @@ let G_FILTERS = {
   pendencia: ''   // '', 'open', 'none'
 };
 
+let G_PROFILE_FILTER = {
+  tab: 'all',     // 'all', 'risk', 'ok', 'pend', 'late'
+  q: ''
+};
+
 function renderGuardioesView() {
+  ensureGuardioesData();
   const container = $('guardioes');
   if (!container) return;
 
   if (!D || !D.length) {
     container.innerHTML = `
+      ${renderGuardioesDropdownBar('')}
       <div class="card" style="padding:48px 20px;text-align:center">
         <div style="font-size:32px;margin-bottom:12px">🛡️</div>
         <h2 style="margin:0 0 8px;font-size:18px">Carregando dados das EJs…</h2>
         <p style="color:var(--mut);margin:0;font-size:13px">Aguardando a sincronização da planilha para exibir a governança dos Guardiões.</p>
       </div>
     `;
+    bindGuardioesDropdownBar();
     return;
   }
 
@@ -6227,6 +6749,9 @@ function renderGuardioesView() {
   ];
 
   let html = `
+    <!-- Menu Suspenso Rápido de Perfil do Guardião -->
+    ${renderGuardioesDropdownBar('')}
+
     <!-- Topo Hero & Ações -->
     <div class="g-hero-card">
       <div class="g-hero-titles">
@@ -6234,7 +6759,7 @@ function renderGuardioesView() {
           <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:22px;height:22px;color:var(--ac)"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           Governança &amp; Acompanhamento de Guardiões
         </h2>
-        <p>Acompanhamento estratégico por squads, líderes, guardiões, metas e atas de reuniões quinzenais.</p>
+        <p>Selecione um guardião no menu suspenso acima (ou na barra lateral) para abrir o Perfil do Guardião e ver todas as suas EJs.</p>
       </div>
       <div class="g-hero-actions">
         <button id="btnGNewGuardian" class="g-btn g-btn-primary" type="button" title="Cadastrar novo guardião">
@@ -6633,12 +7158,14 @@ function renderGuardioesView() {
     };
   }
 
-  // Clique em chips de guardião abre o Perfil / Transferência do Guardião
+  bindGuardioesDropdownBar();
+
+  // Clique em chips de guardião abre o Perfil Dedicado do Guardião
   container.querySelectorAll('.chip-guardiao, .guardian-chip-pill').forEach(el => {
     el.onclick = e => {
       e.stopPropagation();
       const gid = el.dataset.gid;
-      if (gid) openGuardianProfileModal(gid);
+      if (gid) go('guardiao:' + gid);
     };
   });
 
@@ -6787,7 +7314,376 @@ function renderGuardioesViewFast() {
     el.onclick = e => {
       e.stopPropagation();
       const gid = el.dataset.gid;
-      if (gid) openGuardianProfileModal(gid);
+      if (gid) go('guardiao:' + gid);
+    };
+  });
+}
+
+// ==========================================================================
+// PERFIL INDIVIDUAL DO GUARDIÃO (CARTEIRA DE EJs DO GUARDIÃO)
+// ==========================================================================
+function renderGuardiaoProfileView(guardianId) {
+  ensureGuardioesData();
+  const container = $('guardioes');
+  if (!container) return;
+
+  const g = G_DATA && G_DATA.guardioes && G_DATA.guardioes[guardianId];
+  if (!g) {
+    go('guardioes');
+    return;
+  }
+
+  const sq = (G_DATA.squads && G_DATA.squads[g.squad]) || { id: g.squad || '1', nome: 'Squad ' + (g.squad || '1') };
+  const sqColor = g.squad === '1' ? '#6366f1' : g.squad === '2' ? '#06b6d4' : '#10b981';
+  const initials = (g.nome || 'G').trim().slice(0, 2).toUpperCase();
+
+  if (!D || !D.length) {
+    container.innerHTML = `
+      ${renderGuardioesDropdownBar(guardianId)}
+      <div class="card" style="padding:48px 20px;text-align:center">
+        <div style="font-size:32px;margin-bottom:12px">🛡️</div>
+        <h2 style="margin:0 0 8px;font-size:18px">Carregando carteira de ${esc(g.nome)}…</h2>
+        <p style="color:var(--mut);margin:0;font-size:13px">Aguardando a sincronização da planilha.</p>
+      </div>
+    `;
+    bindGuardioesDropdownBar();
+    return;
+  }
+
+  // EJs vinculadas a este guardião
+  const myEjs = D.filter(d => getEjGuardiao(d)?.id === guardianId);
+  const somaFat = myEjs.reduce((a, b) => a + (b.fat || 0), 0);
+  const somaMeta = myEjs.reduce((a, b) => a + (b.meta || 0), 0);
+  const pctMeta = somaMeta > 0 ? Math.round((somaFat / somaMeta) * 100) : 0;
+
+  const emDiaCount = myEjs.filter(d => d.fa && (d.fa[1] === 'm' || d.fa[1] === 'g')).length;
+  const pctEmDia = myEjs.length > 0 ? Math.round((emDiaCount / myEjs.length) * 100) : 0;
+  const redCount = myEjs.filter(d => d.fa && d.fa[1] === 'r').length;
+
+  let openPendCount = 0;
+  let withPendEjsCount = 0;
+  let lateRegCount = 0;
+  myEjs.forEach(d => {
+    const p = getEjOpenPendenciasCount(d);
+    openPendCount += p;
+    if (p > 0) withPendEjsCount++;
+    const days = getEjDaysSinceUpdate(d);
+    if (days === null || days > 15) lateRegCount++;
+  });
+
+  // Opções para vincular nova EJ ao perfil deste guardião
+  const otherEjs = D.filter(d => getEjGuardiao(d)?.id !== guardianId).sort((a, b) => {
+    const ga = getEjGuardiao(a);
+    const gb = getEjGuardiao(b);
+    if (!!ga !== !!gb) return ga ? 1 : -1;
+    return (a.nome || '').localeCompare(b.nome || '');
+  });
+
+  let assignOptsHtml = `<option value="">+ Selecionar EJ para adicionar à carteira de ${esc(g.nome)}...</option>`;
+  const unassignedList = otherEjs.filter(d => !getEjGuardiao(d));
+  const assignedOtherList = otherEjs.filter(d => !!getEjGuardiao(d));
+  if (unassignedList.length) {
+    assignOptsHtml += `<optgroup label="⚠️ EJs Sem Guardião (${unassignedList.length})">`;
+    unassignedList.forEach(d => {
+      assignOptsHtml += `<option value="${esc(getEjCode(d))}">➕ ${esc(d.nome)} (#${esc(getEjCode(d))}) — Sem guardião</option>`;
+    });
+    assignOptsHtml += `</optgroup>`;
+  }
+  if (assignedOtherList.length) {
+    assignOptsHtml += `<optgroup label="🔄 EJs com outro Guardião (Transferir para ${esc(g.nome)})">`;
+    assignedOtherList.forEach(d => {
+      const curG = getEjGuardiao(d);
+      assignOptsHtml += `<option value="${esc(getEjCode(d))}">🔄 ${esc(d.nome)} (atual: ${esc(curG ? curG.nome : '')})</option>`;
+    });
+    assignOptsHtml += `</optgroup>`;
+  }
+
+  // Aplicar filtro de abas e busca nas EJs do guardião
+  let visibleEjs = myEjs.slice();
+  if (G_PROFILE_FILTER.tab === 'risk') {
+    visibleEjs = visibleEjs.filter(d => d.fa && d.fa[1] === 'r');
+  } else if (G_PROFILE_FILTER.tab === 'ok') {
+    visibleEjs = visibleEjs.filter(d => d.fa && (d.fa[1] === 'm' || d.fa[1] === 'g'));
+  } else if (G_PROFILE_FILTER.tab === 'pend') {
+    visibleEjs = visibleEjs.filter(d => getEjOpenPendenciasCount(d) > 0);
+  } else if (G_PROFILE_FILTER.tab === 'late') {
+    visibleEjs = visibleEjs.filter(d => {
+      const days = getEjDaysSinceUpdate(d);
+      return days === null || days > 15;
+    });
+  }
+  if (G_PROFILE_FILTER.q) {
+    const q = G_PROFILE_FILTER.q.toLowerCase().trim();
+    visibleEjs = visibleEjs.filter(d => {
+      const code = getEjCode(d);
+      const v = getEjVinculo(d);
+      return (d.nome && d.nome.toLowerCase().includes(q)) ||
+             (code && code.toLowerCase().includes(q)) ||
+             (v && v.presidente && v.presidente.toLowerCase().includes(q));
+    });
+  }
+
+  let html = `
+    <!-- Menu Suspenso Rápido de Perfil do Guardião -->
+    ${renderGuardioesDropdownBar(guardianId)}
+
+    <!-- Hero do Perfil do Guardião -->
+    <div class="g-profile-hero" style="--g-sq-color:${sqColor}">
+      <div class="g-profile-identity">
+        <div class="g-profile-avatar">${esc(initials)}</div>
+        <div class="g-profile-info">
+          <h2>
+            <span>${esc(g.nome)}</span>
+            ${g.isLider ? `<span class="squad-leader-badge">👑 Líder do ${esc(sq.nome)}</span>` : ''}
+          </h2>
+          <div class="g-profile-badges">
+            <span class="squad-pill-tag squad-pill-${esc(sq.id)}">🛡️ ${esc(sq.nome)}</span>
+            <span class="chip n">📋 ${myEjs.length} ${myEjs.length === 1 ? 'EJ acompanhada' : 'EJs acompanhadas'}</span>
+            <span class="chip ${redCount > 0 ? 'r' : 'g'}">${redCount > 0 ? `${redCount} em risco (vermelho)` : '0 em vermelho'}</span>
+            <span class="chip ${openPendCount > 0 ? 'y' : 'n'}">${openPendCount} pendência${openPendCount === 1 ? '' : 's'} aberta${openPendCount === 1 ? '' : 's'}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="g-assign-ej-bar" style="flex:1;max-width:520px">
+        <select id="gProfileQuickAssignSelect" title="Vincular uma EJ diretamente à carteira deste guardião">
+          ${assignOptsHtml}
+        </select>
+        <button type="button" class="g-btn g-btn-primary" id="btnGProfileQuickAssign">
+          <span>+ Vincular EJ</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 5 KPIs da Carteira do Guardião -->
+    <div class="g-kpis-grid">
+      <div class="g-kpi-card">
+        <span class="g-kpi-label">Minhas EJs</span>
+        <b class="g-kpi-val">${myEjs.length}</b>
+        <span class="g-kpi-sub">na carteira de ${esc(g.nome)}</span>
+      </div>
+      <div class="g-kpi-card">
+        <span class="g-kpi-label">Faturamento da Carteira</span>
+        <b class="g-kpi-val" style="color:var(--ac)">${R(somaFat)}</b>
+        <span class="g-kpi-sub">Meta: ${R(somaMeta)} (${pctMeta}%)</span>
+      </div>
+      <div class="g-kpi-card">
+        <span class="g-kpi-label">Metas em Dia</span>
+        <b class="g-kpi-val" style="color:var(--g)">${emDiaCount} de ${myEjs.length} <small style="font-size:14px">(${pctEmDia}%)</small></b>
+        <span class="g-kpi-sub">meta batida ou verde</span>
+      </div>
+      <div class="g-kpi-card">
+        <span class="g-kpi-label">EJs em Risco</span>
+        <b class="g-kpi-val" style="color:${redCount > 0 ? 'var(--r)' : 'var(--g)'}">${redCount}</b>
+        <span class="g-kpi-sub">faturamento no vermelho</span>
+      </div>
+      <div class="g-kpi-card">
+        <span class="g-kpi-label">Pendências Abertas</span>
+        <b class="g-kpi-val" style="color:${openPendCount > 0 ? 'var(--y)' : 'var(--g)'}">${openPendCount}</b>
+        <span class="g-kpi-sub">${withPendEjsCount} EJ(s) com ações</span>
+      </div>
+    </div>
+
+    <!-- Barra de Filtros da Carteira do Guardião -->
+    <div class="g-toolbar" style="justify-content:space-between">
+      <div class="g-profile-filter-pills">
+        <button type="button" class="g-pf-pill ${G_PROFILE_FILTER.tab === 'all' ? 'active' : ''}" data-tab="all">Todas (${myEjs.length})</button>
+        <button type="button" class="g-pf-pill ${G_PROFILE_FILTER.tab === 'risk' ? 'active' : ''}" data-tab="risk">🔴 Em Risco (${redCount})</button>
+        <button type="button" class="g-pf-pill ${G_PROFILE_FILTER.tab === 'ok' ? 'active' : ''}" data-tab="ok">🟢 Em Dia (${emDiaCount})</button>
+        <button type="button" class="g-pf-pill ${G_PROFILE_FILTER.tab === 'pend' ? 'active' : ''}" data-tab="pend">⚠️ Com Pendências (${withPendEjsCount})</button>
+        <button type="button" class="g-pf-pill ${G_PROFILE_FILTER.tab === 'late' ? 'active' : ''}" data-tab="late">⏰ Sem Registro &gt;15d (${lateRegCount})</button>
+      </div>
+      <div class="g-search-wrap" style="max-width:300px">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="gProfileSearchInput" placeholder="Buscar EJ na carteira de ${esc(g.nome)}…" value="${esc(G_PROFILE_FILTER.q)}" />
+      </div>
+    </div>
+  `;
+
+  if (visibleEjs.length === 0) {
+    html += `
+      <div class="card" style="padding:42px 20px;text-align:center">
+        <div style="font-size:32px;margin-bottom:10px">📂</div>
+        <h3 style="margin:0 0 6px;font-size:16px">${myEjs.length === 0 ? `${esc(g.nome)} ainda não possui EJs vinculadas` : 'Nenhuma EJ encontrada neste filtro'}</h3>
+        <p style="color:var(--mut);margin:0;font-size:13px">${myEjs.length === 0 ? 'Use o seletor "+ Vincular EJ" acima para adicionar EJs à carteira deste guardião.' : 'Experimente mudar a aba de filtro ou limpar a busca.'}</p>
+      </div>
+    `;
+  } else {
+    html += `<div class="g-profile-ejs-grid">`;
+    visibleEjs.forEach(d => {
+      const code = getEjCode(d);
+      const v = getEjVinculo(d);
+      const acomp = getEjAcompanhamentos(d);
+      const openPend = getEjOpenPendenciasCount(d);
+      const days = getEjDaysSinceUpdate(d);
+      const fatPct = d.meta > 0 ? Math.min(100, Math.round((d.fat / d.meta) * 100)) : 0;
+      const fatColor = COL[d.fa[1]] || 'var(--ac)';
+
+      const daysBadge = days === null
+        ? `<span class="chip-status-days alert-danger">Sem registro</span>`
+        : days <= 15
+          ? `<span class="chip-status-days alert-ok">Em dia (${days === 0 ? 'hoje' : days + 'd'})</span>`
+          : days <= 30
+            ? `<span class="chip-status-days alert-warning">&gt;15d (${days}d)</span>`
+            : `<span class="chip-status-days alert-danger">&gt;30d (${days}d)</span>`;
+
+      html += `
+        <div class="g-ej-profile-card">
+          <div class="g-ej-card-top">
+            <div>
+              <div class="g-ej-card-title" data-ej="${esc(d.nome)}" title="Abrir perfil completo de ${esc(d.nome)}">${esc(d.nome)}</div>
+              <div class="g-ej-card-meta">
+                ${code ? `<span class="ej-code-badge">#${esc(code)}</span>` : ''}
+                <span class="chip n" style="font-size:10.5px;padding:2px 7px">Classe ${esc(d.cls)}</span>
+                <span class="chip n" style="font-size:10.5px;padding:2px 7px">Cluster ${d.clu || '—'}</span>
+                ${v && v.presidente ? `<span style="font-size:11.5px;color:var(--mut)">👤 Pres: <b>${esc(v.presidente)}</b></span>` : ''}
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+              ${daysBadge}
+              ${openPend > 0 ? `<span class="badge-pend badge-pend-open">⚠️ ${openPend} pendência${openPend > 1 ? 's' : ''}</span>` : ''}
+            </div>
+          </div>
+
+          <!-- Faturamento & Meta da EJ -->
+          <div class="g-ej-card-fat-box">
+            <div class="g-ej-card-fat-row">
+              <div>
+                <small style="font-size:10px;font-weight:800;color:var(--mut);text-transform:uppercase">Faturamento Realizado</small>
+                <div style="font-size:18px;font-weight:800;color:var(--tx)">${R(d.fat)} <small style="font-size:12px;font-weight:600;color:var(--mut)">/ ${R(d.meta)}</small></div>
+              </div>
+              <div style="text-align:right">
+                ${renderStatus(d.fa)}
+                <div style="font-size:11.5px;font-weight:700;color:var(--mut);margin-top:3px">${fatPct}% da meta · Gap: ${R(d.gap)}</div>
+              </div>
+            </div>
+            <div class="drawer-progress-track" style="height:7px;margin:2px 0">
+              <div class="drawer-progress-fill" style="width:${fatPct}%;background:${fatColor}"></div>
+            </div>
+          </div>
+
+          <!-- Diagnóstico nos 5 Indicadores -->
+          <div class="g-ej-card-ind-strip">
+            <div class="g-ej-ind-mini">
+              <small>Fat.</small>
+              ${renderStatus(d.fa)}
+            </div>
+            <div class="g-ej-ind-mini">
+              <small>ECM</small>
+              ${renderStatus(d.ecm)}
+            </div>
+            <div class="g-ej-ind-mini">
+              <small>CSAT</small>
+              ${renderStatus(d.cs)}
+            </div>
+            <div class="g-ej-ind-mini">
+              <small>Colab.</small>
+              ${renderStatus(d.co)}
+            </div>
+            <div class="g-ej-ind-mini">
+              <small>Cluster</small>
+              ${renderStatus(d.cu)}
+            </div>
+          </div>
+
+          <!-- Último Registro de Acompanhamento -->
+          ${acomp.length > 0 ? `
+            <div class="g-ej-card-note">
+              <div style="font-weight:700;font-size:11px;color:var(--tx);margin-bottom:2px">📌 Último acompanhamento (${esc(acomp[0].data ? acomp[0].data.split('-').reverse().join('/') : 'Recente')}):</div>
+              <div>${esc(acomp[0].resumo ? (acomp[0].resumo.length > 120 ? acomp[0].resumo.slice(0, 120) + '…' : acomp[0].resumo) : '')}</div>
+            </div>
+          ` : `
+            <div class="g-ej-card-note" style="border-left-color:var(--bd);opacity:0.8">
+              Nenhum acompanhamento quinzenal registrado ainda. Clique em <b>Abrir Perfil &amp; Acompanhar EJ</b> para registrar.
+            </div>
+          `}
+
+          <!-- Rodapé do Card -->
+          <div class="g-ej-card-actions">
+            <button type="button" class="g-btn" data-unassign-code="${esc(code)}" data-unassign-name="${esc(d.nome)}" style="padding:6px 10px;font-size:11.5px;color:var(--mut)" title="Remover EJ da carteira deste guardião">
+              Desvincular
+            </button>
+            <button type="button" class="g-btn g-btn-primary btn-open-ej" data-ej="${esc(d.nome)}" style="padding:7px 14px;font-size:12.5px">
+              <span>Abrir Perfil &amp; Acompanhar EJ</span>
+              <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </button>
+          </div>
+        </div>
+      `;
+    });
+    html += `</div>`;
+  }
+
+  container.innerHTML = html;
+
+  // Eventos do Perfil do Guardião
+  bindGuardioesDropdownBar();
+
+  // Botão Vincular EJ rapidamente
+  const btnQuickAssign = $('btnGProfileQuickAssign');
+  const selQuickAssign = $('gProfileQuickAssignSelect');
+  if (btnQuickAssign && selQuickAssign) {
+    btnQuickAssign.onclick = async () => {
+      const code = selQuickAssign.value;
+      if (!code) {
+        alert("Selecione uma EJ na lista para vincular à carteira de " + g.nome + ".");
+        return;
+      }
+      const ejObj = D.find(x => getEjCode(x) === code);
+      await guardioesSet(`vinculos/${code}/guardiaoId`, guardianId);
+      if (ejObj && (!G_DATA.vinculos[code] || !G_DATA.vinculos[code].nomeEJ)) {
+        await guardioesSet(`vinculos/${code}/nomeEJ`, ejObj.nome);
+      }
+      renderGuardiaoProfileView(guardianId);
+      nav();
+    };
+  }
+
+  // Abas de filtro
+  container.querySelectorAll('.g-pf-pill').forEach(btn => {
+    btn.onclick = () => {
+      G_PROFILE_FILTER.tab = btn.dataset.tab || 'all';
+      renderGuardiaoProfileView(guardianId);
+    };
+  });
+
+  // Busca nas EJs do guardião
+  const searchIn = $('gProfileSearchInput');
+  if (searchIn) {
+    searchIn.oninput = e => {
+      G_PROFILE_FILTER.q = e.target.value;
+      const pos = searchIn.selectionStart;
+      renderGuardiaoProfileView(guardianId);
+      const newIn = $('gProfileSearchInput');
+      if (newIn) {
+        newIn.focus();
+        try { newIn.setSelectionRange(pos, pos); } catch(err) {}
+      }
+    };
+  }
+
+  // Abrir perfil da EJ (Drawer)
+  container.querySelectorAll('.g-ej-card-title, .btn-open-ej').forEach(el => {
+    el.onclick = e => {
+      e.stopPropagation();
+      const ejName = el.dataset.ej;
+      if (ejName && typeof openEjProfile === 'function') {
+        openEjProfile(ejName);
+      }
+    };
+  });
+
+  // Desvincular EJ rapidamente
+  container.querySelectorAll('[data-unassign-code]').forEach(btn => {
+    btn.onclick = async e => {
+      e.stopPropagation();
+      const code = btn.dataset.unassignCode;
+      const name = btn.dataset.unassignName;
+      if (!code) return;
+      if (!confirm(`Deseja desvincular a EJ "${name}" da carteira de ${g.nome}?`)) return;
+      await guardioesSet(`vinculos/${code}/guardiaoId`, null);
+      renderGuardiaoProfileView(guardianId);
+      nav();
     };
   });
 }
@@ -7049,7 +7945,7 @@ function openGuardianProfileModal(guardianId) {
 
       alert("Transferência realizada com sucesso!");
       openGuardianProfileModal(guardianId);
-      renderGuardioesView();
+      refreshGuardioesViews();
     };
   }
 
@@ -7073,7 +7969,7 @@ function openGuardianProfileModal(guardianId) {
       await guardioesSet(`guardioes/${guardianId}`, g);
       alert("Cadastro do guardião atualizado com sucesso!");
       openGuardianProfileModal(guardianId);
-      renderGuardioesView();
+      refreshGuardioesViews();
     };
   }
 
@@ -7091,7 +7987,11 @@ function openGuardianProfileModal(guardianId) {
       await guardioesRemove(`guardioes/${guardianId}`);
       modal.style.display = 'none';
       alert(`Guardião "${g.nome}" excluído. Suas EJs agora constam como "Sem guardião".`);
-      renderGuardioesView();
+      if (VW === 'guardiao:' + guardianId) {
+        go('guardioes');
+      } else {
+        refreshGuardioesViews();
+      }
     };
   }
 
@@ -7143,8 +8043,9 @@ function openNovoGuardiaoModal() {
 
       await guardioesSet(`guardioes/${gid}`, novoG);
       modal.style.display = 'none';
-      alert(`Guardião "${nomeVal}" cadastrado com sucesso!`);
-      renderGuardioesView();
+      OPEN_G = true;
+      alert(`Guardião "${nomeVal}" cadastrado com sucesso! O menu de Guardiões foi atualizado.`);
+      go('guardiao:' + gid);
     };
   }
 }
