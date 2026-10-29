@@ -1153,6 +1153,82 @@
       }
     }
 
+    /* CONSTRUTOR DE CONDIÇÕES E EVENTOS */
+    .cond-builder {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      background: var(--surface-subtle);
+    }
+
+    .cond-builder-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .cond-logic-toggle {
+      display: inline-flex;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      background: var(--surface);
+    }
+
+    .cond-logic-btn {
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+
+    .cond-logic-btn.active {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .cond-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .cond-row {
+      display: grid;
+      grid-template-columns: minmax(210px, 2fr) minmax(95px, 0.8fr) minmax(130px, 1.2fr) auto;
+      gap: 8px;
+      align-items: center;
+      background: var(--surface);
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+    }
+
+    .cond-preview-bar {
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-secondary);
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    @media (max-width: 768px) {
+      .cond-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
     /* MOBILE RESPONSIVENESS */
     @media (max-width: 768px) {
       .sidebar {
@@ -1282,6 +1358,18 @@
         <div class="sb-sub">
           <button class="sb-item" data-nav="guardioes">Guardiões</button>
         </div>
+
+        <button class="sb-item" data-nav="eventos">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+            <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+            <path d="M4 22h16" />
+            <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+            <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+            <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+          </svg>
+          Eventos
+        </button>
 
         <button class="sb-item" data-nav="upload">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1675,6 +1763,47 @@
             </div>
           </div>
         </section>
+
+        <!-- 6) TELA: EVENTOS -->
+        <section class="screen" id="scr-eventos">
+          <!-- Lista de Eventos -->
+          <div id="eventosListView">
+            <div class="section-header" style="margin-bottom:20px;">
+              <div>
+                <p class="status-sentence" id="eventosStatusSentence" style="margin-bottom:4px;">Eventos e Premiações do Núcleo</p>
+                <span style="font-size:13px;color:var(--text-muted);">Configure palcos das EJs, palcos do Núcleo e premiações apuradas automaticamente.</span>
+              </div>
+              <button class="btn btn-primary" id="btnNewEvento">+ Novo evento</button>
+            </div>
+            <div class="cards-grid" id="eventosCardsGrid"></div>
+          </div>
+
+          <!-- Editor do Evento -->
+          <div id="eventoEditorView" style="display:none;">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px;">
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                <button class="btn btn-sm" id="btnBackToEventos">← Todos os eventos</button>
+                <span id="evtEditorStatusBadge"></span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <button class="btn btn-sm" id="btnDuplicateActiveEvento">Duplicar evento</button>
+                <button class="btn btn-sm" id="btnDeleteActiveEvento" style="color:var(--danger);">Excluir</button>
+              </div>
+            </div>
+
+            <p class="status-sentence" id="evtEditorTitle" style="margin-bottom:16px;">—</p>
+
+            <div class="tabs-bar" id="evtEditorTabs">
+              <button class="tab-btn active" data-evttab="dados">Dados do evento</button>
+              <button class="tab-btn" data-evttab="palcos_ej">Palcos das EJs</button>
+              <button class="tab-btn" data-evttab="palcos_nucleo">Palcos do Núcleo</button>
+              <button class="tab-btn" data-evttab="premiacoes">Premiações</button>
+              <button class="tab-btn" data-evttab="resultado">Resultado</button>
+            </div>
+
+            <div id="evtEditorTabBody"></div>
+          </div>
+        </section>
       </main>
     </div>
   </div>
@@ -1723,6 +1852,7 @@
 
     const STORAGE_KEY_MONITOR = 'vert_raw_v1';
     const STORAGE_KEY_GUARDIOES = 'vert_guardioes_cache';
+    const STORAGE_KEY_EVENTOS = 'vert_eventos_cache';
 
     const $ = id => document.getElementById(id);
     const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -1850,6 +1980,7 @@
         espC: { 1: '', 2: '', 3: '', 4: '', 5: '' }
       },
       gData: JSON.parse(JSON.stringify(INITIAL_GUARDIOES_DATA)),
+      eventos: {},      // Map id -> evento (coleção 'eventos')
       ejs: [],          // Memoized calculated EJs
       rankings: {},     // Map cod -> rank position (1-based)
       metrics: null,    // Memoized summary metrics
@@ -1875,7 +2006,15 @@
         drawerEjCod: null,
         drawerTab: 'resumo',
         drawerAcompLimit: 5,
-        drawerPendLimit: 8
+        drawerPendLimit: 8,
+        activeEventoId: null,
+        eventoTab: 'dados',
+        sandboxRequisito: {
+          logica: 'E',
+          condicoes: [
+            { metrica: 'fa_pct_meta', operador: '>=', valor: 100 }
+          ]
+        }
       }
     };
 
@@ -2063,9 +2202,10 @@
           cu = b === 'SOBE' ? ['Sobe', 'g'] : b === 'PERMANECE' ? ['Mantém', 'n'] : ['Cai', 'r'];
         }
 
+        const crescFat = g(75);
         out.push({
           cod, id: num(r[0]), nome, cl,
-          fat, meta, esp, gap, pct, fa,
+          fat, meta, esp, gap, pct, fa, crescFat,
           ecm, eng, ealvo, mem, ecmP: ecmPctMeta,
           cs, nota, calvo, ctr, coleta,
           co, colab, cm, cesp, projColab,
@@ -2150,12 +2290,14 @@
     let RTDB = null;
     let unsubMonitor = null;
     let unsubGuardioes = null;
+    let unsubEventos = null;
     let rtdbAttached = false;
     let backoffStep = 0;
     let backoffTimer = null;
     const BACKOFF_DELAYS = [5000, 10000, 30000, 60000];
     let lastMonitorSig = '';
     let lastGuardioesSig = '';
+    let lastEventosSig = '';
 
     // Salva a planilha e os parâmetros imediatamente no navegador para nunca perder ao dar F5
     function saveLocalCache() {
@@ -2173,6 +2315,11 @@
           localStorage.setItem(STORAGE_KEY_GUARDIOES, JSON.stringify(STORE.gData));
         }
       } catch (e) { console.warn('Erro ao salvar cache local de guardiões:', e); }
+      try {
+        if (STORE.eventos) {
+          localStorage.setItem(STORAGE_KEY_EVENTOS, JSON.stringify(STORE.eventos));
+        }
+      } catch (e) { console.warn('Erro ao salvar cache local de eventos:', e); }
     }
 
     // Restaura a planilha e os guardiões instantaneamente ao abrir a página
@@ -2210,6 +2357,16 @@
           }
         }
       } catch (e) { console.warn('Erro ao ler cache local de guardiões:', e); }
+
+      try {
+        const rawEv = localStorage.getItem(STORAGE_KEY_EVENTOS);
+        if (rawEv) {
+          const evMap = JSON.parse(rawEv);
+          if (evMap && typeof evMap === 'object') {
+            STORE.eventos = evMap;
+          }
+        }
+      } catch (e) { console.warn('Erro ao ler cache local de eventos:', e); }
     }
 
     function setCloudStatus(state, text) {
@@ -2305,6 +2462,7 @@
       if (isRetry) {
         if (unsubMonitor) { try { unsubMonitor(); } catch (e) { } unsubMonitor = null; }
         if (unsubGuardioes) { try { unsubGuardioes(); } catch (e) { } unsubGuardioes = null; }
+        if (unsubEventos) { try { unsubEventos(); } catch (e) { } unsubEventos = null; }
       }
 
       setCloudStatus('syncing', 'Sincronizando');
@@ -2327,6 +2485,13 @@
               applyCloudGuardioesData(val, val.t || JSON.stringify(val).length);
             }
           }, err => console.warn('RTDB guardioes listener:', err));
+
+          RTDB.ref('eventos').on('value', snap => {
+            const val = snap.val();
+            if (val && typeof val === 'object') {
+              applyCloudEventosMap(val);
+            }
+          }, err => console.warn('RTDB eventos listener:', err));
         } catch (e) { }
       }
 
@@ -2368,6 +2533,29 @@
           },
           err => {
             console.warn('Firestore guardioes_mod/bundle listener erro:', err);
+          }
+        );
+      }
+
+      if (DB && !unsubEventos) {
+        unsubEventos = DB.collection('eventos').onSnapshot(
+          { includeMetadataChanges: false },
+          snap => {
+            if (snap.metadata && snap.metadata.hasPendingWrites) return;
+            const map = {};
+            snap.forEach(doc => {
+              const d = doc.data();
+              if (d && d.id) map[d.id] = d;
+            });
+            if (Object.keys(map).length > 0) {
+              applyCloudEventosMap(map);
+            } else if (!(snap.metadata && snap.metadata.fromCache) && Object.keys(STORE.eventos || {}).length > 0) {
+              // Se a nuvem ainda não tem os eventos locais, envia os locais
+              Object.values(STORE.eventos).forEach(ev => salvarEventoNoBanco(ev, false));
+            }
+          },
+          err => {
+            console.warn('Firestore coleção eventos listener erro:', err);
           }
         );
       }
@@ -3846,6 +4034,7 @@
       monitoramento: 'Monitoramento',
       squads: 'Squads',
       guardioes: 'Guardiões',
+      eventos: 'Eventos',
       upload: 'Atualizar dados',
       parametros: 'Parâmetros'
     };
@@ -3854,6 +4043,7 @@
       STORE.ui.screen = scr;
       if (scr === 'squads') STORE.ui.activeSquadId = null;
       if (scr === 'guardioes') STORE.ui.activeGuardiaoId = null;
+      if (scr === 'eventos') STORE.ui.activeEventoId = null;
 
       document.querySelectorAll('.sb-nav .sb-item').forEach(b => {
         b.classList.toggle('active', b.dataset.nav === scr);
@@ -3871,6 +4061,7 @@
       if (scr === 'monitoramento') renderMonitoramento();
       else if (scr === 'squads') renderSquads();
       else if (scr === 'guardioes') renderGuardioes();
+      else if (scr === 'eventos') renderEventos();
     }
 
     function bindEvents() {
@@ -4255,10 +4446,3541 @@
       });
     }
 
+    // Alias de compatibilidade solicitado para abertura do perfil da EJ
+    window.openEjProfile = openEjDrawer;
+
+    // ============================================================================
+    // 14. MÓDULO DE EVENTOS — FASE 1: CATÁLOGO DE MÉTRICAS, MOTOR PURO E TESTES
+    // ============================================================================
+
+    /**
+     * Catálogo único e extensível de métricas por EJ.
+     * Novas métricas podem ser adicionadas diretamente em METRICAS ou via registrarMetrica().
+     * Tipos suportados: 'numero' | 'percentual' | 'booleano' | 'status'
+     */
+    const METRICAS = {};
+
+    function registrarMetrica(def) {
+      if (!def || !def.id) throw new Error('Métrica inválida: id obrigatório.');
+      METRICAS[def.id] = {
+        id: def.id,
+        rotulo: def.rotulo || def.id,
+        indicador: def.indicador || 'Geral',
+        tipo: def.tipo || 'numero',
+        opcoes: def.opcoes || null,
+        extrair: typeof def.extrair === 'function'
+          ? (ej) => {
+              if (!ej) return null;
+              if (Object.prototype.hasOwnProperty.call(ej, def.id) && ej[def.id] !== undefined) {
+                return ej[def.id];
+              }
+              return def.extrair(ej);
+            }
+          : (ej) => (ej ? ej[def.id] : null),
+        formatar: typeof def.formatar === 'function'
+          ? def.formatar
+          : (v) => formatarValorMetricaPadrao(v, def.tipo)
+      };
+      return METRICAS[def.id];
+    }
+
+    function formatarValorMetricaPadrao(v, tipo) {
+      if (v === null || v === undefined || (typeof v === 'number' && isNaN(v))) return '—';
+      if (tipo === 'percentual') {
+        const n = Number(v) || 0;
+        return n.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 1 }) + '%';
+      }
+      if (tipo === 'booleano') {
+        return normalizarBooleano(v) ? 'Sim' : 'Não';
+      }
+      if (tipo === 'status') {
+        return String(v);
+      }
+      const n = Number(v) || 0;
+      return n.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    }
+
+    function normalizarBooleano(v) {
+      if (typeof v === 'boolean') return v;
+      if (typeof v === 'number') return v !== 0;
+      if (typeof v === 'string') {
+        const s = v.trim().toLowerCase();
+        return s === 'true' || s === 'sim' || s === '1' || s === 'verdadeiro';
+      }
+      return Boolean(v);
+    }
+
+    // --- Faturamento (fa) ---
+    registrarMetrica({
+      id: 'fa_pct_meta',
+      rotulo: 'Faturamento — % da Meta Anual',
+      indicador: 'Faturamento',
+      tipo: 'percentual',
+      extrair: (ej) => (Number(ej.pct) || 0) * 100
+    });
+    registrarMetrica({
+      id: 'fa_realizado',
+      rotulo: 'Faturamento — Realizado (R$)',
+      indicador: 'Faturamento',
+      tipo: 'numero',
+      extrair: (ej) => Number(ej.fat) || 0,
+      formatar: (v) => fmtBRL(Number(v) || 0)
+    });
+    registrarMetrica({
+      id: 'fa_meta',
+      rotulo: 'Faturamento — Meta Anual (R$)',
+      indicador: 'Faturamento',
+      tipo: 'numero',
+      extrair: (ej) => Number(ej.meta) || 0,
+      formatar: (v) => fmtBRL(Number(v) || 0)
+    });
+    registrarMetrica({
+      id: 'fa_esperado',
+      rotulo: 'Faturamento — Esperado até o Mês (R$)',
+      indicador: 'Faturamento',
+      tipo: 'numero',
+      extrair: (ej) => Number(ej.esp) || 0,
+      formatar: (v) => fmtBRL(Number(v) || 0)
+    });
+    registrarMetrica({
+      id: 'fa_gap',
+      rotulo: 'Faturamento — Gap para Meta Anual (R$)',
+      indicador: 'Faturamento',
+      tipo: 'numero',
+      extrair: (ej) => Number(ej.gap) || Math.max(0, (Number(ej.meta) || 0) - (Number(ej.fat) || 0)),
+      formatar: (v) => fmtBRL(Number(v) || 0)
+    });
+    registrarMetrica({
+      id: 'crescimento_fa',
+      rotulo: 'Faturamento — Crescimento vs. Ano Anterior (%)',
+      indicador: 'Faturamento',
+      tipo: 'percentual',
+      extrair: (ej) => Number(ej.crescFat) || 0
+    });
+    registrarMetrica({
+      id: 'fa_status',
+      rotulo: 'Faturamento — Status',
+      indicador: 'Faturamento',
+      tipo: 'status',
+      opcoes: ['Meta batida', 'No ritmo', 'Atenção', 'Abaixo do esperado', 'Sem movimento'],
+      extrair: (ej) => Array.isArray(ej.fa) ? ej.fa[0] : (ej.fa || 'Sem movimento')
+    });
+    registrarMetrica({
+      id: 'fa_meta_batida',
+      rotulo: 'Faturamento — Meta Anual Batida?',
+      indicador: 'Faturamento',
+      tipo: 'booleano',
+      extrair: (ej) => (Array.isArray(ej.fa) ? ej.fa[0] === 'Meta batida' : (Number(ej.pct) || 0) >= 1)
+    });
+    registrarMetrica({
+      id: 'fa_no_ritmo',
+      rotulo: 'Faturamento — No Ritmo ou Meta Batida?',
+      indicador: 'Faturamento',
+      tipo: 'booleano',
+      extrair: (ej) => {
+        const st = Array.isArray(ej.fa) ? ej.fa[0] : '';
+        return st === 'Meta batida' || st === 'No ritmo';
+      }
+    });
+
+    // --- ECM (ecm) ---
+    registrarMetrica({
+      id: 'ecm_pct',
+      rotulo: 'ECM — % de Membros Executando',
+      indicador: 'ECM',
+      tipo: 'percentual',
+      extrair: (ej) => (Number(ej.mem) || 0) > 0 ? ((Number(ej.eng) || 0) / Number(ej.mem)) * 100 : 0
+    });
+    registrarMetrica({
+      id: 'ecm_executando',
+      rotulo: 'ECM — Nº de Membros Executando',
+      indicador: 'ECM',
+      tipo: 'numero',
+      extrair: (ej) => Number(ej.eng) || 0
+    });
+    registrarMetrica({
+      id: 'ecm_membros',
+      rotulo: 'ECM — Total de Membros da EJ',
+      indicador: 'ECM',
+      tipo: 'numero',
+      extrair: (ej) => Number(ej.mem) || 0
+    });
+    registrarMetrica({
+      id: 'ecm_faltam',
+      rotulo: 'ECM — Membros que Faltam para a Meta',
+      indicador: 'ECM',
+      tipo: 'numero',
+      extrair: (ej) => Math.max(0, (Number(ej.ealvo) || 0) - (Number(ej.eng) || 0))
+    });
+    registrarMetrica({
+      id: 'ecm_status',
+      rotulo: 'ECM — Status',
+      indicador: 'ECM',
+      tipo: 'status',
+      opcoes: ['Meta batida', 'Atenção', 'Abaixo do esperado', 'Sem movimento'],
+      extrair: (ej) => Array.isArray(ej.ecm) ? ej.ecm[0] : (ej.ecm || 'Sem movimento')
+    });
+    registrarMetrica({
+      id: 'ecm_meta_batida',
+      rotulo: 'ECM — Meta Batida?',
+      indicador: 'ECM',
+      tipo: 'booleano',
+      extrair: (ej) => Array.isArray(ej.ecm) ? ej.ecm[0] === 'Meta batida' : false
+    });
+
+    // --- CSAT (cs) ---
+    registrarMetrica({
+      id: 'cs_nota',
+      rotulo: 'CSAT — Nota (0 a 5 ou 0 a 100)',
+      indicador: 'CSAT',
+      tipo: 'numero',
+      extrair: (ej) => Number(ej.nota) || 0
+    });
+    registrarMetrica({
+      id: 'cs_pct',
+      rotulo: 'CSAT — Nota em Percentual (0 a 100%)',
+      indicador: 'CSAT',
+      tipo: 'percentual',
+      extrair: (ej) => {
+        const n = Number(ej.nota) || 0;
+        return n <= 5 ? (n / 5) * 100 : n;
+      }
+    });
+    registrarMetrica({
+      id: 'cs_respostas',
+      rotulo: 'CSAT — Nº de Respostas / Contratos',
+      indicador: 'CSAT',
+      tipo: 'numero',
+      extrair: (ej) => Number(ej.ctr) || 0
+    });
+    registrarMetrica({
+      id: 'cs_coleta',
+      rotulo: 'CSAT — Taxa de Coleta (%)',
+      indicador: 'CSAT',
+      tipo: 'percentual',
+      extrair: (ej) => Number(ej.coleta) || 0
+    });
+    registrarMetrica({
+      id: 'cs_minimo',
+      rotulo: 'CSAT — Mínimo Exigido do Cluster',
+      indicador: 'CSAT',
+      tipo: 'numero',
+      extrair: (ej) => Number(ej.calvo) || 0
+    });
+    registrarMetrica({
+      id: 'cs_status',
+      rotulo: 'CSAT — Status',
+      indicador: 'CSAT',
+      tipo: 'status',
+      opcoes: ['Meta batida', 'Atenção', 'Abaixo do esperado', 'Sem movimento'],
+      extrair: (ej) => Array.isArray(ej.cs) ? ej.cs[0] : (ej.cs || 'Sem movimento')
+    });
+    registrarMetrica({
+      id: 'cs_meta_batida',
+      rotulo: 'CSAT — Meta Batida?',
+      indicador: 'CSAT',
+      tipo: 'booleano',
+      extrair: (ej) => Array.isArray(ej.cs) ? ej.cs[0] === 'Meta batida' : false
+    });
+
+    // --- Colaborativo (co) ---
+    registrarMetrica({
+      id: 'co_realizado',
+      rotulo: 'Colaborativo — Valor Realizado (R$)',
+      indicador: 'Colaborativo',
+      tipo: 'numero',
+      extrair: (ej) => Number(ej.colab) || 0,
+      formatar: (v) => fmtBRL(Number(v) || 0)
+    });
+    registrarMetrica({
+      id: 'co_meta',
+      rotulo: 'Colaborativo — Meta (R$)',
+      indicador: 'Colaborativo',
+      tipo: 'numero',
+      extrair: (ej) => Number(ej.cm) || 0,
+      formatar: (v) => fmtBRL(Number(v) || 0)
+    });
+    registrarMetrica({
+      id: 'co_pct_meta',
+      rotulo: 'Colaborativo — % da Meta',
+      indicador: 'Colaborativo',
+      tipo: 'percentual',
+      extrair: (ej) => {
+        const cm = Number(ej.cm) || 0;
+        const colab = Number(ej.colab) || 0;
+        return cm > 0 ? (colab / cm) * 100 : (colab > 0 ? 100 : 0);
+      }
+    });
+    registrarMetrica({
+      id: 'co_projetos',
+      rotulo: 'Colaborativo — Nº de Projetos',
+      indicador: 'Colaborativo',
+      tipo: 'numero',
+      extrair: (ej) => Number(ej.projColab) || ((Number(ej.colab) || 0) > 0 ? 1 : 0)
+    });
+    registrarMetrica({
+      id: 'co_status',
+      rotulo: 'Colaborativo — Status',
+      indicador: 'Colaborativo',
+      tipo: 'status',
+      opcoes: ['Meta batida', 'No ritmo', 'Atenção', 'Abaixo do esperado', 'Sem movimento'],
+      extrair: (ej) => Array.isArray(ej.co) ? ej.co[0] : (ej.co || 'Sem movimento')
+    });
+    registrarMetrica({
+      id: 'co_meta_batida',
+      rotulo: 'Colaborativo — Meta Batida?',
+      indicador: 'Colaborativo',
+      tipo: 'booleano',
+      extrair: (ej) => Array.isArray(ej.co) ? ej.co[0] === 'Meta batida' : false
+    });
+
+    // --- Cluster (cu) ---
+    registrarMetrica({
+      id: 'cu_atual',
+      rotulo: 'Cluster — Nível Atual (1 a 5)',
+      indicador: 'Cluster',
+      tipo: 'numero',
+      extrair: (ej) => Number(ej.cl) || 0
+    });
+    registrarMetrica({
+      id: 'cu_pontuacao',
+      rotulo: 'Cluster — Pontuação Atual',
+      indicador: 'Cluster',
+      tipo: 'numero',
+      extrair: (ej) => Number(ej.idx) || 0
+    });
+    registrarMetrica({
+      id: 'cu_pct_manutencao',
+      rotulo: 'Cluster — % da Régua de Manutenção',
+      indicador: 'Cluster',
+      tipo: 'percentual',
+      extrair: (ej) => (Number(ej.targetManut) || 0) > 0 ? ((Number(ej.idx) || 0) / Number(ej.targetManut)) * 100 : 0
+    });
+    registrarMetrica({
+      id: 'cu_pct_subida',
+      rotulo: 'Cluster — % da Régua de Subida',
+      indicador: 'Cluster',
+      tipo: 'percentual',
+      extrair: (ej) => (Number(ej.targetSubida) || 0) > 0 ? ((Number(ej.idx) || 0) / Number(ej.targetSubida)) * 100 : 0
+    });
+    registrarMetrica({
+      id: 'cu_resultado',
+      rotulo: 'Cluster — Resultado (Sobe, Mantém, Cai)',
+      indicador: 'Cluster',
+      tipo: 'status',
+      opcoes: ['Sobe', 'Mantém', 'Cai', 'Sem cluster'],
+      extrair: (ej) => Array.isArray(ej.cu) ? ej.cu[0] : (ej.cu || 'Sem cluster')
+    });
+    registrarMetrica({
+      id: 'cu_sobe',
+      rotulo: 'Cluster — Sobe de Cluster?',
+      indicador: 'Cluster',
+      tipo: 'booleano',
+      extrair: (ej) => (Array.isArray(ej.cu) ? ej.cu[0] : ej.cu) === 'Sobe'
+    });
+    registrarMetrica({
+      id: 'cu_mantem_ou_sobe',
+      rotulo: 'Cluster — Mantém ou Sobe?',
+      indicador: 'Cluster',
+      tipo: 'booleano',
+      extrair: (ej) => {
+        const res = Array.isArray(ej.cu) ? ej.cu[0] : ej.cu;
+        return res === 'Sobe' || res === 'Mantém';
+      }
+    });
+
+    // --- Derivadas Multidimensionais ---
+    registrarMetrica({
+      id: 'qtd_metas_batidas',
+      rotulo: 'Geral — Qtd. de Indicadores com Meta Batida (0 a 5)',
+      indicador: 'Geral',
+      tipo: 'numero',
+      extrair: (ej) => {
+        let count = 0;
+        if (METRICAS.fa_meta_batida.extrair(ej)) count++;
+        if (METRICAS.ecm_meta_batida.extrair(ej)) count++;
+        if (METRICAS.cs_meta_batida.extrair(ej)) count++;
+        if (METRICAS.co_meta_batida.extrair(ej)) count++;
+        if (METRICAS.cu_mantem_ou_sobe.extrair(ej)) count++;
+        return count;
+      }
+    });
+
+    /**
+     * Compara dois valores segundo um operador ('>=', '>', '<=', '<', '=', '!=') e tipo da métrica.
+     */
+    function compararValores(valorAtual, operador, valorExigido, tipo) {
+      const op = String(operador || '=').trim();
+      if (tipo === 'booleano') {
+        const a = normalizarBooleano(valorAtual);
+        const b = normalizarBooleano(valorExigido);
+        if (op === '=' || op === '==') return a === b;
+        if (op === '!=' || op === '<>') return a !== b;
+        return a === b;
+      }
+      if (tipo === 'status') {
+        const a = String(valorAtual ?? '').trim().toLowerCase();
+        const b = String(valorExigido ?? '').trim().toLowerCase();
+        if (op === '=' || op === '==') return a === b;
+        if (op === '!=' || op === '<>') return a !== b;
+        return a === b;
+      }
+      const a = Number(valorAtual) || 0;
+      const b = Number(valorExigido) || 0;
+      const eps = 1e-9;
+      switch (op) {
+        case '>=': return a + eps >= b;
+        case '>':  return a > b + eps;
+        case '<=': return a - eps <= b;
+        case '<':  return a < b - eps;
+        case '=':
+        case '==': return Math.abs(a - b) <= eps;
+        case '!=':
+        case '<>': return Math.abs(a - b) > eps;
+        default:   return false;
+      }
+    }
+
+    /**
+     * Avalia uma única condição { metrica, operador, valor } para uma EJ.
+     * Retorna explicação detalhada (valor atual vs. exigido e quanto falta).
+     */
+    function avaliarCondicao(condicao, ej) {
+      if (!condicao || !condicao.metrica) {
+        return {
+          bateu: true,
+          metrica: null,
+          rotulo: 'Sem condição',
+          operador: '=',
+          valorAtual: null,
+          valorExigido: null,
+          valorAtualFmt: '—',
+          valorExigidoFmt: '—',
+          diferenca: 0,
+          diferencaFmt: '0',
+          explicacao: 'Condição vazia (cumprida por padrão)'
+        };
+      }
+
+      const def = METRICAS[condicao.metrica] || {
+        id: condicao.metrica,
+        rotulo: condicao.metrica,
+        tipo: typeof condicao.valor === 'boolean' ? 'booleano' : (typeof condicao.valor === 'string' && isNaN(Number(condicao.valor)) ? 'status' : 'numero'),
+        extrair: (x) => (x ? x[condicao.metrica] : 0),
+        formatar: (v) => String(v ?? '—')
+      };
+
+      const operador = condicao.operador || '>=';
+      const valorAtual = def.extrair(ej);
+      const valorExigido = condicao.valor;
+      const bateu = compararValores(valorAtual, operador, valorExigido, def.tipo);
+
+      const valorAtualFmt = def.formatar(valorAtual);
+      const valorExigidoFmt = def.formatar(valorExigido);
+
+      let diferenca = 0;
+      let diferencaFmt = '';
+      if (!bateu && (def.tipo === 'numero' || def.tipo === 'percentual')) {
+        const a = Number(valorAtual) || 0;
+        const b = Number(valorExigido) || 0;
+        if (operador === '>=' || operador === '>' || operador === '=') {
+          diferenca = Math.max(0, b - a);
+          diferencaFmt = `falta ${def.formatar(diferenca)}`;
+        } else if (operador === '<=' || operador === '<') {
+          diferenca = Math.max(0, a - b);
+          diferencaFmt = `excedeu em ${def.formatar(diferenca)}`;
+        }
+      }
+
+      const explicacao = bateu
+        ? `${def.rotulo}: ${valorAtualFmt} (meta: ${operador} ${valorExigidoFmt})`
+        : `${def.rotulo}: atual ${valorAtualFmt} vs. exigido ${operador} ${valorExigidoFmt}${diferencaFmt ? ` (${diferencaFmt})` : ''}`;
+
+      return {
+        bateu,
+        metrica: def.id,
+        rotulo: def.rotulo,
+        tipo: def.tipo,
+        operador,
+        valorAtual,
+        valorExigido,
+        valorAtualFmt,
+        valorExigidoFmt,
+        diferenca,
+        diferencaFmt,
+        explicacao
+      };
+    }
+
+    /**
+     * Avalia um requisito (grupo de condições com lógica E / OU).
+     * Aceita formato:
+     *   { logica: 'E' | 'OU', condicoes: [ { metrica, operador, valor } | SubRequisito ] }
+     * ou um array direto de condições (tratado como 'E').
+     */
+    function avaliarRequisito(requisito, ej) {
+      if (!requisito) {
+        return {
+          bateu: true,
+          logica: 'E',
+          avaliacoes: [],
+          condicoesBatidas: [],
+          condicoesFalhas: [],
+          resumoFalta: ''
+        };
+      }
+
+      // Se uma condição única foi passada diretamente como requisito
+      if (requisito.metrica && !Array.isArray(requisito.condicoes)) {
+        const av = avaliarCondicao(requisito, ej);
+        return {
+          bateu: av.bateu,
+          logica: 'E',
+          avaliacoes: [av],
+          condicoesBatidas: av.bateu ? [av] : [],
+          condicoesFalhas: av.bateu ? [] : [av],
+          resumoFalta: av.bateu ? '' : av.explicacao
+        };
+      }
+
+      const lista = Array.isArray(requisito)
+        ? requisito
+        : (Array.isArray(requisito.condicoes) ? requisito.condicoes : []);
+
+      const logicaRaw = String(requisito.logica || requisito.operadorLogico || 'E').trim().toUpperCase();
+      const logica = (logicaRaw === 'OU' || logicaRaw === 'OR') ? 'OU' : 'E';
+
+      if (lista.length === 0) {
+        return {
+          bateu: true,
+          logica,
+          avaliacoes: [],
+          condicoesBatidas: [],
+          condicoesFalhas: [],
+          resumoFalta: ''
+        };
+      }
+
+      const avaliacoes = [];
+      const condicoesBatidas = [];
+      const condicoesFalhas = [];
+
+      for (const item of lista) {
+        if (item && (Array.isArray(item.condicoes) || Array.isArray(item))) {
+          const sub = avaliarRequisito(item, ej);
+          avaliacoes.push(sub);
+          if (sub.bateu) {
+            condicoesBatidas.push(...sub.condicoesBatidas);
+          } else {
+            condicoesFalhas.push(...sub.condicoesFalhas);
+          }
+        } else {
+          const av = avaliarCondicao(item, ej);
+          avaliacoes.push(av);
+          if (av.bateu) {
+            condicoesBatidas.push(av);
+          } else {
+            condicoesFalhas.push(av);
+          }
+        }
+      }
+
+      const bateu = logica === 'OU'
+        ? avaliacoes.some(a => a.bateu)
+        : avaliacoes.every(a => a.bateu);
+
+      let resumoFalta = '';
+      if (!bateu) {
+        const textosFalhas = condicoesFalhas.map(f => f.explicacao);
+        resumoFalta = logica === 'OU'
+          ? `Não atingiu nenhuma das opções (${textosFalhas.join(' OU ')})`
+          : textosFalhas.join(' | ');
+      }
+
+      return {
+        bateu,
+        logica,
+        avaliacoes,
+        condicoesBatidas,
+        condicoesFalhas,
+        resumoFalta
+      };
+    }
+
+    /**
+     * Avalia um Palco das EJs para a lista de EJs.
+     * Regra 1: a EJ fica no MAIOR nível em que cumpre todo o requisito.
+     * Se exigirNiveisAnteriores=true, só sobe se cumpriu todos os níveis anteriores em ordem.
+     */
+    function avaliarPalcoEj(palco, dadosEjs) {
+      const niveisOrdenados = [...(palco.niveis || [])].sort((a, b) => (Number(a.ordem) || 0) - (Number(b.ordem) || 0));
+      const exigirAnteriores = Boolean(palco.exigirNiveisAnteriores);
+
+      const resultadosPorEj = dadosEjs.map(ej => {
+        const avaliacoesPorNivel = niveisOrdenados.map(nivel => {
+          const av = avaliarRequisito(nivel.requisito, ej);
+          return {
+            ordem: Number(nivel.ordem) || 0,
+            nome: nivel.nome || `Nível ${nivel.ordem}`,
+            bateuRequisito: av.bateu,
+            condicoesBatidas: av.condicoesBatidas,
+            condicoesFalhas: av.condicoesFalhas,
+            resumoFalta: av.resumoFalta
+          };
+        });
+
+        let indiceNivelAtingido = -1;
+
+        if (exigirAnteriores) {
+          for (let i = 0; i < avaliacoesPorNivel.length; i++) {
+            if (avaliacoesPorNivel[i].bateuRequisito) {
+              indiceNivelAtingido = i;
+            } else {
+              break; // Bloqueia subida aos níveis seguintes se falhou o anterior
+            }
+          }
+        } else {
+          for (let i = 0; i < avaliacoesPorNivel.length; i++) {
+            if (avaliacoesPorNivel[i].bateuRequisito) {
+              indiceNivelAtingido = i; // Fica sempre no maior nível cumprido
+            }
+          }
+        }
+
+        const nivelAtingido = indiceNivelAtingido >= 0
+          ? {
+              ordem: avaliacoesPorNivel[indiceNivelAtingido].ordem,
+              nome: avaliacoesPorNivel[indiceNivelAtingido].nome
+            }
+          : null;
+
+        const indiceProximo = indiceNivelAtingido + 1;
+        const proximoNivel = indiceProximo < avaliacoesPorNivel.length
+          ? {
+              ordem: avaliacoesPorNivel[indiceProximo].ordem,
+              nome: avaliacoesPorNivel[indiceProximo].nome,
+              condicoesBatidas: avaliacoesPorNivel[indiceProximo].condicoesBatidas,
+              condicoesFalhas: avaliacoesPorNivel[indiceProximo].condicoesFalhas,
+              oQueFalta: avaliacoesPorNivel[indiceProximo].resumoFalta
+            }
+          : null;
+
+        return {
+          cod: ej.cod,
+          nome: ej.nome,
+          cl: ej.cl,
+          nivelAtingido,
+          proximoNivel,
+          oQueFalta: proximoNivel ? proximoNivel.oQueFalta : 'Nível máximo atingido',
+          niveis: avaliacoesPorNivel
+        };
+      });
+
+      const resumoNiveis = niveisOrdenados.map(n => {
+        const ejsNoNivel = resultadosPorEj.filter(
+          r => r.nivelAtingido && r.nivelAtingido.ordem === (Number(n.ordem) || 0) && r.nivelAtingido.nome === (n.nome || `Nível ${n.ordem}`)
+        );
+        return {
+          ordem: Number(n.ordem) || 0,
+          nome: n.nome || `Nível ${n.ordem}`,
+          quantidade: ejsNoNivel.length,
+          ejs: ejsNoNivel
+        };
+      });
+
+      const semPalco = resultadosPorEj.filter(r => !r.nivelAtingido);
+
+      return {
+        id: palco.id,
+        nome: palco.nome || 'Palco das EJs',
+        exigirNiveisAnteriores: exigirAnteriores,
+        niveis: resumoNiveis,
+        semPalco: {
+          quantidade: semPalco.length,
+          ejs: semPalco
+        },
+        resultadosPorEj
+      };
+    }
+
+    /**
+     * Avalia um agregado do Núcleo sobre todas as EJs:
+     * agregado = { tipo: "contagem"|"percentual"|"soma"|"media", metrica?, condicaoEj?: requisito, operador, valor }
+     */
+    function avaliarAgregadoNucleo(agregado, dadosEjs) {
+      if (!agregado) {
+        return {
+          bateu: true,
+          tipo: 'contagem',
+          operador: '>=',
+          valorAtual: 0,
+          valorExigido: 0,
+          valorAtualFmt: '0',
+          valorExigidoFmt: '0',
+          diferenca: 0,
+          diferencaFmt: '0',
+          explicacao: 'Sem critério agregado',
+          ejsQueCumprem: [],
+          ejsPendentes: []
+        };
+      }
+
+      const tipo = String(agregado.tipo || 'contagem').toLowerCase();
+      const operador = agregado.operador || '>=';
+      const valorExigido = Number(agregado.valor) || 0;
+      const totalEjs = dadosEjs.length;
+      const temCondicaoEj = Boolean(
+        agregado.condicaoEj &&
+        ((Array.isArray(agregado.condicaoEj.condicoes) && agregado.condicaoEj.condicoes.length > 0) ||
+         agregado.condicaoEj.metrica ||
+         (Array.isArray(agregado.condicaoEj) && agregado.condicaoEj.length > 0))
+      );
+
+      const ejsQueCumprem = [];
+      const ejsPendentes = [];
+
+      dadosEjs.forEach(ej => {
+        const av = temCondicaoEj ? avaliarRequisito(agregado.condicaoEj, ej) : { bateu: true, resumoFalta: '' };
+        if (av.bateu) {
+          ejsQueCumprem.push({ cod: ej.cod, nome: ej.nome });
+        } else {
+          ejsPendentes.push({ cod: ej.cod, nome: ej.nome, oQueFalta: av.resumoFalta });
+        }
+      });
+
+      const defMetrica = agregado.metrica ? METRICAS[agregado.metrica] : null;
+      const baseCalculo = temCondicaoEj ? dadosEjs.filter(ej => avaliarRequisito(agregado.condicaoEj, ej).bateu) : dadosEjs;
+
+      let valorAtual = 0;
+      let formatarValor = (v) => Number(v || 0).toLocaleString('pt-BR', { maximumFractionDigits: 2 });
+
+      if (tipo === 'contagem') {
+        valorAtual = ejsQueCumprem.length;
+        formatarValor = (v) => `${Math.round(Number(v) || 0)} EJs`;
+      } else if (tipo === 'percentual') {
+        if (temCondicaoEj || !defMetrica) {
+          valorAtual = totalEjs > 0 ? (ejsQueCumprem.length / totalEjs) * 100 : 0;
+        } else {
+          const soma = baseCalculo.reduce((acc, ej) => acc + (Number(defMetrica.extrair(ej)) || 0), 0);
+          valorAtual = baseCalculo.length > 0 ? soma / baseCalculo.length : 0;
+        }
+        formatarValor = (v) => `${(Number(v) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 1 })}%`;
+      } else if (tipo === 'soma') {
+        valorAtual = baseCalculo.reduce((acc, ej) => acc + (defMetrica ? (Number(defMetrica.extrair(ej)) || 0) : 0), 0);
+        if (defMetrica) formatarValor = defMetrica.formatar;
+      } else if (tipo === 'media') {
+        const soma = baseCalculo.reduce((acc, ej) => acc + (defMetrica ? (Number(defMetrica.extrair(ej)) || 0) : 0), 0);
+        valorAtual = baseCalculo.length > 0 ? soma / baseCalculo.length : 0;
+        if (defMetrica) formatarValor = defMetrica.formatar;
+      }
+
+      const bateu = compararValores(valorAtual, operador, valorExigido, 'numero');
+      const valorAtualFmt = formatarValor(valorAtual);
+      const valorExigidoFmt = formatarValor(valorExigido);
+
+      let diferenca = 0;
+      let diferencaFmt = '';
+      if (!bateu) {
+        if (operador === '>=' || operador === '>' || operador === '=') {
+          diferenca = Math.max(0, valorExigido - valorAtual);
+          diferencaFmt = `falta ${formatarValor(diferenca)}`;
+        } else if (operador === '<=' || operador === '<') {
+          diferenca = Math.max(0, valorAtual - valorExigido);
+          diferencaFmt = `excedeu em ${formatarValor(diferenca)}`;
+        }
+      }
+
+      const explicacao = bateu
+        ? `Atingido: ${valorAtualFmt} (meta: ${operador} ${valorExigidoFmt})`
+        : `Atual: ${valorAtualFmt} vs. exigido ${operador} ${valorExigidoFmt}${diferencaFmt ? ` (${diferencaFmt})` : ''}`;
+
+      return {
+        bateu,
+        tipo,
+        metrica: agregado.metrica || null,
+        operador,
+        valorAtual,
+        valorExigido,
+        valorAtualFmt,
+        valorExigidoFmt,
+        diferenca,
+        diferencaFmt,
+        explicacao,
+        ejsQueCumprem,
+        ejsPendentes
+      };
+    }
+
+    /**
+     * Avalia um Palco do Núcleo sobre todas as EJs.
+     * Regra 2: O nível atingido é o maior cujo agregado é satisfeito.
+     */
+    function avaliarPalcoNucleo(palcoNucleo, dadosEjs) {
+      const niveisOrdenados = [...(palcoNucleo.niveis || [])].sort((a, b) => (Number(a.ordem) || 0) - (Number(b.ordem) || 0));
+      const exigirAnteriores = Boolean(palcoNucleo.exigirNiveisAnteriores);
+
+      const niveisAvaliados = niveisOrdenados.map(nivel => {
+        const av = avaliarAgregadoNucleo(nivel.agregado, dadosEjs);
+        return {
+          ordem: Number(nivel.ordem) || 0,
+          nome: nivel.nome || `Nível ${nivel.ordem}`,
+          bateu: av.bateu,
+          avaliacao: av
+        };
+      });
+
+      let indiceAtingido = -1;
+      if (exigirAnteriores) {
+        for (let i = 0; i < niveisAvaliados.length; i++) {
+          if (niveisAvaliados[i].bateu) indiceAtingido = i;
+          else break;
+        }
+      } else {
+        for (let i = 0; i < niveisAvaliados.length; i++) {
+          if (niveisAvaliados[i].bateu) indiceAtingido = i;
+        }
+      }
+
+      const nivelAtingido = indiceAtingido >= 0
+        ? {
+            ordem: niveisAvaliados[indiceAtingido].ordem,
+            nome: niveisAvaliados[indiceAtingido].nome,
+            avaliacao: niveisAvaliados[indiceAtingido].avaliacao
+          }
+        : null;
+
+      const indiceProximo = indiceAtingido + 1;
+      const proximoNivel = indiceProximo < niveisAvaliados.length
+        ? {
+            ordem: niveisAvaliados[indiceProximo].ordem,
+            nome: niveisAvaliados[indiceProximo].nome,
+            oQueFalta: niveisAvaliados[indiceProximo].avaliacao.explicacao,
+            diferenca: niveisAvaliados[indiceProximo].avaliacao.diferenca,
+            diferencaFmt: niveisAvaliados[indiceProximo].avaliacao.diferencaFmt,
+            avaliacao: niveisAvaliados[indiceProximo].avaliacao
+          }
+        : null;
+
+      return {
+        id: palcoNucleo.id,
+        nome: palcoNucleo.nome || 'Palco do Núcleo',
+        nivelAtingido,
+        proximoNivel,
+        oQueFaltaProximoNivel: proximoNivel ? proximoNivel.oQueFalta : 'Nível máximo atingido pelo Núcleo',
+        niveis: niveisAvaliados
+      };
+    }
+
+    /**
+     * Compara duas EJs segundo uma lista de critérios de ordenação [{ metrica, ordem: 'maior'|'menor' }].
+     * Retorna < 0 se A vem antes de B, > 0 se B vem antes de A, e 0 se empatarem em todos os critérios.
+     */
+    function compararEjsPorCriterios(ejA, ejB, criterios) {
+      const eps = 1e-9;
+      for (const crit of criterios) {
+        if (!crit || !crit.metrica) continue;
+        const def = METRICAS[crit.metrica];
+        const vA = def ? (Number(def.extrair(ejA)) || 0) : (Number(ejA[crit.metrica]) || 0);
+        const vB = def ? (Number(def.extrair(ejB)) || 0) : (Number(ejB[crit.metrica]) || 0);
+        if (Math.abs(vA - vB) > eps) {
+          const menorPrimeiro = String(crit.ordem || 'maior').toLowerCase() === 'menor';
+          return menorPrimeiro ? (vA - vB) : (vB - vA);
+        }
+      }
+      return 0;
+    }
+
+    /**
+     * Avalia todas as Premiações do evento em ordem de prioridade (menor número primeiro).
+     * Regras 3, 4 e 6:
+     * - Exclusão seletiva via naoAcumulaCom (EJs que venceram premiações listadas são ignoradas como candidatas).
+     * - modo "todos": todas as EJs elegíveis (e não impedidas) vencem.
+     * - modo "topN": ranking pela métrica principal + desempate em ordem; se ainda empatar, mantém empatadas e sinaliza.
+     * - Explicabilidade completa para vencedoras e não vencedoras.
+     */
+    function avaliarPremiacoes(premiacoes, dadosEjs) {
+      const listaOrdenada = [...(premiacoes || [])].sort((a, b) => {
+        const pA = Number(a.prioridade) || 9999;
+        const pB = Number(b.prioridade) || 9999;
+        return pA - pB;
+      });
+
+      // Registro de vencedores já apurados: premiacaoId -> { nome, vencedores: Set(cod) }
+      const historicoVencedores = {};
+
+      return listaOrdenada.map(prem => {
+        const modo = prem.modo === 'todos' ? 'todos' : 'topN';
+        const topN = Math.max(1, Number(prem.n) || 1);
+        const naoAcumulaIds = Array.isArray(prem.naoAcumulaCom) ? prem.naoAcumulaCom.map(String) : [];
+
+        // Critérios de ranking (métrica principal + critérios de desempate)
+        const criteriosRanking = [];
+        if (prem.metricaRanking) {
+          criteriosRanking.push({
+            metrica: prem.metricaRanking,
+            ordem: prem.ordem || 'maior'
+          });
+        }
+        if (Array.isArray(prem.desempate)) {
+          prem.desempate.forEach(d => {
+            if (d && d.metrica) {
+              criteriosRanking.push({
+                metrica: d.metrica,
+                ordem: d.ordem || 'maior'
+              });
+            }
+          });
+        }
+
+        const candidatas = [];
+        const naoVencedoras = [];
+
+        dadosEjs.forEach(ej => {
+          const codStr = String(ej.cod);
+          const avElegibilidade = avaliarRequisito(prem.elegibilidade, ej);
+
+          // Verifica se esta EJ já venceu alguma premiação listada em naoAcumulaCom
+          const premiosConflitantes = [];
+          naoAcumulaIds.forEach(idConflito => {
+            const hist = historicoVencedores[idConflito];
+            if (hist && hist.vencedores.has(codStr)) {
+              premiosConflitantes.push(hist.nome);
+            }
+          });
+
+          const valoresRanking = criteriosRanking.map(c => {
+            const def = METRICAS[c.metrica];
+            const val = def ? def.extrair(ej) : ej[c.metrica];
+            return {
+              metrica: c.metrica,
+              rotulo: def ? def.rotulo : c.metrica,
+              ordem: c.ordem,
+              valor: val,
+              valorFmt: def ? def.formatar(val) : String(val ?? '—')
+            };
+          });
+
+          if (premiosConflitantes.length > 0) {
+            naoVencedoras.push({
+              cod: ej.cod,
+              nome: ej.nome,
+              cl: ej.cl,
+              elegivel: avElegibilidade.bateu,
+              impedida: true,
+              premiosConflitantes,
+              motivoTipo: 'impedida_nao_acumula',
+              motivoNaoVenceu: `Impedida (não acumula com: ${premiosConflitantes.join(', ')})`,
+              condicoesBatidas: avElegibilidade.condicoesBatidas,
+              condicoesFalhas: avElegibilidade.condicoesFalhas,
+              valoresRanking
+            });
+            return;
+          }
+
+          if (!avElegibilidade.bateu) {
+            naoVencedoras.push({
+              cod: ej.cod,
+              nome: ej.nome,
+              cl: ej.cl,
+              elegivel: false,
+              impedida: false,
+              motivoTipo: 'inelegivel',
+              motivoNaoVenceu: avElegibilidade.resumoFalta || 'Não cumpriu os requisitos de elegibilidade',
+              condicoesBatidas: avElegibilidade.condicoesBatidas,
+              condicoesFalhas: avElegibilidade.condicoesFalhas,
+              valoresRanking
+            });
+            return;
+          }
+
+          candidatas.push({
+            ej,
+            cod: ej.cod,
+            nome: ej.nome,
+            cl: ej.cl,
+            elegivel: true,
+            impedida: false,
+            condicoesBatidas: avElegibilidade.condicoesBatidas,
+            condicoesFalhas: [],
+            valoresRanking
+          });
+        });
+
+        const vencedores = [];
+        let houveEmpate = false;
+
+        if (modo === 'todos') {
+          candidatas.forEach(cand => {
+            vencedores.push({
+              cod: cand.cod,
+              nome: cand.nome,
+              cl: cand.cl,
+              posicao: 1,
+              empatado: false,
+              valoresRanking: cand.valoresRanking,
+              condicoesBatidas: cand.condicoesBatidas
+            });
+          });
+        } else {
+          // Ordena candidatas pelos critérios (ranking principal + desempates)
+          candidatas.sort((a, b) => compararEjsPorCriterios(a.ej, b.ej, criteriosRanking));
+
+          // Atribui posição de ranking ("competition ranking": 1, 2, 2, 4...)
+          for (let i = 0; i < candidatas.length; i++) {
+            if (i === 0) {
+              candidatas[i].posicao = 1;
+            } else {
+              const cmp = compararEjsPorCriterios(candidatas[i - 1].ej, candidatas[i].ej, criteriosRanking);
+              candidatas[i].posicao = (cmp === 0) ? candidatas[i - 1].posicao : (i + 1);
+            }
+          }
+
+          // Identifica se há mais de uma candidata na mesma posição
+          const contagemPorPosicao = {};
+          candidatas.forEach(c => {
+            contagemPorPosicao[c.posicao] = (contagemPorPosicao[c.posicao] || 0) + 1;
+          });
+
+          candidatas.forEach(cand => {
+            const empatadoNaPosicao = contagemPorPosicao[cand.posicao] > 1;
+            if (cand.posicao <= topN) {
+              if (empatadoNaPosicao) houveEmpate = true;
+              vencedores.push({
+                cod: cand.cod,
+                nome: cand.nome,
+                cl: cand.cl,
+                posicao: cand.posicao,
+                empatado: empatadoNaPosicao,
+                valoresRanking: cand.valoresRanking,
+                condicoesBatidas: cand.condicoesBatidas
+              });
+            } else {
+              const resumoMetricas = cand.valoresRanking.map(vr => `${vr.rotulo}: ${vr.valorFmt}`).join(' · ');
+              naoVencedoras.push({
+                cod: cand.cod,
+                nome: cand.nome,
+                cl: cand.cl,
+                elegivel: true,
+                impedida: false,
+                posicao: cand.posicao,
+                empatado: empatadoNaPosicao,
+                motivoTipo: 'ranking',
+                motivoNaoVenceu: `Elegível, mas ficou em ${cand.posicao}º lugar no ranking (limite Top ${topN})${resumoMetricas ? ` — ${resumoMetricas}` : ''}`,
+                condicoesBatidas: cand.condicoesBatidas,
+                condicoesFalhas: [],
+                valoresRanking: cand.valoresRanking
+              });
+            }
+          });
+        }
+
+        // Registra os vencedores desta premiação para exclusão de premiações posteriores via naoAcumulaCom
+        historicoVencedores[String(prem.id)] = {
+          nome: prem.nome || `Premiação ${prem.id}`,
+          vencedores: new Set(vencedores.map(v => String(v.cod)))
+        };
+
+        return {
+          id: prem.id,
+          nome: prem.nome || 'Premiação',
+          prioridade: Number(prem.prioridade) || 1,
+          modo,
+          n: modo === 'topN' ? topN : null,
+          metricaRanking: prem.metricaRanking || null,
+          ordem: prem.ordem || 'maior',
+          desempate: prem.desempate || [],
+          naoAcumulaCom: naoAcumulaIds,
+          houveEmpate,
+          vencedores,
+          naoVencedoras
+        };
+      });
+    }
+
+    /**
+     * Função PURA principal do motor de cálculo de Eventos:
+     * avaliarEvento(evento, dadosEjs, opcoes) -> resultado
+     * Não acessa DOM nem Firebase.
+     */
+    function avaliarEvento(evento, dadosEjs, opcoes = {}) {
+      if (!evento) {
+        return {
+          eventoId: null,
+          calculadoEm: new Date().toISOString(),
+          congelado: false,
+          totalEjs: 0,
+          palcosEj: [],
+          palcosNucleo: [],
+          premiacoes: []
+        };
+      }
+
+      // Regra 5: se o evento está encerrado e possui resultadoCongelado, retorna ele diretamente
+      if (evento.status === 'encerrado' && evento.resultadoCongelado && !opcoes.ignorarCongelado) {
+        return {
+          ...evento.resultadoCongelado,
+          congelado: true
+        };
+      }
+
+      const listaEjs = Array.isArray(dadosEjs) ? dadosEjs : [];
+
+      const palcosEj = (evento.palcosEj || []).map(palco => avaliarPalcoEj(palco, listaEjs));
+      const palcosNucleo = (evento.palcosNucleo || []).map(palco => avaliarPalcoNucleo(palco, listaEjs));
+      const premiacoes = avaliarPremiacoes(evento.premiacoes || [], listaEjs);
+
+      return {
+        eventoId: evento.id || null,
+        eventoNome: evento.nome || '',
+        statusEvento: evento.status || 'rascunho',
+        calculadoEm: new Date().toISOString(),
+        congelado: false,
+        totalEjs: listaEjs.length,
+        palcosEj,
+        palcosNucleo,
+        premiacoes
+      };
+    }
+
+    /**
+     * Suite de testes automatizados do motor de eventos (rodável no console via rodarTestesMotorEventos()).
+     * Cobre:
+     * 1. Palcos das EJs (exigirNiveisAnteriores = false vs true) e explicabilidade ("o que falta").
+     * 2. Palcos do Núcleo (contagem, percentual, soma).
+     * 3. Premiações com ordem de prioridade e exclusão seletiva (naoAcumulaCom).
+     * 4. Premiações Top N com desempate resolvido e com empate persistente sinalizado (sem escolha arbitrária).
+     * 5. Congelamento de resultado quando status = "encerrado".
+     */
+    function rodarTestesMotorEventos() {
+      const resultados = [];
+      const assert = (nome, condicao, detalhe = '') => {
+        resultados.push({ teste: nome, passou: Boolean(condicao), detalhe });
+        if (!condicao) {
+          console.error(`[FALHOU] ${nome}`, detalhe);
+        }
+      };
+
+      const mockEjs = [
+        {
+          cod: 'EJ1', nome: 'Alfa Jr', cl: 3,
+          fat: 120000, meta: 100000, pct: 1.20, gap: 0, fa: ['Meta batida', 'g'], crescFat: 45,
+          eng: 18, mem: 20, ealvo: 15, ecm: ['Meta batida', 'g'],
+          nota: 4.8, ctr: 12, coleta: 90, calvo: 8, cs: ['Meta batida', 'g'],
+          colab: 15000, cm: 10000, projColab: 2, co: ['Meta batida', 'g'],
+          idx: 85000, targetManut: 50000, targetSubida: 80000, cu: ['Sobe', 'g']
+        },
+        {
+          cod: 'EJ2', nome: 'Beta Jr', cl: 2,
+          fat: 110000, meta: 100000, pct: 1.10, gap: 0, fa: ['Meta batida', 'g'], crescFat: 45,
+          eng: 16, mem: 20, ealvo: 15, ecm: ['Meta batida', 'g'],
+          nota: 4.5, ctr: 10, coleta: 85, calvo: 6, cs: ['Meta batida', 'g'],
+          colab: 5000, cm: 10000, projColab: 1, co: ['Atenção', 'r'],
+          idx: 45000, targetManut: 30000, targetSubida: 50000, cu: ['Mantém', 'n']
+        },
+        {
+          cod: 'EJ3', nome: 'Gama Jr', cl: 2,
+          fat: 95000, meta: 100000, pct: 0.95, gap: 5000, fa: ['No ritmo', 'n'], crescFat: 45,
+          eng: 16, mem: 20, ealvo: 15, ecm: ['Meta batida', 'g'],
+          nota: 4.5, ctr: 10, coleta: 85, calvo: 6, cs: ['Meta batida', 'g'],
+          colab: 12000, cm: 10000, projColab: 2, co: ['Meta batida', 'g'],
+          idx: 42000, targetManut: 30000, targetSubida: 50000, cu: ['Mantém', 'n']
+        },
+        {
+          cod: 'EJ4', nome: 'Delta Jr', cl: 1,
+          fat: 60000, meta: 100000, pct: 0.60, gap: 40000, fa: ['Abaixo do esperado', 'r'], crescFat: 10,
+          eng: 10, mem: 20, ealvo: 15, ecm: ['Abaixo do esperado', 'r'],
+          nota: 4.9, ctr: 8, coleta: 100, calvo: 4, cs: ['Meta batida', 'g'],
+          colab: 0, cm: 5000, projColab: 0, co: ['Sem movimento', 'r'],
+          idx: 20000, targetManut: 15000, targetSubida: 30000, cu: ['Mantém', 'n']
+        }
+      ];
+
+      const eventoTeste = {
+        id: 'evt_teste_1',
+        nome: 'RR Vertentes — Teste Motor',
+        status: 'em_andamento',
+        palcosEj: [
+          {
+            id: 'palco_1',
+            nome: 'Palco Alto Crescimento (Com Escada)',
+            exigirNiveisAnteriores: true,
+            niveis: [
+              {
+                ordem: 1,
+                nome: 'Bronze (Faturamento >= 100%)',
+                requisito: { logica: 'E', condicoes: [{ metrica: 'fa_pct_meta', operador: '>=', valor: 100 }] }
+              },
+              {
+                ordem: 2,
+                nome: 'Prata (ECM >= 75% e Colaborativo >= 100%)',
+                requisito: {
+                  logica: 'E',
+                  condicoes: [
+                    { metrica: 'ecm_pct', operador: '>=', valor: 75 },
+                    { metrica: 'co_pct_meta', operador: '>=', valor: 100 }
+                  ]
+                }
+              },
+              {
+                ordem: 3,
+                nome: 'Ouro (Sobe de Cluster)',
+                requisito: { logica: 'E', condicoes: [{ metrica: 'cu_resultado', operador: '=', valor: 'Sobe' }] }
+              }
+            ]
+          },
+          {
+            id: 'palco_2',
+            nome: 'Palco Livre (Sem Exigir Nível Anterior)',
+            exigirNiveisAnteriores: false,
+            niveis: [
+              {
+                ordem: 1,
+                nome: 'Nível 1 (Faturamento >= 100%)',
+                requisito: { logica: 'E', condicoes: [{ metrica: 'fa_pct_meta', operador: '>=', valor: 100 }] }
+              },
+              {
+                ordem: 2,
+                nome: 'Nível 2 (Colaborativo >= 100%)',
+                requisito: { logica: 'E', condicoes: [{ metrica: 'co_pct_meta', operador: '>=', valor: 100 }] }
+              }
+            ]
+          }
+        ],
+        palcosNucleo: [
+          {
+            id: 'nucleo_1',
+            nome: 'Palco Regional Faturamento',
+            niveis: [
+              {
+                ordem: 1,
+                nome: '2 EJs com Meta Batida',
+                agregado: {
+                  tipo: 'contagem',
+                  condicaoEj: { logica: 'E', condicoes: [{ metrica: 'fa_meta_batida', operador: '=', valor: true }] },
+                  operador: '>=',
+                  valor: 2
+                }
+              },
+              {
+                ordem: 2,
+                nome: '3 EJs com Meta Batida',
+                agregado: {
+                  tipo: 'contagem',
+                  condicaoEj: { logica: 'E', condicoes: [{ metrica: 'fa_meta_batida', operador: '=', valor: true }] },
+                  operador: '>=',
+                  valor: 3
+                }
+              }
+            ]
+          }
+        ],
+        premiacoes: [
+          {
+            id: 'prem_prioritaria',
+            nome: 'EJ Destaque Geral (Top 1 Faturamento %)',
+            prioridade: 1,
+            elegibilidade: { logica: 'E', condicoes: [{ metrica: 'fa_pct_meta', operador: '>=', valor: 100 }] },
+            modo: 'topN',
+            n: 1,
+            metricaRanking: 'fa_pct_meta',
+            ordem: 'maior',
+            desempate: [{ metrica: 'fa_realizado', ordem: 'maior' }],
+            naoAcumulaCom: []
+          },
+          {
+            id: 'prem_nao_acumula',
+            nome: 'Troféu Escalada (Não acumula com Destaque Geral)',
+            prioridade: 2,
+            elegibilidade: { logica: 'E', condicoes: [{ metrica: 'fa_pct_meta', operador: '>=', valor: 100 }] },
+            modo: 'topN',
+            n: 1,
+            metricaRanking: 'fa_pct_meta',
+            ordem: 'maior',
+            desempate: [],
+            naoAcumulaCom: ['prem_prioritaria']
+          },
+          {
+            id: 'prem_desempate_resolvido',
+            nome: 'Prêmio Crescimento (Desempate por Colaborativo)',
+            prioridade: 3,
+            elegibilidade: { logica: 'E', condicoes: [{ metrica: 'crescimento_fa', operador: '>=', valor: 40 }] },
+            modo: 'topN',
+            n: 1,
+            metricaRanking: 'crescimento_fa',
+            ordem: 'maior',
+            desempate: [{ metrica: 'co_realizado', ordem: 'maior' }],
+            naoAcumulaCom: []
+          },
+          {
+            id: 'prem_empate_real',
+            nome: 'Prêmio Empate Técnico Persistente (Top 1)',
+            prioridade: 4,
+            elegibilidade: {
+              logica: 'E',
+              condicoes: [
+                { metrica: 'crescimento_fa', operador: '=', valor: 45 },
+                { metrica: 'ecm_pct', operador: '=', valor: 80 }
+              ]
+            },
+            modo: 'topN',
+            n: 1,
+            metricaRanking: 'crescimento_fa',
+            ordem: 'maior',
+            desempate: [{ metrica: 'ecm_pct', ordem: 'maior' }],
+            naoAcumulaCom: []
+          }
+        ]
+      };
+
+      const res = avaliarEvento(eventoTeste, mockEjs);
+
+      // 1. Teste Palco EJ com exigirNiveisAnteriores = true
+      const p1 = res.palcosEj[0];
+      const ej1P1 = p1.resultadosPorEj.find(r => r.cod === 'EJ1');
+      const ej2P1 = p1.resultadosPorEj.find(r => r.cod === 'EJ2');
+      const ej3P1 = p1.resultadosPorEj.find(r => r.cod === 'EJ3');
+      assert('Palco c/ escada: EJ1 atinge Nível 3 (Ouro)', ej1P1.nivelAtingido && ej1P1.nivelAtingido.ordem === 3);
+      assert('Palco c/ escada: EJ2 para no Nível 1 pois falhou Colaborativo no Nível 2', ej2P1.nivelAtingido && ej2P1.nivelAtingido.ordem === 1 && ej2P1.proximoNivel.ordem === 2);
+      assert('Palco c/ escada: EJ3 fica sem palco pois falhou Nível 1 (mesmo batendo Nível 2)', ej3P1.nivelAtingido === null && ej3P1.proximoNivel.ordem === 1);
+
+      // 2. Teste Palco EJ com exigirNiveisAnteriores = false
+      const p2 = res.palcosEj[1];
+      const ej3P2 = p2.resultadosPorEj.find(r => r.cod === 'EJ3');
+      assert('Palco livre: EJ3 atinge Nível 2 mesmo sem bater Nível 1', ej3P2.nivelAtingido && ej3P2.nivelAtingido.ordem === 2);
+
+      // 3. Teste Palco do Núcleo
+      const pn1 = res.palcosNucleo[0];
+      assert('Palco Núcleo: atinge Nível 1 (2 EJs com meta batida) e mostra falta de 1 EJ para Nível 2', pn1.nivelAtingido && pn1.nivelAtingido.ordem === 1 && pn1.proximoNivel && pn1.proximoNivel.diferenca === 1);
+
+      // 4. Teste Premiação Prioritária + Exclusão (naoAcumulaCom)
+      const prem1 = res.premiacoes[0];
+      const prem2 = res.premiacoes[1];
+      assert('Premiação 1 (Prioridade 1): EJ1 vence', prem1.vencedores.length === 1 && prem1.vencedores[0].cod === 'EJ1');
+      assert('Premiação 2 (naoAcumulaCom Premiação 1): EJ1 é impedida e EJ2 vence', prem2.vencedores.length === 1 && prem2.vencedores[0].cod === 'EJ2' && prem2.naoVencedoras.some(nv => nv.cod === 'EJ1' && nv.impedida));
+
+      // 5. Teste Desempate Resolvido
+      const prem3 = res.premiacoes[2];
+      assert('Premiação 3 (Desempate resolvido): EJ1, EJ2 e EJ3 empatam em crescimento_fa (45%), mas EJ1 vence pelo desempate co_realizado (15k)', prem3.vencedores.length === 1 && prem3.vencedores[0].cod === 'EJ1' && !prem3.houveEmpate);
+
+      // 6. Teste Empate Persistente (não escolhe arbitrariamente)
+      const prem4 = res.premiacoes[3];
+      assert('Premiação 4 (Empate persistente): EJ2 e EJ3 empatam na métrica e no desempate -> ambas vencem com houveEmpate=true', prem4.houveEmpate === true && prem4.vencedores.length === 2 && prem4.vencedores.every(v => v.empatado === true));
+
+      // 7. Teste Resultado Congelado
+      const eventoEncerrado = {
+        ...eventoTeste,
+        status: 'encerrado',
+        resultadoCongelado: { marcadorTesteCongelado: 12345, palcosEj: [], palcosNucleo: [], premiacoes: [] }
+      };
+      const resCongelado = avaliarEvento(eventoEncerrado, []);
+      assert('Evento encerrado retorna resultadoCongelado intacto', resCongelado.congelado === true && resCongelado.marcadorTesteCongelado === 12345);
+
+      const totalPassou = resultados.filter(r => r.passou).length;
+      console.table(resultados);
+      return {
+        total: resultados.length,
+        passou: totalPassou,
+        falhou: resultados.length - totalPassou,
+        todosPassaram: totalPassou === resultados.length,
+        resultados
+      };
+    }
+
+    // Expõe API da Fase 1 no escopo global para inspeção e testes no console
+    window.METRICAS = METRICAS;
+    window.registrarMetrica = registrarMetrica;
+    window.avaliarCondicao = avaliarCondicao;
+    window.avaliarRequisito = avaliarRequisito;
+    window.avaliarEvento = avaliarEvento;
+    window.rodarTestesMotorEventos = rodarTestesMotorEventos;
+
+    // ============================================================================
+    // 15. MÓDULO DE EVENTOS — FASE 2: CRUD SINCRONIZADO, NAVEGAÇÃO E CONSTRUTOR DE CONDIÇÕES
+    // ============================================================================
+
+    function normalizarEventoObj(ev) {
+      if (!ev || typeof ev !== 'object') return null;
+      const id = String(ev.id || ('evt_' + Date.now()));
+      return {
+        id,
+        nome: String(ev.nome || 'Novo Evento').trim(),
+        data: String(ev.data || ''),
+        periodoReferencia: String(ev.periodoReferencia || ''),
+        status: ['rascunho', 'em_andamento', 'encerrado'].includes(ev.status) ? ev.status : 'rascunho',
+        palcosEj: Array.isArray(ev.palcosEj) ? ev.palcosEj : [],
+        palcosNucleo: Array.isArray(ev.palcosNucleo) ? ev.palcosNucleo : [],
+        premiacoes: Array.isArray(ev.premiacoes) ? ev.premiacoes : [],
+        resultadoCongelado: ev.resultadoCongelado || null,
+        atualizadoEm: Number(ev.atualizadoEm) || Date.now()
+      };
+    }
+
+    function applyCloudEventosMap(cloudMap) {
+      if (!cloudMap || typeof cloudMap !== 'object') return;
+      const sig = JSON.stringify(cloudMap);
+      if (sig === lastEventosSig) return;
+      lastEventosSig = sig;
+
+      const merged = Object.assign({}, STORE.eventos || {});
+      Object.keys(cloudMap).forEach(k => {
+        const incoming = normalizarEventoObj(cloudMap[k]);
+        if (!incoming) return;
+        const local = merged[incoming.id];
+        if (!local || (incoming.atualizadoEm || 0) >= (local.atualizadoEm || 0)) {
+          merged[incoming.id] = incoming;
+        }
+      });
+
+      STORE.eventos = merged;
+      saveLocalCache();
+      if (STORE.ui.screen === 'eventos') {
+        renderEventos();
+      }
+    }
+
+    async function salvarEventoNoBanco(evento, reRender = true) {
+      const norm = normalizarEventoObj(evento);
+      if (!norm) return null;
+      norm.atualizadoEm = Date.now();
+
+      if (!STORE.eventos) STORE.eventos = {};
+      STORE.eventos[norm.id] = norm;
+      saveLocalCache();
+      if (reRender && STORE.ui.screen === 'eventos') {
+        renderEventos();
+      }
+
+      setCloudStatus('syncing', 'Salvando…');
+      const cleanPayload = JSON.parse(JSON.stringify(norm));
+
+      if (RTDB) {
+        try {
+          await Promise.race([
+            RTDB.ref('eventos/' + norm.id).set(cleanPayload),
+            new Promise(res => setTimeout(res, 3000))
+          ]);
+        } catch (e) {
+          console.warn('Erro ao salvar evento no RTDB:', e);
+        }
+      }
+
+      if (DB) {
+        try {
+          const batch = DB.batch();
+          const ref = DB.collection('eventos').doc(norm.id);
+          batch.set(ref, cleanPayload);
+          await Promise.race([
+            batch.commit(),
+            new Promise(res => setTimeout(res, 3000))
+          ]);
+          setCloudStatus('online', 'Nuvem ativa');
+        } catch (err) {
+          console.warn('Erro ao salvar evento no Firestore:', err);
+          setCloudStatus('online', 'Salvo neste dispositivo');
+        }
+      } else {
+        setCloudStatus('online', 'Salvo neste dispositivo');
+      }
+
+      return norm;
+    }
+
+    async function excluirEventoDoBanco(eventoId) {
+      const id = String(eventoId || '');
+      if (!id || !STORE.eventos || !STORE.eventos[id]) return;
+
+      delete STORE.eventos[id];
+      if (STORE.ui.activeEventoId === id) {
+        STORE.ui.activeEventoId = null;
+      }
+      saveLocalCache();
+      if (STORE.ui.screen === 'eventos') {
+        renderEventos();
+      }
+
+      if (RTDB) {
+        try {
+          await Promise.race([
+            RTDB.ref('eventos/' + id).remove(),
+            new Promise(res => setTimeout(res, 3000))
+          ]);
+        } catch (e) { }
+      }
+
+      if (DB) {
+        try {
+          const batch = DB.batch();
+          batch.delete(DB.collection('eventos').doc(id));
+          await Promise.race([
+            batch.commit(),
+            new Promise(res => setTimeout(res, 3000))
+          ]);
+        } catch (e) { }
+      }
+    }
+
+    async function criarNovoEvento() {
+      const hoje = new Date().toISOString().slice(0, 10);
+      const mesAtualNome = MN[(STORE.params.mes || 1) - 1] || 'Outubro';
+      const novo = normalizarEventoObj({
+        id: 'evt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+        nome: 'Novo Evento Regional',
+        data: hoje,
+        periodoReferencia: `Acumulado até ${mesAtualNome}`,
+        status: 'rascunho',
+        palcosEj: [],
+        palcosNucleo: [],
+        premiacoes: [],
+        resultadoCongelado: null
+      });
+      STORE.ui.activeEventoId = novo.id;
+      STORE.ui.eventoTab = 'dados';
+      await salvarEventoNoBanco(novo, true);
+    }
+
+    async function duplicarEvento(eventoId) {
+      const orig = STORE.eventos && STORE.eventos[eventoId];
+      if (!orig) return;
+      const clone = JSON.parse(JSON.stringify(orig));
+      clone.id = 'evt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+      clone.nome = `${orig.nome} (Cópia)`;
+      clone.status = 'rascunho';
+      clone.resultadoCongelado = null;
+      clone.atualizadoEm = Date.now();
+      await salvarEventoNoBanco(clone, true);
+    }
+
+    function renderStatusEventoTag(status) {
+      if (status === 'encerrado') {
+        return renderTag(['Encerrado (Congelado)', 'g']);
+      }
+      if (status === 'em_andamento') {
+        return renderTag(['Em andamento (Ao vivo)', 'g']);
+      }
+      return renderTag(['Rascunho', 'n']);
+    }
+
+    // ----------------------------------------------------------------------------
+    // CONSTRUTOR VISUAL DE CONDIÇÕES REUTILIZÁVEL
+    // ----------------------------------------------------------------------------
+
+    function obterGruposMetricas() {
+      const grupos = {};
+      Object.values(METRICAS).forEach(m => {
+        const ind = m.indicador || 'Geral';
+        if (!grupos[ind]) grupos[ind] = [];
+        grupos[ind].push(m);
+      });
+      return grupos;
+    }
+
+    function obterOperadoresParaTipo(tipo) {
+      if (tipo === 'booleano' || tipo === 'status') {
+        return [
+          { op: '=', label: '= (Igual a)' },
+          { op: '!=', label: '!= (Diferente de)' }
+        ];
+      }
+      return [
+        { op: '>=', label: '>= (Maior ou igual)' },
+        { op: '>', label: '> (Maior que)' },
+        { op: '<=', label: '<= (Menor ou igual)' },
+        { op: '<', label: '< (Menor que)' },
+        { op: '=', label: '= (Igual a)' },
+        { op: '!=', label: '!= (Diferente de)' }
+      ];
+    }
+
+    function garantirRequisitoValido(req) {
+      if (!req || typeof req !== 'object') {
+        return { logica: 'E', condicoes: [] };
+      }
+      const logica = String(req.logica || req.operadorLogico || 'E').toUpperCase() === 'OU' ? 'OU' : 'E';
+      const condicoes = Array.isArray(req.condicoes)
+        ? req.condicoes.map(c => ({
+            metrica: (c && c.metrica && METRICAS[c.metrica]) ? c.metrica : 'fa_pct_meta',
+            operador: (c && c.operador) ? c.operador : '>=',
+            valor: (c && c.valor !== undefined) ? c.valor : 100
+          }))
+        : [];
+      return { logica, condicoes };
+    }
+
+    /**
+     * Gera o HTML de um Construtor de Condições reutilizável.
+     * @param {string} builderId Identificador único do construtor no DOM.
+     * @param {object} requisito Objeto { logica: 'E'|'OU', condicoes: [{ metrica, operador, valor }] }
+     * @param {object} opts Opções extras { titulo, textoVazio, mostrarPreview }
+     */
+    function gerarHtmlConstrutorCondicoes(builderId, requisito, opts = {}) {
+      const req = garantirRequisitoValido(requisito);
+      const grupos = obterGruposMetricas();
+      const titulo = opts.titulo || 'Requisitos / Condições';
+      const textoVazio = opts.textoVazio || 'Nenhuma condição configurada (qualquer EJ cumpre por padrão).';
+      const mostrarPreview = opts.mostrarPreview !== false;
+
+      const linhasHtml = req.condicoes.length === 0
+        ? `<div style="font-size:12.5px;color:var(--text-muted);padding:8px 4px;">${esc(textoVazio)}</div>`
+        : req.condicoes.map((cond, idx) => {
+            const def = METRICAS[cond.metrica] || METRICAS.fa_pct_meta;
+            const ops = obterOperadoresParaTipo(def.tipo);
+            const opValido = ops.some(o => o.op === cond.operador) ? cond.operador : ops[0].op;
+
+            const selectMetricaHtml = Object.keys(grupos).map(nomeGrupo => {
+              const options = grupos[nomeGrupo].map(m =>
+                `<option value="${esc(m.id)}" ${m.id === def.id ? 'selected' : ''}>${esc(m.rotulo)}</option>`
+              ).join('');
+              return `<optgroup label="${esc(nomeGrupo)}">${options}</optgroup>`;
+            }).join('');
+
+            const selectOperadorHtml = ops.map(o =>
+              `<option value="${esc(o.op)}" ${o.op === opValido ? 'selected' : ''}>${esc(o.label)}</option>`
+            ).join('');
+
+            let campoValorHtml = '';
+            if (def.tipo === 'booleano') {
+              const valBool = normalizarBooleano(cond.valor);
+              campoValorHtml = `
+                <select class="select" data-cb-field="valor" data-cb-idx="${idx}" style="width:100%;">
+                  <option value="true" ${valBool ? 'selected' : ''}>Sim (Verdadeiro)</option>
+                  <option value="false" ${!valBool ? 'selected' : ''}>Não (Falso)</option>
+                </select>
+              `;
+            } else if (def.tipo === 'status' && Array.isArray(def.opcoes)) {
+              const valStr = String(cond.valor ?? def.opcoes[0]);
+              campoValorHtml = `
+                <select class="select" data-cb-field="valor" data-cb-idx="${idx}" style="width:100%;">
+                  ${def.opcoes.map(op => `<option value="${esc(op)}" ${op === valStr ? 'selected' : ''}>${esc(op)}</option>`).join('')}
+                </select>
+              `;
+            } else {
+              const numVal = (cond.valor !== undefined && cond.valor !== null && cond.valor !== '') ? Number(cond.valor) : 0;
+              const placeholder = def.tipo === 'percentual' ? 'Ex.: 80 (%)' : 'Valor numérico';
+              campoValorHtml = `
+                <input type="number" step="any" class="input" data-cb-field="valor" data-cb-idx="${idx}" value="${esc(isNaN(numVal) ? 0 : numVal)}" placeholder="${esc(placeholder)}" style="width:100%;">
+              `;
+            }
+
+            return `
+              <div class="cond-row" data-cb-row="${idx}">
+                <select class="select" data-cb-field="metrica" data-cb-idx="${idx}" style="width:100%;">
+                  ${selectMetricaHtml}
+                </select>
+                <select class="select" data-cb-field="operador" data-cb-idx="${idx}" style="width:100%;">
+                  ${selectOperadorHtml}
+                </select>
+                <div>${campoValorHtml}</div>
+                <button type="button" class="btn btn-sm" data-cb-remove="${idx}" title="Remover condição" style="color:var(--danger);padding:5px 9px;">✕</button>
+              </div>
+            `;
+          }).join('');
+
+      let previewHtml = '';
+      if (mostrarPreview) {
+        const total = (STORE.ejs || []).length;
+        const qtdCumprem = (STORE.ejs || []).filter(ej => avaliarRequisito(req, ej).bateu).length;
+        previewHtml = `
+          <div class="cond-preview-bar">
+            <span>Conector atual: <strong>${req.logica === 'OU' ? 'OU (basta 1 condição bater)' : 'E (todas as condições devem bater)'}</strong></span>
+            <span>Prévia com dados atuais: <strong>${qtdCumprem} de ${total} EJs</strong> cumprem este requisito</span>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="cond-builder" id="cb_${esc(builderId)}" data-cb-id="${esc(builderId)}">
+          <div class="cond-builder-header">
+            <span style="font-size:12.5px;font-weight:600;color:var(--text);">${esc(titulo)}</span>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <div class="cond-logic-toggle" title="Alternar entre E (todas) e OU (qualquer uma)">
+                <button type="button" class="cond-logic-btn ${req.logica === 'E' ? 'active' : ''}" data-cb-logic="E">E (Todas)</button>
+                <button type="button" class="cond-logic-btn ${req.logica === 'OU' ? 'active' : ''}" data-cb-logic="OU">OU (Qualquer)</button>
+              </div>
+              <button type="button" class="btn btn-sm" data-cb-add="1">+ Adicionar condição</button>
+            </div>
+          </div>
+          <div class="cond-list">
+            ${linhasHtml}
+          </div>
+          ${previewHtml}
+        </div>
+      `;
+    }
+
+    /**
+     * Conecta os eventos de interação de um Construtor de Condições renderizado no DOM.
+     * Sempre que o usuário adiciona/remove condição, troca métrica/operador/valor ou alterna E/OU,
+     * atualiza o objeto `requisito` e invoca `onChange(requisito)`.
+     */
+    function vincularConstrutorCondicoes(builderId, requisitoRef, onChange) {
+      const container = document.getElementById('cb_' + builderId);
+      if (!container) return;
+
+      const req = garantirRequisitoValido(requisitoRef);
+      requisitoRef.logica = req.logica;
+      requisitoRef.condicoes = req.condicoes;
+
+      const dispararAtualizacao = (reRenderDom = true) => {
+        if (typeof onChange === 'function') {
+          onChange(requisitoRef, reRenderDom);
+        }
+      };
+
+      // Alternar E / OU
+      container.querySelectorAll('[data-cb-logic]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          requisitoRef.logica = btn.dataset.cbLogic === 'OU' ? 'OU' : 'E';
+          dispararAtualizacao(true);
+        });
+      });
+
+      // Adicionar condição
+      const btnAdd = container.querySelector('[data-cb-add]');
+      if (btnAdd) {
+        btnAdd.addEventListener('click', () => {
+          requisitoRef.condicoes.push({
+            metrica: 'fa_pct_meta',
+            operador: '>=',
+            valor: 100
+          });
+          dispararAtualizacao(true);
+        });
+      }
+
+      // Remover condição
+      container.querySelectorAll('[data-cb-remove]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const idx = Number(btn.dataset.cbRemove);
+          if (!isNaN(idx) && idx >= 0 && idx < requisitoRef.condicoes.length) {
+            requisitoRef.condicoes.splice(idx, 1);
+            dispararAtualizacao(true);
+          }
+        });
+      });
+
+      // Alterar métrica, operador ou valor
+      container.querySelectorAll('[data-cb-field]').forEach(input => {
+        const field = input.dataset.cbField;
+        const idx = Number(input.dataset.cbIdx);
+        const cond = requisitoRef.condicoes[idx];
+        if (!cond) return;
+
+        const handler = () => {
+          if (field === 'metrica') {
+            const novaMetrica = input.value;
+            const def = METRICAS[novaMetrica] || METRICAS.fa_pct_meta;
+            cond.metrica = novaMetrica;
+            const ops = obterOperadoresParaTipo(def.tipo);
+            if (!ops.some(o => o.op === cond.operador)) {
+              cond.operador = ops[0].op;
+            }
+            if (def.tipo === 'booleano') {
+              cond.valor = true;
+            } else if (def.tipo === 'status' && Array.isArray(def.opcoes)) {
+              cond.valor = def.opcoes[0];
+            } else if (typeof cond.valor !== 'number' || isNaN(cond.valor)) {
+              cond.valor = def.tipo === 'percentual' ? 100 : 1;
+            }
+            dispararAtualizacao(true);
+          } else if (field === 'operador') {
+            cond.operador = input.value;
+            dispararAtualizacao(true);
+          } else if (field === 'valor') {
+            const def = METRICAS[cond.metrica] || METRICAS.fa_pct_meta;
+            if (def.tipo === 'booleano') {
+              cond.valor = input.value === 'true';
+            } else if (def.tipo === 'status') {
+              cond.valor = input.value;
+            } else {
+              cond.valor = Number(input.value) || 0;
+            }
+            dispararAtualizacao(false);
+            // Atualiza a barra de prévia sem perder foco do input numérico
+            const previewBar = container.querySelector('.cond-preview-bar');
+            if (previewBar) {
+              const total = (STORE.ejs || []).length;
+              const qtdCumprem = (STORE.ejs || []).filter(ej => avaliarRequisito(requisitoRef, ej).bateu).length;
+              previewBar.innerHTML = `
+                <span>Conector atual: <strong>${requisitoRef.logica === 'OU' ? 'OU (basta 1 condição bater)' : 'E (todas as condições devem bater)'}</strong></span>
+                <span>Prévia com dados atuais: <strong>${qtdCumprem} de ${total} EJs</strong> cumprem este requisito</span>
+              `;
+            }
+          }
+        };
+
+        if (field === 'valor' && input.tagName === 'INPUT') {
+          input.addEventListener('input', handler);
+        } else {
+          input.addEventListener('change', handler);
+        }
+      });
+    }
+
+    // ----------------------------------------------------------------------------
+    // RENDERIZAÇÃO DA ABA "EVENTOS" (LISTA + EDITOR COM ABAS)
+    // ----------------------------------------------------------------------------
+
+    function renderEventos() {
+      const activeId = STORE.ui.activeEventoId;
+      if (activeId && STORE.eventos && STORE.eventos[activeId]) {
+        $('eventosListView').style.display = 'none';
+        $('eventoEditorView').style.display = 'block';
+        renderEventoEditor(STORE.eventos[activeId]);
+      } else {
+        STORE.ui.activeEventoId = null;
+        $('eventosListView').style.display = 'block';
+        $('eventoEditorView').style.display = 'none';
+        renderEventosLista();
+      }
+    }
+
+    function renderEventosLista() {
+      const lista = Object.values(STORE.eventos || {}).sort((a, b) => (b.atualizadoEm || 0) - (a.atualizadoEm || 0));
+      const emAndamento = lista.filter(e => e.status === 'em_andamento').length;
+      const encerrados = lista.filter(e => e.status === 'encerrado').length;
+
+      $('eventosStatusSentence').textContent = lista.length === 0
+        ? 'Nenhum evento cadastrado ainda'
+        : `${lista.length} ${lista.length === 1 ? 'evento cadastrado' : 'eventos cadastrados'} (${emAndamento} em andamento · ${encerrados} ${encerrados === 1 ? 'encerrado' : 'encerrados'})`;
+
+      const grid = $('eventosCardsGrid');
+      if (lista.length === 0) {
+        grid.innerHTML = `
+          <div class="clean-card" style="grid-column:1 / -1;text-align:center;padding:40px 24px;">
+            <p style="font-size:15px;font-weight:600;margin-bottom:6px;">Nenhum evento configurado</p>
+            <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">Crie um evento (ex.: Reunião Regional, Reconhecimento Trimestral) para configurar palcos das EJs, palcos do Núcleo e premiações.</p>
+            <button class="btn btn-primary" data-evt-new-empty="1">+ Criar primeiro evento</button>
+          </div>
+        `;
+        const btnEmpty = grid.querySelector('[data-evt-new-empty]');
+        if (btnEmpty) btnEmpty.addEventListener('click', criarNovoEvento);
+        return;
+      }
+
+      grid.innerHTML = lista.map(ev => {
+        const qtdPalcosEj = (ev.palcosEj || []).length;
+        const qtdPalcosNucleo = (ev.palcosNucleo || []).length;
+        const qtdPremiacoes = (ev.premiacoes || []).length;
+        const dataFmt = ev.data ? ev.data.split('-').reverse().join('/') : 'Sem data definida';
+
+        return `
+          <div class="clean-card clickable" data-open-evt="${esc(ev.id)}">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px;">
+              <div>
+                <div style="font-size:16px;font-weight:600;color:var(--text);margin-bottom:4px;">${esc(ev.nome)}</div>
+                <div style="font-size:12.5px;color:var(--text-muted);">${esc(dataFmt)}${ev.periodoReferencia ? ` · ${esc(ev.periodoReferencia)}` : ''}</div>
+              </div>
+              ${renderStatusEventoTag(ev.status)}
+            </div>
+
+            <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--text-secondary);padding:10px 0;border-top:1px solid var(--border-subtle);border-bottom:1px solid var(--border-subtle);margin-bottom:12px;">
+              <span><strong>${qtdPalcosEj}</strong> ${qtdPalcosEj === 1 ? 'palco de EJ' : 'palcos de EJs'}</span>
+              <span><strong>${qtdPalcosNucleo}</strong> ${qtdPalcosNucleo === 1 ? 'palco do Núcleo' : 'palcos do Núcleo'}</span>
+              <span><strong>${qtdPremiacoes}</strong> ${qtdPremiacoes === 1 ? 'premiação' : 'premiações'}</span>
+            </div>
+
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span style="font-size:11.5px;color:var(--text-muted);">Atualizado em ${fmtDate(ev.atualizadoEm)}</span>
+              <div style="display:flex;gap:6px;">
+                <button class="btn btn-sm" data-dup-evt="${esc(ev.id)}" title="Duplicar este evento">Duplicar</button>
+                <button class="btn btn-sm" data-del-evt="${esc(ev.id)}" title="Excluir este evento" style="color:var(--danger);">Excluir</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderEventoEditor(ev) {
+      $('evtEditorTitle').textContent = ev.nome || 'Evento sem nome';
+      $('evtEditorStatusBadge').innerHTML = renderStatusEventoTag(ev.status);
+
+      const tab = STORE.ui.eventoTab || 'dados';
+      document.querySelectorAll('#evtEditorTabs .tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.evttab === tab);
+      });
+
+      const body = $('evtEditorTabBody');
+      if (tab === 'dados') {
+        renderEventoTabDados(ev, body);
+      } else if (tab === 'palcos_ej') {
+        renderEventoTabPalcosEj(ev, body);
+      } else if (tab === 'palcos_nucleo') {
+        renderEventoTabPalcosNucleo(ev, body);
+      } else if (tab === 'premiacoes') {
+        renderEventoTabPremiacoes(ev, body);
+      } else if (tab === 'resultado') {
+        renderEventoTabResultado(ev, body);
+      }
+    }
+
+    function renderEventoTabDados(ev, container) {
+      const bloqueado = ev.status === 'encerrado';
+
+      container.innerHTML = `
+        <div class="clean-card" style="max-width:760px;margin-bottom:24px;">
+          <h3 class="section-title" style="margin-bottom:14px;">Configurações básicas do evento</h3>
+          <div class="kv-grid">
+            <div class="form-group" style="grid-column:1 / -1;">
+              <label class="form-label" for="evtInputNome">Nome do evento</label>
+              <input type="text" class="input" id="evtInputNome" value="${esc(ev.nome)}" placeholder="Ex.: Reunião Regional Vertentes 2026" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="evtInputData">Data do evento</label>
+              <input type="date" class="input" id="evtInputData" value="${esc(ev.data || '')}" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="evtInputPeriodo">Período de referência</label>
+              <input type="text" class="input" id="evtInputPeriodo" value="${esc(ev.periodoReferencia || '')}" placeholder="Ex.: Jan a Out / 2026" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
+            </div>
+            <div class="form-group" style="grid-column:1 / -1;">
+              <label class="form-label" for="evtInputStatus">Status do evento</label>
+              <select class="select" id="evtInputStatus" style="width:100%;">
+                <option value="rascunho" ${ev.status === 'rascunho' ? 'selected' : ''}>Rascunho (em configuração)</option>
+                <option value="em_andamento" ${ev.status === 'em_andamento' ? 'selected' : ''}>Em andamento (resultado ao vivo)</option>
+                <option value="encerrado" ${ev.status === 'encerrado' ? 'selected' : ''}>Encerrado (resultado congelado)</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:8px;">
+            <button class="btn btn-primary" id="btnSalvarDadosEvento">Salvar dados do evento</button>
+          </div>
+        </div>
+
+        <div class="clean-card" style="max-width:760px;">
+          <div style="margin-bottom:12px;">
+            <h3 class="section-title" style="margin-bottom:4px;">Simulador do Construtor de Condições (Validação Fase 2)</h3>
+            <p style="font-size:12.5px;color:var(--text-muted);">Este componente visual é reutilizado nos Palcos das EJs, Palcos do Núcleo e Premiações. Adicione condições, alterne entre <strong>E / OU</strong> e veja quantas EJs da planilha atual cumprem o requisito em tempo real.</p>
+          </div>
+          <div id="sandboxCondBuilderWrap"></div>
+          <div id="sandboxPreviewEjsList" style="margin-top:12px;font-size:12.5px;color:var(--text-secondary);"></div>
+        </div>
+      `;
+
+      $('btnSalvarDadosEvento').addEventListener('click', async () => {
+        const novoStatus = $('evtInputStatus').value;
+        ev.nome = $('evtInputNome').value.trim() || 'Evento sem nome';
+        ev.data = $('evtInputData').value;
+        ev.periodoReferencia = $('evtInputPeriodo').value.trim();
+
+        if (novoStatus === 'encerrado' && ev.status !== 'encerrado') {
+          ev.status = 'encerrado';
+          ev.resultadoCongelado = avaliarEvento({ ...ev, status: 'em_andamento' }, STORE.ejs, { ignorarCongelado: true });
+        } else if (novoStatus !== 'encerrado') {
+          ev.status = novoStatus;
+          ev.resultadoCongelado = null;
+        }
+        await salvarEventoNoBanco(ev, true);
+      });
+
+      const renderSandbox = () => {
+        const wrap = $('sandboxCondBuilderWrap');
+        const listEl = $('sandboxPreviewEjsList');
+        if (!wrap) return;
+        wrap.innerHTML = gerarHtmlConstrutorCondicoes('sandbox_fase2', STORE.ui.sandboxRequisito, {
+          titulo: 'Requisito de teste',
+          mostrarPreview: true
+        });
+        const atualizarListaPreview = () => {
+          if (!listEl) return;
+          const aprovadas = (STORE.ejs || []).filter(ej => avaliarRequisito(STORE.ui.sandboxRequisito, ej).bateu);
+          if (aprovadas.length === 0) {
+            listEl.innerHTML = `<span style="color:var(--text-muted);">Nenhuma EJ cumpre este requisito no momento.</span>`;
+          } else {
+            listEl.innerHTML = `<strong>EJs que cumprem (${aprovadas.length}):</strong> ` +
+              aprovadas.slice(0, 15).map(e => `<a href="javascript:void(0)" onclick="openEjProfile('${esc(e.cod)}')" style="color:var(--primary);text-decoration:none;font-weight:500;">${esc(e.nome)}</a>`).join(', ') +
+              (aprovadas.length > 15 ? ` e mais ${aprovadas.length - 15}…` : '');
+          }
+        };
+        atualizarListaPreview();
+        vincularConstrutorCondicoes('sandbox_fase2', STORE.ui.sandboxRequisito, (req, reRenderDom) => {
+          if (reRenderDom) renderSandbox();
+          else atualizarListaPreview();
+        });
+      };
+
+      renderSandbox();
+    }
+
+    // ============================================================================
+    // 16. MÓDULO DE EVENTOS — FASE 3: PALCOS DAS EJs, PALCOS DO NÚCLEO E RESULTADO
+    // ============================================================================
+
+    const salvarEventoDebounced = debounce((ev) => {
+      salvarEventoNoBanco(ev, false);
+    }, 600);
+
+    function persistirEdicaoEvento(ev, reRender = false) {
+      ev.atualizadoEm = Date.now();
+      saveLocalCache();
+      salvarEventoDebounced(ev);
+      if (reRender && STORE.ui.screen === 'eventos') {
+        renderEventoEditor(ev);
+      }
+    }
+
+    // ----------------------------------------------------------------------------
+    // ABA: PALCOS DAS EJs
+    // ----------------------------------------------------------------------------
+    function renderEventoTabPalcosEj(ev, container) {
+      const bloqueado = ev.status === 'encerrado';
+      if (!Array.isArray(ev.palcosEj)) ev.palcosEj = [];
+
+      const palcosHtml = ev.palcosEj.length === 0
+        ? `
+          <div class="clean-card" style="text-align:center;padding:36px 24px;">
+            <p style="font-size:15px;font-weight:600;margin-bottom:6px;">Nenhum Palco das EJs configurado</p>
+            <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">Adicione um palco (ex.: Palco de Metas Anuais, Palco Alto Crescimento) e defina os níveis e requisitos para as EJs subirem ao palco.</p>
+            ${!bloqueado ? `<button class="btn btn-primary" data-add-palco-ej="1">+ Adicionar primeiro Palco das EJs</button>` : ''}
+          </div>
+        `
+        : ev.palcosEj.map((palco, pIdx) => {
+            if (!Array.isArray(palco.niveis)) palco.niveis = [];
+            palco.niveis.sort((a, b) => (Number(a.ordem) || 0) - (Number(b.ordem) || 0));
+
+            const niveisHtml = palco.niveis.length === 0
+              ? `<div style="font-size:12.5px;color:var(--text-muted);padding:12px 0;">Nenhum nível cadastrado neste palco. Clique em "+ Adicionar nível" abaixo.</div>`
+              : palco.niveis.map((nivel, nIdx) => {
+                  const cbId = `pej_${pIdx}_${nIdx}`;
+                  return `
+                    <div style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:12px;background:var(--surface);">
+                      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
+                        <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:240px;">
+                          <div style="width:82px;">
+                            <label class="form-label" style="font-size:11px;margin-bottom:2px;">Ordem</label>
+                            <input type="number" min="1" class="input" data-pej-nivel-ordem="${pIdx}:${nIdx}" value="${esc(nivel.ordem ?? (nIdx + 1))}" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
+                          </div>
+                          <div style="flex:1;">
+                            <label class="form-label" style="font-size:11px;margin-bottom:2px;">Nome do nível</label>
+                            <input type="text" class="input" data-pej-nivel-nome="${pIdx}:${nIdx}" value="${esc(nivel.nome || `Nível ${nIdx + 1}`)}" placeholder="Ex.: Nível 1 — Bronze" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
+                          </div>
+                        </div>
+                        ${!bloqueado ? `<button type="button" class="btn btn-sm" data-pej-del-nivel="${pIdx}:${nIdx}" style="color:var(--danger);">Remover nível</button>` : ''}
+                      </div>
+                      <div id="wrap_${cbId}">
+                        ${gerarHtmlConstrutorCondicoes(cbId, nivel.requisito, {
+                          titulo: `Requisito para atingir "${nivel.nome || ('Nível ' + (nivel.ordem || (nIdx + 1)))}"`,
+                          mostrarPreview: true
+                        })}
+                      </div>
+                    </div>
+                  `;
+                }).join('');
+
+            return `
+              <div class="clean-card" style="margin-bottom:20px;">
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-bottom:14px;border-bottom:1px solid var(--border-subtle);margin-bottom:14px;">
+                  <div style="flex:1;min-width:240px;">
+                    <label class="form-label">Nome do Palco das EJs</label>
+                    <input type="text" class="input" data-pej-nome="${pIdx}" value="${esc(palco.nome || '')}" placeholder="Ex.: Palco Reconhecimento Anual" style="width:100%;font-weight:600;" ${bloqueado ? 'disabled' : ''}>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding-top:22px;">
+                    <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--text-secondary);cursor:pointer;">
+                      <input type="checkbox" data-pej-escada="${pIdx}" ${palco.exigirNiveisAnteriores ? 'checked' : ''} ${bloqueado ? 'disabled' : ''}>
+                      <span>Exigir níveis anteriores em ordem (escada)</span>
+                    </label>
+                    ${!bloqueado ? `<button type="button" class="btn btn-sm" data-pej-del-palco="${pIdx}" style="color:var(--danger);">Excluir palco</button>` : ''}
+                  </div>
+                </div>
+
+                <div>
+                  ${niveisHtml}
+                </div>
+
+                ${!bloqueado ? `
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--border-subtle);">
+                    <button type="button" class="btn btn-sm" data-pej-add-nivel="${pIdx}">+ Adicionar nível</button>
+                    <span style="font-size:12px;color:var(--text-muted);">${palco.exigirNiveisAnteriores ? 'Modo escada: a EJ só sobe ao nível seguinte se cumprir os anteriores.' : 'Modo livre: a EJ fica no maior nível cujo requisito ela cumprir.'}</span>
+                  </div>
+                ` : ''}
+              </div>
+            `;
+          }).join('');
+
+      container.innerHTML = `
+        <div class="section-header" style="margin-bottom:16px;">
+          <div>
+            <h3 class="section-title" style="margin-bottom:2px;">Configuração dos Palcos das EJs</h3>
+            <span style="font-size:12.5px;color:var(--text-muted);">Cada EJ é posicionada automaticamente no maior nível em que cumpre o requisito configurado.</span>
+          </div>
+          <div style="display:flex;gap:8px;">
+            ${!bloqueado ? `<button type="button" class="btn" data-add-palco-ej="1">+ Novo palco das EJs</button>` : ''}
+            ${!bloqueado ? `<button type="button" class="btn btn-primary" id="btnSavePalcosEjNow">Salvar alterações</button>` : ''}
+          </div>
+        </div>
+        ${palcosHtml}
+      `;
+
+      // Bind de adicionar palco
+      container.querySelectorAll('[data-add-palco-ej]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          ev.palcosEj.push({
+            id: 'pej_' + Date.now() + '_' + Math.random().toString(36).slice(2, 5),
+            nome: `Palco das EJs ${ev.palcosEj.length + 1}`,
+            exigirNiveisAnteriores: false,
+            niveis: [
+              {
+                ordem: 1,
+                nome: 'Nível 1',
+                requisito: {
+                  logica: 'E',
+                  condicoes: [{ metrica: 'fa_pct_meta', operador: '>=', valor: 100 }]
+                }
+              }
+            ]
+          });
+          persistirEdicaoEvento(ev, true);
+        });
+      });
+
+      const btnSaveNow = $('btnSavePalcosEjNow');
+      if (btnSaveNow) {
+        btnSaveNow.addEventListener('click', async () => {
+          await salvarEventoNoBanco(ev, true);
+        });
+      }
+
+      // Bind dos campos de cada palco e nível
+      container.querySelectorAll('[data-pej-nome]').forEach(inp => {
+        inp.addEventListener('input', () => {
+          const pIdx = Number(inp.dataset.pejNome);
+          if (ev.palcosEj[pIdx]) {
+            ev.palcosEj[pIdx].nome = inp.value;
+            persistirEdicaoEvento(ev, false);
+          }
+        });
+      });
+
+      container.querySelectorAll('[data-pej-escada]').forEach(chk => {
+        chk.addEventListener('change', () => {
+          const pIdx = Number(chk.dataset.pejEscada);
+          if (ev.palcosEj[pIdx]) {
+            ev.palcosEj[pIdx].exigirNiveisAnteriores = chk.checked;
+            persistirEdicaoEvento(ev, true);
+          }
+        });
+      });
+
+      container.querySelectorAll('[data-pej-del-palco]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const pIdx = Number(btn.dataset.pejDelPalco);
+          if (!ev.palcosEj[pIdx]) return;
+          if (!confirm(`Remover o palco "${ev.palcosEj[pIdx].nome}"?`)) return;
+          ev.palcosEj.splice(pIdx, 1);
+          persistirEdicaoEvento(ev, true);
+        });
+      });
+
+      container.querySelectorAll('[data-pej-add-nivel]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const pIdx = Number(btn.dataset.pejAddNivel);
+          const palco = ev.palcosEj[pIdx];
+          if (!palco) return;
+          const maxOrdem = (palco.niveis || []).reduce((m, n) => Math.max(m, Number(n.ordem) || 0), 0);
+          const novaOrdem = maxOrdem + 1;
+          palco.niveis.push({
+            ordem: novaOrdem,
+            nome: `Nível ${novaOrdem}`,
+            requisito: {
+              logica: 'E',
+              condicoes: [{ metrica: 'fa_pct_meta', operador: '>=', valor: 100 }]
+            }
+          });
+          persistirEdicaoEvento(ev, true);
+        });
+      });
+
+      container.querySelectorAll('[data-pej-del-nivel]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const [pIdx, nIdx] = btn.dataset.pejDelNivel.split(':').map(Number);
+          if (ev.palcosEj[pIdx] && ev.palcosEj[pIdx].niveis[nIdx]) {
+            ev.palcosEj[pIdx].niveis.splice(nIdx, 1);
+            persistirEdicaoEvento(ev, true);
+          }
+        });
+      });
+
+      container.querySelectorAll('[data-pej-nivel-ordem]').forEach(inp => {
+        inp.addEventListener('change', () => {
+          const [pIdx, nIdx] = inp.dataset.pejNivelOrdem.split(':').map(Number);
+          if (ev.palcosEj[pIdx] && ev.palcosEj[pIdx].niveis[nIdx]) {
+            ev.palcosEj[pIdx].niveis[nIdx].ordem = Math.max(1, Number(inp.value) || 1);
+            persistirEdicaoEvento(ev, true);
+          }
+        });
+      });
+
+      container.querySelectorAll('[data-pej-nivel-nome]').forEach(inp => {
+        inp.addEventListener('input', () => {
+          const [pIdx, nIdx] = inp.dataset.pejNivelNome.split(':').map(Number);
+          if (ev.palcosEj[pIdx] && ev.palcosEj[pIdx].niveis[nIdx]) {
+            ev.palcosEj[pIdx].niveis[nIdx].nome = inp.value;
+            persistirEdicaoEvento(ev, false);
+          }
+        });
+      });
+
+      // Conecta o Construtor de Condições de cada nível
+      ev.palcosEj.forEach((palco, pIdx) => {
+        (palco.niveis || []).forEach((nivel, nIdx) => {
+          if (!nivel.requisito) nivel.requisito = { logica: 'E', condicoes: [] };
+          const cbId = `pej_${pIdx}_${nIdx}`;
+          if (!bloqueado) {
+            vincularConstrutorCondicoes(cbId, nivel.requisito, (req, reRenderDom) => {
+              persistirEdicaoEvento(ev, reRenderDom);
+            });
+          }
+        });
+      });
+    }
+
+    // ----------------------------------------------------------------------------
+    // ABA: PALCOS DO NÚCLEO
+    // ----------------------------------------------------------------------------
+    function obterMetricasNumericasCatalogo() {
+      return Object.values(METRICAS).filter(m => m.tipo === 'numero' || m.tipo === 'percentual');
+    }
+
+    function renderEventoTabPalcosNucleo(ev, container) {
+      const bloqueado = ev.status === 'encerrado';
+      if (!Array.isArray(ev.palcosNucleo)) ev.palcosNucleo = [];
+      const metricasNum = obterMetricasNumericasCatalogo();
+
+      const palcosHtml = ev.palcosNucleo.length === 0
+        ? `
+          <div class="clean-card" style="text-align:center;padding:36px 24px;">
+            <p style="font-size:15px;font-weight:600;margin-bottom:6px;">Nenhum Palco do Núcleo configurado</p>
+            <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">Configure metas coletivas do Núcleo Vertentes (ex.: "15 ou mais EJs com meta batida", "Faturamento total >= R$ 2 mi", "% de EJs com CSAT >= 85%").</p>
+            ${!bloqueado ? `<button class="btn btn-primary" data-add-palco-nuc="1">+ Adicionar primeiro Palco do Núcleo</button>` : ''}
+          </div>
+        `
+        : ev.palcosNucleo.map((palco, pIdx) => {
+            if (!Array.isArray(palco.niveis)) palco.niveis = [];
+            palco.niveis.sort((a, b) => (Number(a.ordem) || 0) - (Number(b.ordem) || 0));
+
+            const niveisHtml = palco.niveis.length === 0
+              ? `<div style="font-size:12.5px;color:var(--text-muted);padding:12px 0;">Nenhum nível cadastrado neste palco do Núcleo.</div>`
+              : palco.niveis.map((nivel, nIdx) => {
+                  if (!nivel.agregado) {
+                    nivel.agregado = {
+                      tipo: 'contagem',
+                      metrica: 'fa_realizado',
+                      condicaoEj: { logica: 'E', condicoes: [{ metrica: 'fa_meta_batida', operador: '=', valor: true }] },
+                      operador: '>=',
+                      valor: 6
+                    };
+                  }
+                  const ag = nivel.agregado;
+                  if (!ag.condicaoEj) ag.condicaoEj = { logica: 'E', condicoes: [] };
+                  const precisaMetrica = ag.tipo === 'soma' || ag.tipo === 'media';
+                  const cbId = `pnuc_${pIdx}_${nIdx}`;
+                  const avPreview = avaliarAgregadoNucleo(ag, STORE.ejs || []);
+
+                  return `
+                    <div style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:12px;background:var(--surface);">
+                      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
+                        <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:240px;">
+                          <div style="width:82px;">
+                            <label class="form-label" style="font-size:11px;margin-bottom:2px;">Ordem</label>
+                            <input type="number" min="1" class="input" data-pnuc-nivel-ordem="${pIdx}:${nIdx}" value="${esc(nivel.ordem ?? (nIdx + 1))}" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
+                          </div>
+                          <div style="flex:1;">
+                            <label class="form-label" style="font-size:11px;margin-bottom:2px;">Nome do nível do Núcleo</label>
+                            <input type="text" class="input" data-pnuc-nivel-nome="${pIdx}:${nIdx}" value="${esc(nivel.nome || `Nível ${nIdx + 1}`)}" placeholder="Ex.: Nível 1 — 6 EJs com Meta Batida" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
+                          </div>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                          ${renderTag([avPreview.bateu ? 'Atingido agora' : 'Pendente', avPreview.bateu ? 'g' : 'n'])}
+                          ${!bloqueado ? `<button type="button" class="btn btn-sm" data-pnuc-del-nivel="${pIdx}:${nIdx}" style="color:var(--danger);">Remover nível</button>` : ''}
+                        </div>
+                      </div>
+
+                      <!-- Configuração do Agregado -->
+                      <div class="kv-grid" style="grid-template-columns:repeat(auto-fit, minmax(170px, 1fr));gap:10px;margin-bottom:12px;">
+                        <div class="form-group" style="margin-bottom:0;">
+                          <label class="form-label" style="font-size:11.5px;">Tipo de cálculo no Núcleo</label>
+                          <select class="select" data-pnuc-ag-tipo="${pIdx}:${nIdx}" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
+                            <option value="contagem" ${ag.tipo === 'contagem' ? 'selected' : ''}>Contagem de EJs (Nº)</option>
+                            <option value="percentual" ${ag.tipo === 'percentual' ? 'selected' : ''}>% de EJs do Núcleo</option>
+                            <option value="soma" ${ag.tipo === 'soma' ? 'selected' : ''}>Soma de métrica nas EJs</option>
+                            <option value="media" ${ag.tipo === 'media' ? 'selected' : ''}>Média de métrica nas EJs</option>
+                          </select>
+                        </div>
+
+                        ${precisaMetrica ? `
+                          <div class="form-group" style="margin-bottom:0;">
+                            <label class="form-label" style="font-size:11.5px;">Métrica a ${ag.tipo === 'soma' ? 'somar' : 'calcular média'}</label>
+                            <select class="select" data-pnuc-ag-metrica="${pIdx}:${nIdx}" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
+                              ${metricasNum.map(m => `<option value="${esc(m.id)}" ${m.id === ag.metrica ? 'selected' : ''}>${esc(m.rotulo)}</option>`).join('')}
+                            </select>
+                          </div>
+                        ` : ''}
+
+                        <div class="form-group" style="margin-bottom:0;">
+                          <label class="form-label" style="font-size:11.5px;">Operador da meta</label>
+                          <select class="select" data-pnuc-ag-op="${pIdx}:${nIdx}" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
+                            ${['>=', '>', '<=', '<', '=', '!='].map(op => `<option value="${op}" ${(ag.operador || '>=') === op ? 'selected' : ''}>${op}</option>`).join('')}
+                          </select>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom:0;">
+                          <label class="form-label" style="font-size:11.5px;">Valor exigido (${ag.tipo === 'contagem' ? 'Qtd. EJs' : ag.tipo === 'percentual' ? '%' : 'Valor'})</label>
+                          <input type="number" step="any" class="input" data-pnuc-ag-val="${pIdx}:${nIdx}" value="${esc(Number(ag.valor) || 0)}" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
+                        </div>
+                      </div>
+
+                      <!-- Condição por EJ -->
+                      <div id="wrap_${cbId}">
+                        ${gerarHtmlConstrutorCondicoes(cbId, ag.condicaoEj, {
+                          titulo: precisaMetrica
+                            ? 'Filtro opcional de EJs para entrar na conta (vazio = todas as EJs)'
+                            : 'Condição que a EJ precisa cumprir para entrar nesta contagem / percentual',
+                          mostrarPreview: false
+                        })}
+                      </div>
+
+                      <div class="cond-preview-bar" data-pnuc-preview="${pIdx}:${nIdx}" style="margin-top:8px;">
+                        <span>Resultado atual do Núcleo neste nível: <strong>${esc(avPreview.explicacao)}</strong></span>
+                        <span>EJs que cumprem a condição: <strong>${avPreview.ejsQueCumprem.length} de ${(STORE.ejs || []).length}</strong></span>
+                      </div>
+                    </div>
+                  `;
+                }).join('');
+
+            return `
+              <div class="clean-card" style="margin-bottom:20px;">
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-bottom:14px;border-bottom:1px solid var(--border-subtle);margin-bottom:14px;">
+                  <div style="flex:1;min-width:240px;">
+                    <label class="form-label">Nome do Palco do Núcleo</label>
+                    <input type="text" class="input" data-pnuc-nome="${pIdx}" value="${esc(palco.nome || '')}" placeholder="Ex.: Palco Regional do Núcleo Vertentes" style="width:100%;font-weight:600;" ${bloqueado ? 'disabled' : ''}>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:12px;padding-top:22px;">
+                    ${!bloqueado ? `<button type="button" class="btn btn-sm" data-pnuc-del-palco="${pIdx}" style="color:var(--danger);">Excluir palco do Núcleo</button>` : ''}
+                  </div>
+                </div>
+
+                <div>
+                  ${niveisHtml}
+                </div>
+
+                ${!bloqueado ? `
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--border-subtle);">
+                    <button type="button" class="btn btn-sm" data-pnuc-add-nivel="${pIdx}">+ Adicionar nível do Núcleo</button>
+                    <span style="font-size:12px;color:var(--text-muted);">O nível atingido pelo Núcleo será o maior cujo agregado for satisfeito.</span>
+                  </div>
+                ` : ''}
+              </div>
+            `;
+          }).join('');
+
+      container.innerHTML = `
+        <div class="section-header" style="margin-bottom:16px;">
+          <div>
+            <h3 class="section-title" style="margin-bottom:2px;">Configuração dos Palcos do Núcleo</h3>
+            <span style="font-size:12.5px;color:var(--text-muted);">Avalia metas coletivas agregadas sobre todas as EJs (contagem, percentual, soma ou média).</span>
+          </div>
+          <div style="display:flex;gap:8px;">
+            ${!bloqueado ? `<button type="button" class="btn" data-add-palco-nuc="1">+ Novo palco do Núcleo</button>` : ''}
+            ${!bloqueado ? `<button type="button" class="btn btn-primary" id="btnSavePalcosNucNow">Salvar alterações</button>` : ''}
+          </div>
+        </div>
+        ${palcosHtml}
+      `;
+
+      // Bind de adicionar palco do núcleo
+      container.querySelectorAll('[data-add-palco-nuc]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          ev.palcosNucleo.push({
+            id: 'pnuc_' + Date.now() + '_' + Math.random().toString(36).slice(2, 5),
+            nome: `Palco do Núcleo ${ev.palcosNucleo.length + 1}`,
+            niveis: [
+              {
+                ordem: 1,
+                nome: 'Nível 1 — 6 EJs com Meta de Faturamento Batida',
+                agregado: {
+                  tipo: 'contagem',
+                  metrica: 'fa_realizado',
+                  condicaoEj: {
+                    logica: 'E',
+                    condicoes: [{ metrica: 'fa_meta_batida', operador: '=', valor: true }]
+                  },
+                  operador: '>=',
+                  valor: 6
+                }
+              }
+            ]
+          });
+          persistirEdicaoEvento(ev, true);
+        });
+      });
+
+      const btnSaveNow = $('btnSavePalcosNucNow');
+      if (btnSaveNow) {
+        btnSaveNow.addEventListener('click', async () => {
+          await salvarEventoNoBanco(ev, true);
+        });
+      }
+
+      container.querySelectorAll('[data-pnuc-nome]').forEach(inp => {
+        inp.addEventListener('input', () => {
+          const pIdx = Number(inp.dataset.pnucNome);
+          if (ev.palcosNucleo[pIdx]) {
+            ev.palcosNucleo[pIdx].nome = inp.value;
+            persistirEdicaoEvento(ev, false);
+          }
+        });
+      });
+
+      container.querySelectorAll('[data-pnuc-del-palco]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const pIdx = Number(btn.dataset.pnucDelPalco);
+          if (!ev.palcosNucleo[pIdx]) return;
+          if (!confirm(`Remover o palco do Núcleo "${ev.palcosNucleo[pIdx].nome}"?`)) return;
+          ev.palcosNucleo.splice(pIdx, 1);
+          persistirEdicaoEvento(ev, true);
+        });
+      });
+
+      container.querySelectorAll('[data-pnuc-add-nivel]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const pIdx = Number(btn.dataset.pnucAddNivel);
+          const palco = ev.palcosNucleo[pIdx];
+          if (!palco) return;
+          const maxOrdem = (palco.niveis || []).reduce((m, n) => Math.max(m, Number(n.ordem) || 0), 0);
+          const novaOrdem = maxOrdem + 1;
+          palco.niveis.push({
+            ordem: novaOrdem,
+            nome: `Nível ${novaOrdem}`,
+            agregado: {
+              tipo: 'contagem',
+              metrica: 'fa_realizado',
+              condicaoEj: {
+                logica: 'E',
+                condicoes: [{ metrica: 'fa_meta_batida', operador: '=', valor: true }]
+              },
+              operador: '>=',
+              valor: 10
+            }
+          });
+          persistirEdicaoEvento(ev, true);
+        });
+      });
+
+      container.querySelectorAll('[data-pnuc-del-nivel]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const [pIdx, nIdx] = btn.dataset.pnucDelNivel.split(':').map(Number);
+          if (ev.palcosNucleo[pIdx] && ev.palcosNucleo[pIdx].niveis[nIdx]) {
+            ev.palcosNucleo[pIdx].niveis.splice(nIdx, 1);
+            persistirEdicaoEvento(ev, true);
+          }
+        });
+      });
+
+      container.querySelectorAll('[data-pnuc-nivel-ordem]').forEach(inp => {
+        inp.addEventListener('change', () => {
+          const [pIdx, nIdx] = inp.dataset.pnucNivelOrdem.split(':').map(Number);
+          if (ev.palcosNucleo[pIdx] && ev.palcosNucleo[pIdx].niveis[nIdx]) {
+            ev.palcosNucleo[pIdx].niveis[nIdx].ordem = Math.max(1, Number(inp.value) || 1);
+            persistirEdicaoEvento(ev, true);
+          }
+        });
+      });
+
+      container.querySelectorAll('[data-pnuc-nivel-nome]').forEach(inp => {
+        inp.addEventListener('input', () => {
+          const [pIdx, nIdx] = inp.dataset.pnucNivelNome.split(':').map(Number);
+          if (ev.palcosNucleo[pIdx] && ev.palcosNucleo[pIdx].niveis[nIdx]) {
+            ev.palcosNucleo[pIdx].niveis[nIdx].nome = inp.value;
+            persistirEdicaoEvento(ev, false);
+          }
+        });
+      });
+
+      container.querySelectorAll('[data-pnuc-ag-tipo]').forEach(sel => {
+        sel.addEventListener('change', () => {
+          const [pIdx, nIdx] = sel.dataset.pnucAgTipo.split(':').map(Number);
+          const ag = ev.palcosNucleo[pIdx]?.niveis[nIdx]?.agregado;
+          if (!ag) return;
+          ag.tipo = sel.value;
+          if ((ag.tipo === 'soma' || ag.tipo === 'media') && !ag.metrica) {
+            ag.metrica = 'fa_realizado';
+          }
+          persistirEdicaoEvento(ev, true);
+        });
+      });
+
+      container.querySelectorAll('[data-pnuc-ag-metrica]').forEach(sel => {
+        sel.addEventListener('change', () => {
+          const [pIdx, nIdx] = sel.dataset.pnucAgMetrica.split(':').map(Number);
+          const ag = ev.palcosNucleo[pIdx]?.niveis[nIdx]?.agregado;
+          if (!ag) return;
+          ag.metrica = sel.value;
+          persistirEdicaoEvento(ev, true);
+        });
+      });
+
+      container.querySelectorAll('[data-pnuc-ag-op]').forEach(sel => {
+        sel.addEventListener('change', () => {
+          const [pIdx, nIdx] = sel.dataset.pnucAgOp.split(':').map(Number);
+          const ag = ev.palcosNucleo[pIdx]?.niveis[nIdx]?.agregado;
+          if (!ag) return;
+          ag.operador = sel.value;
+          persistirEdicaoEvento(ev, true);
+        });
+      });
+
+      container.querySelectorAll('[data-pnuc-ag-val]').forEach(inp => {
+        inp.addEventListener('input', () => {
+          const [pIdx, nIdx] = inp.dataset.pnucAgVal.split(':').map(Number);
+          const ag = ev.palcosNucleo[pIdx]?.niveis[nIdx]?.agregado;
+          if (!ag) return;
+          ag.valor = Number(inp.value) || 0;
+          persistirEdicaoEvento(ev, false);
+          const prevEl = container.querySelector(`[data-pnuc-preview="${pIdx}:${nIdx}"]`);
+          if (prevEl) {
+            const avPreview = avaliarAgregadoNucleo(ag, STORE.ejs || []);
+            prevEl.innerHTML = `
+              <span>Resultado atual do Núcleo neste nível: <strong>${esc(avPreview.explicacao)}</strong></span>
+              <span>EJs que cumprem a condição: <strong>${avPreview.ejsQueCumprem.length} de ${(STORE.ejs || []).length}</strong></span>
+            `;
+          }
+        });
+      });
+
+      ev.palcosNucleo.forEach((palco, pIdx) => {
+        (palco.niveis || []).forEach((nivel, nIdx) => {
+          if (!nivel.agregado) return;
+          if (!nivel.agregado.condicaoEj) nivel.agregado.condicaoEj = { logica: 'E', condicoes: [] };
+          const cbId = `pnuc_${pIdx}_${nIdx}`;
+          if (!bloqueado) {
+            vincularConstrutorCondicoes(cbId, nivel.agregado.condicaoEj, (req, reRenderDom) => {
+              persistirEdicaoEvento(ev, true);
+            });
+          }
+        });
+      });
+    }
+
+    // ----------------------------------------------------------------------------
+    // ABA: RESULTADO (PALCOS DAS EJs E PALCOS DO NÚCLEO — FASE 3)
+    // ----------------------------------------------------------------------------
+    if (!STORE.ui.evtResFiltros) {
+      STORE.ui.evtResFiltros = {}; // palcoId -> { nivel: 'todos', busca: '' }
+    }
+
+    function renderEventoTabResultado(ev, container) {
+      const resultado = avaliarEvento(ev, STORE.ejs || []);
+
+      // (a) HTML dos Palcos das EJs
+      const palcosEjHtml = resultado.palcosEj.length === 0
+        ? `<div class="clean-card" style="margin-bottom:20px;color:var(--text-muted);font-size:13px;">Nenhum Palco das EJs configurado neste evento.</div>`
+        : resultado.palcosEj.map(palco => {
+            if (!STORE.ui.evtResFiltros[palco.id]) {
+              STORE.ui.evtResFiltros[palco.id] = { nivel: 'todos', busca: '' };
+            }
+            const filtro = STORE.ui.evtResFiltros[palco.id];
+
+            const pillsNiveisHtml = [
+              `<button type="button" class="btn btn-sm ${filtro.nivel === 'todos' ? 'btn-primary' : ''}" data-res-pej-filter="${esc(palco.id)}::todos">Todas (${resultado.totalEjs})</button>`,
+              ...palco.niveis.map(n =>
+                `<button type="button" class="btn btn-sm ${filtro.nivel === String(n.ordem) ? 'btn-primary' : ''}" data-res-pej-filter="${esc(palco.id)}::${n.ordem}">${esc(n.nome)}: ${n.quantidade}</button>`
+              ),
+              `<button type="button" class="btn btn-sm ${filtro.nivel === 'sem_palco' ? 'btn-primary' : ''}" data-res-pej-filter="${esc(palco.id)}::sem_palco">Sem palco: ${palco.semPalco.quantidade}</button>`
+            ].join('');
+
+            const ejsFiltradas = palco.resultadosPorEj.filter(r => {
+              if (filtro.nivel === 'sem_palco' && r.nivelAtingido !== null) return false;
+              if (filtro.nivel !== 'todos' && filtro.nivel !== 'sem_palco') {
+                if (!r.nivelAtingido || String(r.nivelAtingido.ordem) !== String(filtro.nivel)) return false;
+              }
+              if (filtro.busca) {
+                const q = filtro.busca.toLowerCase().trim();
+                if (!String(r.nome || '').toLowerCase().includes(q) && !String(r.cod || '').toLowerCase().includes(q)) {
+                  return false;
+                }
+              }
+              return true;
+            });
+
+            // Ordena: maior nível atingido primeiro, depois nome alfabético
+            ejsFiltradas.sort((a, b) => {
+              const ordA = a.nivelAtingido ? a.nivelAtingido.ordem : -1;
+              const ordB = b.nivelAtingido ? b.nivelAtingido.ordem : -1;
+              if (ordB !== ordA) return ordB - ordA;
+              return String(a.nome || '').localeCompare(String(b.nome || ''), 'pt-BR');
+            });
+
+            const linhasTabela = ejsFiltradas.length === 0
+              ? `<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:20px;">Nenhuma EJ encontrada para este filtro.</td></tr>`
+              : ejsFiltradas.map(r => {
+                  const tagNivel = r.nivelAtingido
+                    ? renderTag([`${r.nivelAtingido.nome}`, 'g'])
+                    : renderTag(['Sem palco', 'n']);
+
+                  let detalheExplicacaoHtml = '';
+                  if (!r.proximoNivel) {
+                    detalheExplicacaoHtml = `<span style="color:var(--success);font-weight:500;">✓ Nível máximo deste palco atingido</span>`;
+                  } else {
+                    const falhas = (r.proximoNivel.condicoesFalhas || []).map(f => `<div style="color:var(--danger);font-size:12px;">• Falta: ${esc(f.explicacao)}</div>`).join('');
+                    const batidas = (r.proximoNivel.condicoesBatidas || []).map(b => `<div style="color:var(--text-muted);font-size:11.5px;">✓ Cumprido: ${esc(b.explicacao)}</div>`).join('');
+                    detalheExplicacaoHtml = `
+                      <div style="font-size:12px;font-weight:600;margin-bottom:2px;">Próximo: ${esc(r.proximoNivel.nome)}</div>
+                      ${falhas}
+                      ${batidas}
+                    `;
+                  }
+
+                  return `
+                    <tr>
+                      <td class="sticky-col" data-label="EJ">
+                        <a href="javascript:void(0)" class="ej-link" data-open-ej="${esc(r.cod)}" style="color:var(--text);font-weight:600;text-decoration:none;">
+                          ${esc(r.nome)}
+                        </a>
+                      </td>
+                      <td data-label="Cluster">Cluster ${esc(r.cl || '-')}</td>
+                      <td data-label="Nível Atingido">${tagNivel}</td>
+                      <td data-label="Diagnóstico / O que falta para subir">${detalheExplicacaoHtml}</td>
+                    </tr>
+                  `;
+                }).join('');
+
+            return `
+              <div class="clean-card" style="margin-bottom:20px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
+                  <div>
+                    <h4 style="font-size:15px;font-weight:600;margin:0 0 2px 0;">${esc(palco.nome)}</h4>
+                    <span style="font-size:12px;color:var(--text-muted);">${palco.exigirNiveisAnteriores ? 'Exige níveis anteriores em ordem (escada)' : 'Posiciona no maior nível cumprido'}</span>
+                  </div>
+                </div>
+
+                <div class="table-toolbar" style="margin-bottom:12px;">
+                  <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                    ${pillsNiveisHtml}
+                  </div>
+                  <input type="search" class="input" data-res-pej-search="${esc(palco.id)}" value="${esc(filtro.busca)}" placeholder="Buscar EJ neste palco…" style="min-width:200px;">
+                </div>
+
+                <div class="table-wrap" style="max-height:420px;">
+                  <table class="data-table">
+                    <thead>
+                      <tr>
+                        <th class="sticky-col">EJ</th>
+                        <th>Cluster</th>
+                        <th>Nível Atingido</th>
+                        <th>Diagnóstico / O que falta para o próximo nível</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${linhasTabela}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            `;
+          }).join('');
+
+      // (b) HTML dos Palcos do Núcleo
+      const palcosNucleoHtml = resultado.palcosNucleo.length === 0
+        ? `<div class="clean-card" style="margin-bottom:20px;color:var(--text-muted);font-size:13px;">Nenhum Palco do Núcleo configurado neste evento.</div>`
+        : resultado.palcosNucleo.map(pn => {
+            const tagAtingido = pn.nivelAtingido
+              ? renderTag([`Nível atingido: ${pn.nivelAtingido.nome}`, 'g'])
+              : renderTag(['Nenhum nível atingido ainda', 'r']);
+
+            const niveisRows = pn.niveis.map(n => {
+              const av = n.avaliacao;
+              return `
+                <div style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:8px;background:var(--surface);">
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+                    <div>
+                      <span style="font-weight:600;font-size:13.5px;">${esc(n.nome)}</span>
+                      <div style="font-size:12.5px;color:var(--text-secondary);margin-top:2px;">${esc(av.explicacao)}</div>
+                    </div>
+                    ${renderTag([n.bateu ? 'Meta batida' : 'Pendente', n.bateu ? 'g' : 'r'])}
+                  </div>
+                  <details style="margin-top:8px;font-size:12px;color:var(--text-secondary);">
+                    <summary style="cursor:pointer;color:var(--primary);font-weight:500;">Ver detalhamento de EJs (${av.ejsQueCumprem.length} cumprem · ${av.ejsPendentes.length} pendentes)</summary>
+                    <div style="margin-top:8px;display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:12px;">
+                      <div>
+                        <strong>✓ Já cumprem (${av.ejsQueCumprem.length}):</strong>
+                        <div style="margin-top:4px;line-height:1.6;">
+                          ${av.ejsQueCumprem.length === 0 ? '<span style="color:var(--text-muted);">Nenhuma EJ</span>' : av.ejsQueCumprem.map(e => `<a href="javascript:void(0)" data-open-ej="${esc(e.cod)}" style="color:var(--text);text-decoration:underline;margin-right:8px;">${esc(e.nome)}</a>`).join('')}
+                        </div>
+                      </div>
+                      <div>
+                        <strong>Pendentes (${av.ejsPendentes.length}):</strong>
+                        <div style="margin-top:4px;max-height:150px;overflow-y:auto;">
+                          ${av.ejsPendentes.length === 0 ? '<span style="color:var(--text-muted);">Nenhuma EJ pendente</span>' : av.ejsPendentes.map(e => `
+                            <div style="margin-bottom:4px;">
+                              <a href="javascript:void(0)" data-open-ej="${esc(e.cod)}" style="font-weight:600;color:var(--text);text-decoration:underline;">${esc(e.nome)}</a>:
+                              <span style="color:var(--text-muted);">${esc(e.oQueFalta)}</span>
+                            </div>
+                          `).join('')}
+                        </div>
+                      </div>
+                    </div>
+                  </details>
+                </div>
+              `;
+            }).join('');
+
+            return `
+              <div class="clean-card" style="margin-bottom:20px;">
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
+                  <div>
+                    <h4 style="font-size:15px;font-weight:600;margin:0 0 4px 0;">${esc(pn.nome)}</h4>
+                    <div style="font-size:13px;color:var(--text-secondary);">
+                      ${pn.proximoNivel
+                        ? `Próximo nível: <strong>${esc(pn.proximoNivel.nome)}</strong> — ${esc(pn.oQueFaltaProximoNivel)}`
+                        : `<span style="color:var(--success);font-weight:600;">✓ O Núcleo atingiu o nível máximo deste palco!</span>`}
+                    </div>
+                  </div>
+                  ${tagAtingido}
+                </div>
+                <div>
+                  ${niveisRows}
+                </div>
+              </div>
+            `;
+          }).join('');
+
+      // (c) HTML das Premiações (Fase 4)
+      const premiacoesHtml = resultado.premiacoes.length === 0
+        ? `<div class="clean-card" style="margin-bottom:20px;color:var(--text-muted);font-size:13px;">Nenhuma Premiação configurada neste evento.</div>`
+        : resultado.premiacoes.map(prem => {
+            const defRank = prem.metricaRanking ? METRICAS[prem.metricaRanking] : null;
+            const descModo = prem.modo === 'todos'
+              ? 'Modo: Todas as EJs elegíveis vencem'
+              : `Modo: Top ${prem.n || 1} · Ranking por "${defRank ? defRank.rotulo : (prem.metricaRanking || '-')}" (${prem.ordem === 'menor' ? 'menor valor vence' : 'maior valor vence'})`;
+
+            const descDesempate = (prem.modo === 'topN' && Array.isArray(prem.desempate) && prem.desempate.length > 0)
+              ? ' · Desempate: ' + prem.desempate.map((d, idx) => {
+                  const m = METRICAS[d.metrica];
+                  return `${idx + 1}º ${m ? m.rotulo : d.metrica} (${d.ordem === 'menor' ? 'menor' : 'maior'})`;
+                }).join(', ')
+              : '';
+
+            const nomesNaoAcumula = (prem.naoAcumulaCom || []).map(idConf => {
+              const pEncontrada = (ev.premiacoes || []).find(x => String(x.id) === String(idConf));
+              return pEncontrada ? pEncontrada.nome : idConf;
+            });
+
+            const alertaEmpateHtml = prem.houveEmpate
+              ? `
+                <div style="margin-bottom:12px;padding:10px 12px;border:1px solid var(--danger);background:var(--danger-soft);border-radius:var(--radius-sm);font-size:12.5px;color:var(--danger);font-weight:500;">
+                  ! Empate técnico persistente detectado: as EJs empatadas na mesma colocação foram mantidas no resultado (nenhuma escolha arbitrária foi feita).
+                </div>
+              `
+              : '';
+
+            const vencedoresHtml = prem.vencedores.length === 0
+              ? `<div style="padding:14px;border:1px dashed var(--border);border-radius:var(--radius-sm);color:var(--text-muted);font-size:13px;margin-bottom:12px;">Nenhuma EJ elegível/disponível venceu esta premiação.</div>`
+              : `
+                <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:10px;margin-bottom:12px;">
+                  ${prem.vencedores.map(v => {
+                    const metricasTxt = (v.valoresRanking || []).map(vr => `<span>${esc(vr.rotulo)}: <strong>${esc(vr.valorFmt)}</strong></span>`).join(' · ');
+                    return `
+                      <div style="border:1px solid var(--border);border-left:4px solid var(--success);border-radius:var(--radius-sm);padding:12px 14px;background:var(--surface);">
+                        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px;">
+                          <div style="display:flex;align-items:center;gap:6px;">
+                            <span style="font-size:12px;font-weight:700;color:var(--success);">#${v.posicao}º</span>
+                            <a href="javascript:void(0)" data-open-ej="${esc(v.cod)}" style="font-size:14.5px;font-weight:600;color:var(--text);text-decoration:underline;">
+                              ${esc(v.nome)}
+                            </a>
+                          </div>
+                          <div style="display:flex;align-items:center;gap:6px;">
+                            ${v.empatado ? renderTag(['Empatada', 'r']) : renderTag(['Vencedora', 'g'])}
+                          </div>
+                        </div>
+                        <div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">Cluster ${esc(v.cl || '-')}</div>
+                        ${metricasTxt ? `<div style="font-size:12px;color:var(--text-secondary);line-height:1.4;">${metricasTxt}</div>` : ''}
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
+              `;
+
+            const qtdImpedidas = prem.naoVencedoras.filter(nv => nv.impedida).length;
+            const qtdRanking = prem.naoVencedoras.filter(nv => nv.motivoTipo === 'ranking').length;
+            const qtdInelegiveis = prem.naoVencedoras.filter(nv => nv.motivoTipo === 'inelegivel').length;
+
+            const linhasNaoVencedoras = prem.naoVencedoras.length === 0
+              ? `<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:14px;">Todas as EJs venceram esta premiação.</td></tr>`
+              : prem.naoVencedoras.map(nv => {
+                  let tagMotivo = renderTag(['Inelegível', 'n']);
+                  if (nv.impedida) tagMotivo = renderTag(['Não acumula', 'r']);
+                  else if (nv.motivoTipo === 'ranking') tagMotivo = renderTag([`${nv.posicao}º no ranking`, 'n']);
+
+                  return `
+                    <tr>
+                      <td class="sticky-col" data-label="EJ">
+                        <a href="javascript:void(0)" data-open-ej="${esc(nv.cod)}" style="color:var(--text);font-weight:600;text-decoration:none;">
+                          ${esc(nv.nome)}
+                        </a>
+                      </td>
+                      <td data-label="Cluster">Cluster ${esc(nv.cl || '-')}</td>
+                      <td data-label="Situação">${tagMotivo}</td>
+                      <td data-label="Motivo / O que faltou" style="font-size:12px;color:var(--text-secondary);">${esc(nv.motivoNaoVenceu)}</td>
+                    </tr>
+                  `;
+                }).join('');
+
+            return `
+              <div class="clean-card" style="margin-bottom:20px;">
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px;">
+                  <div>
+                    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
+                      <span class="tag tag-n">Prioridade ${esc(prem.prioridade)}</span>
+                      <h4 style="font-size:15.5px;font-weight:600;margin:0;">${esc(prem.nome)}</h4>
+                    </div>
+                    <div style="font-size:12.5px;color:var(--text-muted);">
+                      ${esc(descModo)}${esc(descDesempate)}
+                      ${nomesNaoAcumula.length > 0 ? ` · <strong>Não acumula com:</strong> ${esc(nomesNaoAcumula.join(', '))}` : ''}
+                    </div>
+                  </div>
+                  ${renderTag([`${prem.vencedores.length} ${prem.vencedores.length === 1 ? 'vencedora' : 'vencedoras'}`, prem.vencedores.length > 0 ? 'g' : 'n'])}
+                </div>
+
+                ${alertaEmpateHtml}
+                ${vencedoresHtml}
+
+                <details style="margin-top:8px;">
+                  <summary style="cursor:pointer;font-size:12.5px;font-weight:500;color:var(--primary);">
+                    Ver motivo das EJs não vencedoras (${prem.naoVencedoras.length}: ${qtdRanking} fora do Top N · ${qtdImpedidas} impedidas por acúmulo · ${qtdInelegiveis} inelegíveis)
+                  </summary>
+                  <div class="table-wrap" style="max-height:340px;margin-top:10px;">
+                    <table class="data-table">
+                      <thead>
+                        <tr>
+                          <th class="sticky-col">EJ</th>
+                          <th>Cluster</th>
+                          <th>Situação</th>
+                          <th>Motivo detalhado / O que faltou</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        ${linhasNaoVencedoras}
+                      </tbody>
+                    </table>
+                  </div>
+                </details>
+              </div>
+            `;
+          }).join('');
+
+      container.innerHTML = `
+        <div class="clean-card" style="margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
+              <span style="font-size:14.5px;font-weight:600;">${resultado.congelado ? '🔒 Resultado Congelado (Evento Encerrado)' : '⚡ Resultado Ao Vivo'}</span>
+              ${renderStatusEventoTag(ev.status)}
+            </div>
+            <div style="font-size:12.5px;color:var(--text-muted);">
+              ${resultado.congelado
+                ? `Snapshot gravado em <strong>${fmtDate(resultado.calculadoEm)}</strong> com <strong>${resultado.totalEjs} EJs</strong>. Atualizações posteriores da planilha não alteram este resultado.`
+                : `Calculado em tempo real sobre <strong>${resultado.totalEjs} EJs</strong> carregadas na plataforma · Clique no nome de qualquer EJ para abrir o perfil lateral.`}
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <button type="button" class="btn" id="btnExportarResultadoCsv">📥 Exportar resultado (CSV)</button>
+            ${ev.status !== 'encerrado'
+              ? `<button type="button" class="btn btn-primary" id="btnCongelarResultadoEvento">🔒 Encerrar e congelar</button>`
+              : `<button type="button" class="btn btn-sm" id="btnReabrirResultadoEvento" title="Descongelar e voltar para apuração ao vivo">🔓 Reabrir ao vivo</button>`}
+          </div>
+        </div>
+
+        <div class="section-header" style="margin-top:8px;">
+          <h3 class="section-title">1. Palcos das EJs</h3>
+        </div>
+        ${palcosEjHtml}
+
+        <div class="section-header" style="margin-top:24px;">
+          <h3 class="section-title">2. Palcos do Núcleo</h3>
+        </div>
+        ${palcosNucleoHtml}
+
+        <div class="section-header" style="margin-top:24px;">
+          <h3 class="section-title">3. Premiações (Apuradas por Ordem de Prioridade)</h3>
+        </div>
+        ${premiacoesHtml}
+      `;
+
+      const btnExportCsv = $('btnExportarResultadoCsv');
+      if (btnExportCsv) {
+        btnExportCsv.addEventListener('click', () => {
+          exportarResultadoEventoCSV(ev);
+        });
+      }
+
+      const btnCongelar = $('btnCongelarResultadoEvento');
+      if (btnCongelar) {
+        btnCongelar.addEventListener('click', async () => {
+          await encerrarECongelarEvento(ev);
+        });
+      }
+
+      const btnReabrir = $('btnReabrirResultadoEvento');
+      if (btnReabrir) {
+        btnReabrir.addEventListener('click', async () => {
+          await reabrirEventoCongelado(ev);
+        });
+      }
+
+      // Bind de filtros de nível dos Palcos das EJs
+      container.querySelectorAll('[data-res-pej-filter]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const [palcoId, nv] = btn.dataset.resPejFilter.split('::');
+          if (!STORE.ui.evtResFiltros[palcoId]) STORE.ui.evtResFiltros[palcoId] = { nivel: 'todos', busca: '' };
+          STORE.ui.evtResFiltros[palcoId].nivel = nv;
+          renderEventoTabResultado(ev, container);
+        });
+      });
+
+      // Bind de busca por EJ dentro do palco
+      container.querySelectorAll('[data-res-pej-search]').forEach(inp => {
+        inp.addEventListener('input', debounce(() => {
+          const palcoId = inp.dataset.resPejSearch;
+          if (!STORE.ui.evtResFiltros[palcoId]) STORE.ui.evtResFiltros[palcoId] = { nivel: 'todos', busca: '' };
+          STORE.ui.evtResFiltros[palcoId].busca = inp.value;
+          renderEventoTabResultado(ev, container);
+        }, 250));
+      });
+
+      // Clique no nome da EJ abre openEjProfile(cod)
+      container.querySelectorAll('[data-open-ej]').forEach(link => {
+        link.addEventListener('click', () => {
+          openEjProfile(link.dataset.openEj);
+        });
+      });
+    }
+
+    // ============================================================================
+    // 17. MÓDULO DE EVENTOS — FASE 4: CONFIGURAÇÃO E APURAÇÃO DE PREMIAÇÕES
+    // ============================================================================
+
+    function renderEventoTabPremiacoes(ev, container) {
+      const bloqueado = ev.status === 'encerrado';
+      if (!Array.isArray(ev.premiacoes)) ev.premiacoes = [];
+
+      // Ordena visualmente por prioridade crescente
+      ev.premiacoes.sort((a, b) => (Number(a.prioridade) || 999) - (Number(b.prioridade) || 999));
+
+      const gruposMetricas = obterGruposMetricas();
+      const gerarOptionsMetricasRanking = (metricaSelecionada) => {
+        return Object.keys(gruposMetricas).map(nomeGrupo => {
+          const metricasNum = gruposMetricas[nomeGrupo].filter(m => m.tipo === 'numero' || m.tipo === 'percentual');
+          if (!metricasNum.length) return '';
+          const opts = metricasNum.map(m =>
+            `<option value="${esc(m.id)}" ${m.id === metricaSelecionada ? 'selected' : ''}>${esc(m.rotulo)}</option>`
+          ).join('');
+          return `<optgroup label="${esc(nomeGrupo)}">${opts}</optgroup>`;
+        }).join('');
+      };
+
+      const resultadoPreview = avaliarEvento(ev, STORE.ejs || []);
+
+      const premiacoesCardsHtml = ev.premiacoes.length === 0
+        ? `
+          <div class="clean-card" style="text-align:center;padding:36px 24px;">
+            <p style="font-size:15px;font-weight:600;margin-bottom:6px;">Nenhuma Premiação configurada</p>
+            <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">Cadastre premiações com ordem de prioridade, elegibilidade, ranking Top N, critérios de desempate em cascata e regras de não acumulação.</p>
+            ${!bloqueado ? `<button class="btn btn-primary" data-add-premiacao="1">+ Adicionar primeira Premiação</button>` : ''}
+          </div>
+        `
+        : ev.premiacoes.map((prem, pIdx) => {
+            if (!prem.elegibilidade) prem.elegibilidade = { logica: 'E', condicoes: [] };
+            if (!Array.isArray(prem.desempate)) prem.desempate = [];
+            if (!Array.isArray(prem.naoAcumulaCom)) prem.naoAcumulaCom = [];
+
+            const modo = prem.modo === 'todos' ? 'todos' : 'topN';
+            const cbId = `prem_eleg_${pIdx}`;
+
+            // Outras premiações disponíveis para marcar em naoAcumulaCom
+            const outrasPremiacoes = ev.premiacoes.filter((_, idx) => idx !== pIdx);
+            const naoAcumulaHtml = outrasPremiacoes.length === 0
+              ? `<span style="font-size:12px;color:var(--text-muted);">Cadastre mais premiações neste evento para configurar exclusão mútua (não acumular).</span>`
+              : `<div style="display:flex;gap:12px;flex-wrap:wrap;">` +
+                outrasPremiacoes.map(outra => {
+                  const marcado = prem.naoAcumulaCom.map(String).includes(String(outra.id));
+                  return `
+                    <label style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;padding:5px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);cursor:pointer;">
+                      <input type="checkbox" data-prem-nao-acumula="${pIdx}::${esc(outra.id)}" ${marcado ? 'checked' : ''} ${bloqueado ? 'disabled' : ''}>
+                      <span>Prioridade ${esc(outra.prioridade || 1)}: <strong>${esc(outra.nome || outra.id)}</strong></span>
+                    </label>
+                  `;
+                }).join('') +
+                `</div>`;
+
+            // Critérios de desempate (somente modo topN)
+            const desempateRowsHtml = prem.desempate.length === 0
+              ? `<div style="font-size:12px;color:var(--text-muted);padding:4px 0;">Nenhum critério de desempate extra (se empatar na métrica principal, ambas as EJs serão exibidas como empatadas).</div>`
+              : prem.desempate.map((des, dIdx) => `
+                  <div style="display:grid;grid-template-columns:auto 1fr 180px auto;gap:8px;align-items:center;margin-bottom:6px;background:var(--surface);padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);">
+                    <span style="font-size:12px;font-weight:600;color:var(--text-muted);">${dIdx + 1}º desempate:</span>
+                    <select class="select" data-prem-des-metrica="${pIdx}:${dIdx}" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
+                      ${gerarOptionsMetricasRanking(des.metrica)}
+                    </select>
+                    <select class="select" data-prem-des-ordem="${pIdx}:${dIdx}" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
+                      <option value="maior" ${(des.ordem || 'maior') === 'maior' ? 'selected' : ''}>Maior valor vence</option>
+                      <option value="menor" ${des.ordem === 'menor' ? 'selected' : ''}>Menor valor vence</option>
+                    </select>
+                    ${!bloqueado ? `<button type="button" class="btn btn-sm" data-prem-del-des="${pIdx}:${dIdx}" style="color:var(--danger);padding:4px 8px;">✕</button>` : ''}
+                  </div>
+                `).join('');
+
+            // Resultado prévio desta premiação
+            const resPrem = (resultadoPreview.premiacoes || []).find(r => String(r.id) === String(prem.id));
+            const nomesVencedoresPreview = resPrem && resPrem.vencedores.length > 0
+              ? resPrem.vencedores.map(v => `${v.nome}${v.empatado ? ' (Empate)' : ''}`).join(', ')
+              : 'Nenhuma EJ vencedora com os dados atuais';
+
+            return `
+              <div class="clean-card" style="margin-bottom:20px;">
+                <!-- Cabeçalho da Premiação -->
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-bottom:14px;border-bottom:1px solid var(--border-subtle);margin-bottom:14px;">
+                  <div style="display:flex;gap:10px;flex:1;min-width:260px;flex-wrap:wrap;">
+                    <div style="width:110px;">
+                      <label class="form-label">Prioridade</label>
+                      <input type="number" min="1" class="input" data-prem-prio="${pIdx}" value="${esc(prem.prioridade ?? (pIdx + 1))}" style="width:100%;font-weight:600;" title="Menor número é apurado primeiro" ${bloqueado ? 'disabled' : ''}>
+                    </div>
+                    <div style="flex:1;min-width:200px;">
+                      <label class="form-label">Nome da Premiação</label>
+                      <input type="text" class="input" data-prem-nome="${pIdx}" value="${esc(prem.nome || '')}" placeholder="Ex.: EJ Destaque em Faturamento" style="width:100%;font-weight:600;" ${bloqueado ? 'disabled' : ''}>
+                    </div>
+                  </div>
+                  <div style="padding-top:22px;">
+                    ${!bloqueado ? `<button type="button" class="btn btn-sm" data-prem-del="${pIdx}" style="color:var(--danger);">Excluir premiação</button>` : ''}
+                  </div>
+                </div>
+
+                <!-- Modo de Apuração e Ranking -->
+                <div class="kv-grid" style="grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:12px;margin-bottom:14px;">
+                  <div class="form-group" style="margin-bottom:0;">
+                    <label class="form-label">Modo de premiação</label>
+                    <select class="select" data-prem-modo="${pIdx}" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
+                      <option value="topN" ${modo === 'topN' ? 'selected' : ''}>Top N (Ranking por métrica)</option>
+                      <option value="todos" ${modo === 'todos' ? 'selected' : ''}>Todas as EJs elegíveis ganham</option>
+                    </select>
+                  </div>
+
+                  ${modo === 'topN' ? `
+                    <div class="form-group" style="margin-bottom:0;">
+                      <label class="form-label">Quantidade no topo (N)</label>
+                      <input type="number" min="1" max="46" class="input" data-prem-n="${pIdx}" value="${esc(prem.n || 1)}" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                      <label class="form-label">Métrica principal do ranking</label>
+                      <select class="select" data-prem-metrica="${pIdx}" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
+                        ${gerarOptionsMetricasRanking(prem.metricaRanking || 'fa_pct_meta')}
+                      </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                      <label class="form-label">Direção do ranking</label>
+                      <select class="select" data-prem-ordem="${pIdx}" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
+                        <option value="maior" ${(prem.ordem || 'maior') === 'maior' ? 'selected' : ''}>Maior valor vence</option>
+                        <option value="menor" ${prem.ordem === 'menor' ? 'selected' : ''}>Menor valor vence</option>
+                      </select>
+                    </div>
+                  ` : ''}
+                </div>
+
+                <!-- Critérios de Desempate (apenas para Top N) -->
+                ${modo === 'topN' ? `
+                  <div style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;background:var(--surface-subtle);margin-bottom:14px;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+                      <span style="font-size:12.5px;font-weight:600;">Critérios de desempate em ordem</span>
+                      ${!bloqueado ? `<button type="button" class="btn btn-sm" data-prem-add-des="${pIdx}">+ Adicionar desempate</button>` : ''}
+                    </div>
+                    ${desempateRowsHtml}
+                  </div>
+                ` : ''}
+
+                <!-- Exclusão entre Premiações (Não acumula com) -->
+                <div style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;background:var(--surface-subtle);margin-bottom:14px;">
+                  <div style="font-size:12.5px;font-weight:600;margin-bottom:4px;">Não acumula com (Exclusão seletiva de vencedoras anteriores)</div>
+                  <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">Se uma EJ vencer qualquer uma das premiações marcadas abaixo (de maior prioridade), ela será ignorada como candidata nesta premiação:</div>
+                  ${naoAcumulaHtml}
+                </div>
+
+                <!-- Requisitos de Elegibilidade -->
+                <div id="wrap_${cbId}">
+                  ${gerarHtmlConstrutorCondicoes(cbId, prem.elegibilidade, {
+                    titulo: 'Requisito de Elegibilidade para concorrer a esta premiação',
+                    mostrarPreview: true
+                  })}
+                </div>
+
+                <div class="cond-preview-bar" style="margin-top:10px;">
+                  <span>Vencedoras na apuração ao vivo: <strong>${esc(nomesVencedoresPreview)}</strong></span>
+                  ${resPrem && resPrem.houveEmpate ? `<span style="color:var(--danger);font-weight:600;">! Há empate técnico sinalizado</span>` : ''}
+                </div>
+              </div>
+            `;
+          }).join('');
+
+      container.innerHTML = `
+        <div class="section-header" style="margin-bottom:16px;">
+          <div>
+            <h3 class="section-title" style="margin-bottom:2px;">Configuração das Premiações</h3>
+            <span style="font-size:12.5px;color:var(--text-muted);">As premiações são apuradas em ordem crescente de <strong>Prioridade</strong> (1, 2, 3...).</span>
+          </div>
+          <div style="display:flex;gap:8px;">
+            ${!bloqueado ? `<button type="button" class="btn" data-add-premiacao="1">+ Nova premiação</button>` : ''}
+            ${!bloqueado ? `<button type="button" class="btn btn-primary" id="btnSavePremiacoesNow">Salvar alterações</button>` : ''}
+          </div>
+        </div>
+        ${premiacoesCardsHtml}
+      `;
+
+      // Adicionar nova premiação
+      container.querySelectorAll('[data-add-premiacao]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const maxPrio = ev.premiacoes.reduce((m, p) => Math.max(m, Number(p.prioridade) || 0), 0);
+          ev.premiacoes.push({
+            id: 'prem_' + Date.now() + '_' + Math.random().toString(36).slice(2, 5),
+            nome: `Premiação ${ev.premiacoes.length + 1}`,
+            prioridade: maxPrio + 1,
+            elegibilidade: {
+              logica: 'E',
+              condicoes: [{ metrica: 'fa_pct_meta', operador: '>=', valor: 100 }]
+            },
+            modo: 'topN',
+            n: 1,
+            metricaRanking: 'fa_pct_meta',
+            ordem: 'maior',
+            desempate: [{ metrica: 'fa_realizado', ordem: 'maior' }],
+            naoAcumulaCom: []
+          });
+          persistirEdicaoEvento(ev, true);
+        });
+      });
+
+      const btnSaveNow = $('btnSavePremiacoesNow');
+      if (btnSaveNow) {
+        btnSaveNow.addEventListener('click', async () => {
+          await salvarEventoNoBanco(ev, true);
+        });
+      }
+
+      // Bind dos campos de cada premiação
+      container.querySelectorAll('[data-prem-prio]').forEach(inp => {
+        inp.addEventListener('change', () => {
+          const pIdx = Number(inp.dataset.premPrio);
+          if (ev.premiacoes[pIdx]) {
+            ev.premiacoes[pIdx].prioridade = Math.max(1, Number(inp.value) || 1);
+            persistirEdicaoEvento(ev, true);
+          }
+        });
+      });
+
+      container.querySelectorAll('[data-prem-nome]').forEach(inp => {
+        inp.addEventListener('input', () => {
+          const pIdx = Number(inp.dataset.premNome);
+          if (ev.premiacoes[pIdx]) {
+            ev.premiacoes[pIdx].nome = inp.value;
+            persistirEdicaoEvento(ev, false);
+          }
+        });
+      });
+
+      container.querySelectorAll('[data-prem-del]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const pIdx = Number(btn.dataset.premDel);
+          const alvo = ev.premiacoes[pIdx];
+          if (!alvo) return;
+          if (!confirm(`Remover a premiação "${alvo.nome}"?`)) return;
+          const idRemovido = String(alvo.id);
+          ev.premiacoes.splice(pIdx, 1);
+          // Limpa referências ao id removido em naoAcumulaCom das demais premiações
+          ev.premiacoes.forEach(p => {
+            if (Array.isArray(p.naoAcumulaCom)) {
+              p.naoAcumulaCom = p.naoAcumulaCom.filter(id => String(id) !== idRemovido);
+            }
+          });
+          persistirEdicaoEvento(ev, true);
+        });
+      });
+
+      container.querySelectorAll('[data-prem-modo]').forEach(sel => {
+        sel.addEventListener('change', () => {
+          const pIdx = Number(sel.dataset.premModo);
+          if (ev.premiacoes[pIdx]) {
+            ev.premiacoes[pIdx].modo = sel.value === 'todos' ? 'todos' : 'topN';
+            persistirEdicaoEvento(ev, true);
+          }
+        });
+      });
+
+      container.querySelectorAll('[data-prem-n]').forEach(inp => {
+        inp.addEventListener('change', () => {
+          const pIdx = Number(inp.dataset.premN);
+          if (ev.premiacoes[pIdx]) {
+            ev.premiacoes[pIdx].n = Math.max(1, Number(inp.value) || 1);
+            persistirEdicaoEvento(ev, true);
+          }
+        });
+      });
+
+      container.querySelectorAll('[data-prem-metrica]').forEach(sel => {
+        sel.addEventListener('change', () => {
+          const pIdx = Number(sel.dataset.premMetrica);
+          if (ev.premiacoes[pIdx]) {
+            ev.premiacoes[pIdx].metricaRanking = sel.value;
+            persistirEdicaoEvento(ev, true);
+          }
+        });
+      });
+
+      container.querySelectorAll('[data-prem-ordem]').forEach(sel => {
+        sel.addEventListener('change', () => {
+          const pIdx = Number(sel.dataset.premOrdem);
+          if (ev.premiacoes[pIdx]) {
+            ev.premiacoes[pIdx].ordem = sel.value;
+            persistirEdicaoEvento(ev, true);
+          }
+        });
+      });
+
+      // Desempate: adicionar, alterar, remover
+      container.querySelectorAll('[data-prem-add-des]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const pIdx = Number(btn.dataset.premAddDes);
+          if (ev.premiacoes[pIdx]) {
+            if (!Array.isArray(ev.premiacoes[pIdx].desempate)) ev.premiacoes[pIdx].desempate = [];
+            ev.premiacoes[pIdx].desempate.push({ metrica: 'fa_realizado', ordem: 'maior' });
+            persistirEdicaoEvento(ev, true);
+          }
+        });
+      });
+
+      container.querySelectorAll('[data-prem-des-metrica]').forEach(sel => {
+        sel.addEventListener('change', () => {
+          const [pIdx, dIdx] = sel.dataset.premDesMetrica.split(':').map(Number);
+          if (ev.premiacoes[pIdx]?.desempate?.[dIdx]) {
+            ev.premiacoes[pIdx].desempate[dIdx].metrica = sel.value;
+            persistirEdicaoEvento(ev, true);
+          }
+        });
+      });
+
+      container.querySelectorAll('[data-prem-des-ordem]').forEach(sel => {
+        sel.addEventListener('change', () => {
+          const [pIdx, dIdx] = sel.dataset.premDesOrdem.split(':').map(Number);
+          if (ev.premiacoes[pIdx]?.desempate?.[dIdx]) {
+            ev.premiacoes[pIdx].desempate[dIdx].ordem = sel.value;
+            persistirEdicaoEvento(ev, true);
+          }
+        });
+      });
+
+      container.querySelectorAll('[data-prem-del-des]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const [pIdx, dIdx] = btn.dataset.premDelDes.split(':').map(Number);
+          if (ev.premiacoes[pIdx]?.desempate?.[dIdx]) {
+            ev.premiacoes[pIdx].desempate.splice(dIdx, 1);
+            persistirEdicaoEvento(ev, true);
+          }
+        });
+      });
+
+      // Checkboxes naoAcumulaCom
+      container.querySelectorAll('[data-prem-nao-acumula]').forEach(chk => {
+        chk.addEventListener('change', () => {
+          const [pIdxStr, idOutra] = chk.dataset.premNaoAcumula.split('::');
+          const pIdx = Number(pIdxStr);
+          const prem = ev.premiacoes[pIdx];
+          if (!prem) return;
+          const setIds = new Set((prem.naoAcumulaCom || []).map(String));
+          if (chk.checked) setIds.add(String(idOutra));
+          else setIds.delete(String(idOutra));
+          prem.naoAcumulaCom = Array.from(setIds);
+          persistirEdicaoEvento(ev, true);
+        });
+      });
+
+      // Construtor de Condições para Elegibilidade de cada premiação
+      ev.premiacoes.forEach((prem, pIdx) => {
+        if (!prem.elegibilidade) prem.elegibilidade = { logica: 'E', condicoes: [] };
+        const cbId = `prem_eleg_${pIdx}`;
+        if (!bloqueado) {
+          vincularConstrutorCondicoes(cbId, prem.elegibilidade, (req, reRenderDom) => {
+            persistirEdicaoEvento(ev, true);
+          });
+        }
+      });
+    }
+
+    // ============================================================================
+    // 18. MÓDULO DE EVENTOS — FASE 5: CONGELAMENTO DE RESULTADO E EXPORTAÇÃO CSV
+    // ============================================================================
+
+    /**
+     * Regra 5: Encerra o evento, grava o snapshot completo em `resultadoCongelado`
+     * e passa a exibir apenas ele mesmo que a planilha seja atualizada no futuro.
+     */
+    async function encerrarECongelarEvento(ev) {
+      if (!ev) return;
+      const msg = `Deseja encerrar o evento "${ev.nome}" e congelar o resultado atual?\n\nO resultado atual (${(STORE.ejs || []).length} EJs) ficará gravado permanentemente no evento e não mudará mesmo que novas planilhas sejam importadas depois.`;
+      if (!confirm(msg)) return;
+
+      const snapshot = avaliarEvento(
+        { ...ev, status: 'em_andamento' },
+        STORE.ejs || [],
+        { ignorarCongelado: true }
+      );
+      snapshot.congelado = true;
+      snapshot.calculadoEm = new Date().toISOString();
+
+      ev.status = 'encerrado';
+      ev.resultadoCongelado = snapshot;
+      await salvarEventoNoBanco(ev, true);
+    }
+
+    /**
+     * Permite reabrir um evento encerrado caso o usuário queira descongelar e voltar ao cálculo ao vivo.
+     */
+    async function reabrirEventoCongelado(ev) {
+      if (!ev) return;
+      if (!confirm(`Reabrir o evento "${ev.nome}" para edição e apuração ao vivo? O resultado congelado anterior será substituído pelo cálculo em tempo real.`)) return;
+      ev.status = 'em_andamento';
+      ev.resultadoCongelado = null;
+      await salvarEventoNoBanco(ev, true);
+    }
+
+    /**
+     * Escapa uma célula para CSV (separador ';' compatível com Excel pt-BR e Google Sheets).
+     */
+    function csvCell(val) {
+      const s = String(val ?? '').replace(/\r?\n|\r/g, ' ').trim();
+      if (s.includes(';') || s.includes('"') || s.includes(',')) {
+        return '"' + s.replace(/"/g, '""') + '"';
+      }
+      return s;
+    }
+
+    /**
+     * Gera o conteúdo CSV completo e explicável do resultado do evento (Palcos das EJs, Palcos do Núcleo e Premiações).
+     */
+    function gerarCsvResultadoEvento(ev, resultado) {
+      const res = resultado || avaliarEvento(ev, STORE.ejs || []);
+      const linhas = [];
+      const addRow = (cols) => linhas.push(cols.map(csvCell).join(';'));
+
+      // Metadados do Evento
+      addRow(['RELATÓRIO DE RESULTADO DO EVENTO — MONITOR NÚCLEO VERTENTES']);
+      addRow(['Evento', ev.nome || '']);
+      addRow(['Data do Evento', ev.data || '']);
+      addRow(['Período de Referência', ev.periodoReferencia || '']);
+      addRow(['Status do Resultado', res.congelado ? 'ENCERRADO (RESULTADO CONGELADO)' : 'AO VIVO']);
+      addRow(['Calculado em', fmtDate(res.calculadoEm)]);
+      addRow(['Total de EJs Avaliadas', res.totalEjs]);
+      addRow([]);
+
+      // Seção 1: Palcos das EJs
+      addRow(['1. PALCOS DAS EJs']);
+      addRow(['Palco', 'Modo Escada?', 'Código EJ', 'Nome da EJ', 'Cluster', 'Nível Atingido', 'Próximo Nível', 'Diagnóstico / O que falta']);
+      if ((res.palcosEj || []).length === 0) {
+        addRow(['Nenhum Palco das EJs configurado']);
+      } else {
+        res.palcosEj.forEach(palco => {
+          const modoEscada = palco.exigirNiveisAnteriores ? 'Sim' : 'Não';
+          (palco.resultadosPorEj || []).forEach(r => {
+            addRow([
+              palco.nome,
+              modoEscada,
+              r.cod,
+              r.nome,
+              `Cluster ${r.cl || '-'}`,
+              r.nivelAtingido ? r.nivelAtingido.nome : 'Sem palco',
+              r.proximoNivel ? r.proximoNivel.nome : 'Topo atingido',
+              r.oQueFalta || ''
+            ]);
+          });
+        });
+      }
+      addRow([]);
+
+      // Seção 2: Palcos do Núcleo
+      addRow(['2. PALCOS DO NÚCLEO']);
+      addRow(['Palco do Núcleo', 'Nível Atingido pelo Núcleo', 'Ordem do Nível', 'Nome do Nível', 'Status do Nível', 'Explicação (Atual vs. Exigido)', 'Qtd. EJs que Cumprem', 'Qtd. EJs Pendentes']);
+      if ((res.palcosNucleo || []).length === 0) {
+        addRow(['Nenhum Palco do Núcleo configurado']);
+      } else {
+        res.palcosNucleo.forEach(pn => {
+          const atingidoGeral = pn.nivelAtingido ? pn.nivelAtingido.nome : 'Nenhum nível atingido';
+          (pn.niveis || []).forEach(n => {
+            const av = n.avaliacao || {};
+            addRow([
+              pn.nome,
+              atingidoGeral,
+              n.ordem,
+              n.nome,
+              n.bateu ? 'Meta batida' : 'Pendente',
+              av.explicacao || '',
+              (av.ejsQueCumprem || []).length,
+              (av.ejsPendentes || []).length
+            ]);
+          });
+        });
+      }
+      addRow([]);
+
+      // Seção 3: Premiações (Vencedoras e Não Vencedoras)
+      addRow(['3. PREMIAÇÕES (APURADAS POR ORDEM DE PRIORIDADE)']);
+      addRow(['Prioridade', 'Premiação', 'Modo', 'Resultado EJ', 'Posição Ranking', 'Empate Técnico?', 'Código EJ', 'Nome da EJ', 'Cluster', 'Métricas de Ranking / Desempate', 'Explicação / Motivo']);
+      if ((res.premiacoes || []).length === 0) {
+        addRow(['Nenhuma Premiação configurada']);
+      } else {
+        res.premiacoes.forEach(prem => {
+          const modoDesc = prem.modo === 'todos' ? 'Todas elegíveis' : `Top ${prem.n || 1}`;
+          (prem.vencedores || []).forEach(v => {
+            const metricasStr = (v.valoresRanking || []).map(vr => `${vr.rotulo}: ${vr.valorFmt}`).join(' | ');
+            addRow([
+              prem.prioridade,
+              prem.nome,
+              modoDesc,
+              'VENCEDORA',
+              v.posicao ? `${v.posicao}º` : '1º',
+              v.empatado ? 'SIM (Empate técnico)' : 'Não',
+              v.cod,
+              v.nome,
+              `Cluster ${v.cl || '-'}`,
+              metricasStr,
+              v.empatado ? 'Vencedora (empatada na mesma colocação)' : 'Vencedora'
+            ]);
+          });
+
+          (prem.naoVencedoras || []).forEach(nv => {
+            const metricasStr = (nv.valoresRanking || []).map(vr => `${vr.rotulo}: ${vr.valorFmt}`).join(' | ');
+            const situacao = nv.impedida
+              ? 'IMPEDIDA (NÃO ACUMULA)'
+              : (nv.motivoTipo === 'ranking' ? 'ELEGÍVEL (FORA DO TOP N)' : 'INELEGÍVEL');
+            addRow([
+              prem.prioridade,
+              prem.nome,
+              modoDesc,
+              situacao,
+              nv.posicao ? `${nv.posicao}º` : '—',
+              nv.empatado ? 'Sim' : 'Não',
+              nv.cod,
+              nv.nome,
+              `Cluster ${nv.cl || '-'}`,
+              metricasStr,
+              nv.motivoNaoVenceu || ''
+            ]);
+          });
+        });
+      }
+
+      return '\uFEFF' + linhas.join('\r\n');
+    }
+
+    /**
+     * Dispara o download do arquivo CSV com o resultado completo do evento.
+     */
+    function exportarResultadoEventoCSV(ev) {
+      if (!ev) return;
+      const resultado = avaliarEvento(ev, STORE.ejs || []);
+      const csvContent = gerarCsvResultadoEvento(ev, resultado);
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const slug = String(ev.nome || 'evento')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/^_|_$/g, '') || 'evento';
+      const statusSlug = resultado.congelado ? 'congelado' : 'aovivo';
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `resultado_${slug}_${statusSlug}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 200);
+    }
+
+    window.gerarCsvResultadoEvento = gerarCsvResultadoEvento;
+    window.exportarResultadoEventoCSV = exportarResultadoEventoCSV;
+
+    function bindEventosModuleEvents() {
+      const btnNew = $('btnNewEvento');
+      if (btnNew) btnNew.addEventListener('click', criarNovoEvento);
+
+      const btnBack = $('btnBackToEventos');
+      if (btnBack) {
+        btnBack.addEventListener('click', () => {
+          STORE.ui.activeEventoId = null;
+          renderEventos();
+        });
+      }
+
+      const btnDupActive = $('btnDuplicateActiveEvento');
+      if (btnDupActive) {
+        btnDupActive.addEventListener('click', async () => {
+          if (!STORE.ui.activeEventoId) return;
+          await duplicarEvento(STORE.ui.activeEventoId);
+          STORE.ui.activeEventoId = null;
+          renderEventos();
+        });
+      }
+
+      const btnDelActive = $('btnDeleteActiveEvento');
+      if (btnDelActive) {
+        btnDelActive.addEventListener('click', async () => {
+          const id = STORE.ui.activeEventoId;
+          if (!id || !STORE.eventos[id]) return;
+          if (!confirm(`Excluir permanentemente o evento "${STORE.eventos[id].nome}"?`)) return;
+          await excluirEventoDoBanco(id);
+        });
+      }
+
+      document.querySelectorAll('#evtEditorTabs .tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          STORE.ui.eventoTab = btn.dataset.evttab;
+          if (STORE.ui.activeEventoId && STORE.eventos[STORE.ui.activeEventoId]) {
+            renderEventoEditor(STORE.eventos[STORE.ui.activeEventoId]);
+          }
+        });
+      });
+
+      const grid = $('eventosCardsGrid');
+      if (grid) {
+        grid.addEventListener('click', async e => {
+          const dupBtn = e.target.closest('[data-dup-evt]');
+          if (dupBtn) {
+            e.stopPropagation();
+            await duplicarEvento(dupBtn.dataset.dupEvt);
+            return;
+          }
+          const delBtn = e.target.closest('[data-del-evt]');
+          if (delBtn) {
+            e.stopPropagation();
+            const id = delBtn.dataset.delEvt;
+            const ev = STORE.eventos && STORE.eventos[id];
+            if (!ev) return;
+            if (!confirm(`Excluir permanentemente o evento "${ev.nome}"?`)) return;
+            await excluirEventoDoBanco(id);
+            return;
+          }
+          const card = e.target.closest('[data-open-evt]');
+          if (card) {
+            STORE.ui.activeEventoId = card.dataset.openEvt;
+            STORE.ui.eventoTab = 'dados';
+            renderEventos();
+          }
+        });
+      }
+    }
+
     // Inicialização: restaura planilha salva imediatamente antes mesmo da rede responder
     initParamsSelects();
     loadLocalCache();
     bindEvents();
+    bindEventosModuleEvents();
     recomputeStore();
     renderActiveScreen();
     initFirebase();
