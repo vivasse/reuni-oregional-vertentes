@@ -1846,16 +1846,21 @@ function scheduleReconnect() {
   }, delay);
 }
 
-function initFirebase() {
+async function initFirebase() {
   try {
     if (!firebase.apps.length) {
       firebase.initializeApp(firebaseConfig);
     }
     DB = firebase.firestore();
-    // Cache offline persistente do Firestore (substitui cache manual em localStorage)
-    DB.enablePersistence({ synchronizeTabs: true }).catch(() => {
-      // Se já ativo ou navegador não suportar multi-tab, segue normalmente
-    });
+    // Aguarda a ativação do cache offline persistente ANTES de iniciar listeners/operações
+    try {
+      await Promise.race([
+        DB.enablePersistence({ synchronizeTabs: true }),
+        new Promise(res => setTimeout(res, 1500))
+      ]);
+    } catch (e) {
+      // Se outra aba já detiver o lock ou navegador bloquear IndexedDB, segue normalmente
+    }
     attachFirestoreListeners(false);
   } catch (err) {
     console.error('Erro ao inicializar Firestore:', err);
@@ -1939,8 +1944,8 @@ function attachFirestoreListeners(isRetry = false) {
           renderActiveScreen();
           if (STORE.ui.drawerEjCod) renderDrawerBody();
         }
-      } else {
-        // Se banco estiver vazio, garante seed inicial em memória e salva
+      } else if (!(snap.metadata && snap.metadata.fromCache)) {
+        // Se banco remoto estiver vazio, garante seed inicial em memória e salva
         saveGuardioesBundle();
       }
     },
@@ -1966,19 +1971,26 @@ async function saveMonitorToFirestore(rows, ts) {
     const latestRef = DB.collection('monitor').doc('latest');
     const resumoRef = DB.collection('monitor').doc('resumo');
 
-    batch.set(latestRef, {
+    const latestPayload = JSON.parse(JSON.stringify({
       t: STORE.updatedAt,
       rows: STORE.packedRows,
       params: STORE.params
-    });
+    }));
 
-    batch.set(resumoRef, {
+    const resumoPayload = JSON.parse(JSON.stringify({
       t: STORE.updatedAt,
       metrics: STORE.metrics,
       params: STORE.params
-    });
+    }));
 
-    await batch.commit();
+    batch.set(latestRef, latestPayload);
+    batch.set(resumoRef, resumoPayload);
+
+    // Com cache persistente ativo, a gravação local é imediata; usamos race para não travar a UI caso a rede demore
+    await Promise.race([
+      batch.commit(),
+      new Promise(res => setTimeout(res, 3500))
+    ]);
     setCloudStatus('online', 'Nuvem ativa');
   } catch (err) {
     console.error('Erro ao salvar lote no Firestore:', err);
@@ -1994,11 +2006,16 @@ async function saveGuardioesBundle() {
   try {
     const batch = DB.batch();
     const ref = DB.collection('guardioes_mod').doc('bundle');
+    const cleanData = JSON.parse(JSON.stringify(STORE.gData));
     batch.set(ref, {
-      data: STORE.gData,
+      data: cleanData,
       t: Date.now()
     });
-    await batch.commit();
+    await Promise.race([
+      batch.commit(),
+      new Promise(res => setTimeout(res, 3500))
+    ]);
+    setCloudStatus('online', 'Nuvem ativa');
   } catch (err) {
     console.error('Erro ao salvar guardiões:', err);
   }
@@ -3268,24 +3285,28 @@ function handleFileUpload(file) {
   const txtLbl = $('uploadProgressLabel');
   const resBox = $('uploadResultBox');
 
+  bar.classList.remove('danger');
   wrap.style.display = 'block';
   resBox.style.display = 'none';
   bar.style.width = '25%';
   pctLbl.textContent = '25%';
   txtLbl.textContent = 'Lendo planilha…';
 
+  const isCsv = /\.csv$/i.test(file.name || '');
   const reader = new FileReader();
   reader.onload = async e => {
     try {
-      bar.style.width = '60%';
-      pctLbl.textContent = '60%';
+      bar.style.width = '65%';
+      pctLbl.textContent = '65%';
       txtLbl.textContent = 'Interpretando aba ALIMENTAÇÃO…';
 
-      const data = new Uint8Array(e.target.result);
-      const wb = XLSX.read(data, { type: 'array' });
+      const wb = isCsv
+        ? XLSX.read(e.target.result, { type: 'string' })
+        : XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+
       const sheetName = wb.SheetNames.find(n => n.toUpperCase().includes('ALIMENTA')) || wb.SheetNames[0];
       const sheet = wb.Sheets[sheetName];
-      const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+      const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: true, defval: '' });
 
       const hi = rows.findIndex(r => String(r[0]).trim().toUpperCase() === 'ID');
       if (hi < 0) {
@@ -3293,8 +3314,14 @@ function handleFileUpload(file) {
       }
 
       const now = Date.now();
-      await saveMonitorToFirestore(rows, now);
+      STORE.rawRows = rows;
+      STORE.packedRows = pack(rows);
+      STORE.updatedAt = now;
+      recomputeStore();
+      $('updatedAtText').textContent = 'Atualizado em ' + fmtDate(now);
+      renderActiveScreen();
 
+      // Conclui a barra imediatamente após processar os dados em memória
       bar.style.width = '100%';
       pctLbl.textContent = '100%';
       txtLbl.textContent = 'Concluído';
@@ -3302,7 +3329,7 @@ function handleFileUpload(file) {
       const M = STORE.metrics;
       resBox.style.display = 'flex';
       resBox.innerHTML = `
-        <div style="color:var(--good);font-weight:600;font-size:15px;">✓ Dados importados e sincronizados com sucesso</div>
+        <div style="color:var(--good);font-weight:600;font-size:15px;">✓ Dados importados com sucesso</div>
         <div style="font-size:13px;color:var(--text-secondary);">
           <strong>${M.totalEjs} EJs</strong> processadas · Faturamento somado: <strong>${R(M.sumFat)}</strong> · Atualizado em <strong>${fmtDate(now)}</strong>
         </div>
@@ -3310,9 +3337,13 @@ function handleFileUpload(file) {
           <button class="btn btn-primary btn-sm" onclick="switchScreen('monitoramento')">Ir para Monitoramento</button>
         </div>
       `;
+
+      // Sincroniza no Firestore em segundo plano sem travar a tela de upload
+      saveMonitorToFirestore(rows, now);
     } catch (err) {
       bar.style.width = '100%';
       bar.classList.add('danger');
+      txtLbl.textContent = 'Erro na leitura';
       resBox.style.display = 'flex';
       resBox.innerHTML = `
         <div style="color:var(--danger);font-weight:600;">! Erro ao importar planilha</div>
@@ -3320,7 +3351,8 @@ function handleFileUpload(file) {
       `;
     }
   };
-  reader.readAsArrayBuffer(file);
+  if (isCsv) reader.readAsText(file);
+  else reader.readAsArrayBuffer(file);
 }
 
 function initParamsSelects() {
@@ -3555,7 +3587,10 @@ function bindEvents() {
     if (e.dataTransfer.files && e.dataTransfer.files[0]) handleFileUpload(e.dataTransfer.files[0]);
   });
   fi.addEventListener('change', e => {
-    if (e.target.files && e.target.files[0]) handleFileUpload(e.target.files[0]);
+    if (e.target.files && e.target.files[0]) {
+      handleFileUpload(e.target.files[0]);
+      e.target.value = '';
+    }
   });
 
   // Salvar Parâmetros
