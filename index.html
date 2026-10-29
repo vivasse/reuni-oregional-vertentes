@@ -10,6 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <style>
@@ -1713,11 +1714,15 @@
     const firebaseConfig = {
       apiKey: "AIzaSyAUGdZc3VA0XFZlDaG4uTfA5MXH0hTntT4",
       authDomain: "roadmap-76391.firebaseapp.com",
+      databaseURL: "https://roadmap-76391-default-rtdb.firebaseio.com",
       projectId: "roadmap-76391",
       storageBucket: "roadmap-76391.firebasestorage.app",
       messagingSenderId: "390570515113",
       appId: "1:390570515113:web:6b80d5f207c5fd575167b8"
     };
+
+    const STORAGE_KEY_MONITOR = 'vert_raw_v1';
+    const STORAGE_KEY_GUARDIOES = 'vert_guardioes_cache';
 
     const $ = id => document.getElementById(id);
     const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -2139,16 +2144,73 @@
     }
 
     // ============================================================================
-    // 5. CAMADA FIRESTORE OTIMIZADA (SINGLE SNAPSHOT + BACKOFF + WRITEBATCH)
+    // 5. CAMADA DE PERSISTÊNCIA (CACHE LOCAL IMEDIATO + NUVEM FIRESTORE / RTDB)
     // ============================================================================
     let DB = null;
+    let RTDB = null;
     let unsubMonitor = null;
     let unsubGuardioes = null;
+    let rtdbAttached = false;
     let backoffStep = 0;
     let backoffTimer = null;
     const BACKOFF_DELAYS = [5000, 10000, 30000, 60000];
     let lastMonitorSig = '';
     let lastGuardioesSig = '';
+
+    // Salva a planilha e os parâmetros imediatamente no navegador para nunca perder ao dar F5
+    function saveLocalCache() {
+      try {
+        if (STORE.packedRows && STORE.packedRows.length) {
+          localStorage.setItem(STORAGE_KEY_MONITOR, JSON.stringify({
+            t: STORE.updatedAt || Date.now(),
+            rows: STORE.packedRows,
+            params: STORE.params
+          }));
+        }
+      } catch (e) { console.warn('Erro ao salvar cache local da planilha:', e); }
+      try {
+        if (STORE.gData) {
+          localStorage.setItem(STORAGE_KEY_GUARDIOES, JSON.stringify(STORE.gData));
+        }
+      } catch (e) { console.warn('Erro ao salvar cache local de guardiões:', e); }
+    }
+
+    // Restaura a planilha e os guardiões instantaneamente ao abrir a página
+    function loadLocalCache() {
+      try {
+        const rawMon = localStorage.getItem(STORAGE_KEY_MONITOR);
+        if (rawMon) {
+          const parsed = JSON.parse(rawMon);
+          if (parsed && Array.isArray(parsed.rows) && parsed.rows.length) {
+            STORE.packedRows = parsed.rows;
+            STORE.rawRows = unpack(parsed.rows);
+            STORE.updatedAt = parsed.t || Date.now();
+            if (parsed.params) {
+              STORE.params = Object.assign({}, STORE.params, parsed.params);
+              syncParamsInputs();
+            }
+            lastMonitorSig = `${STORE.updatedAt}_${STORE.packedRows.length}_${JSON.stringify(STORE.params || {})}`;
+            if ($('updatedAtText')) $('updatedAtText').textContent = 'Atualizado em ' + fmtDate(STORE.updatedAt);
+          }
+        }
+      } catch (e) { console.warn('Erro ao ler cache local da planilha:', e); }
+
+      try {
+        const rawG = localStorage.getItem(STORAGE_KEY_GUARDIOES);
+        if (rawG) {
+          const d = JSON.parse(rawG);
+          if (d && typeof d === 'object') {
+            STORE.gData = {
+              squads: d.squads && Object.keys(d.squads).length ? d.squads : JSON.parse(JSON.stringify(INITIAL_GUARDIOES_DATA.squads)),
+              guardioes: d.guardioes && Object.keys(d.guardioes).length ? d.guardioes : JSON.parse(JSON.stringify(INITIAL_GUARDIOES_DATA.guardioes)),
+              vinculos: d.vinculos || JSON.parse(JSON.stringify(INITIAL_GUARDIOES_DATA.vinculos)),
+              pendencias: d.pendencias || {},
+              acompanhamentos: d.acompanhamentos || {}
+            };
+          }
+        }
+      } catch (e) { console.warn('Erro ao ler cache local de guardiões:', e); }
+    }
 
     function setCloudStatus(state, text) {
       const dot = $('cloudDot');
@@ -2169,178 +2231,249 @@
       }, delay);
     }
 
+    function applyCloudMonitorDoc(docData) {
+      if (!docData || !Array.isArray(docData.rows) || !docData.rows.length) {
+        // Se a nuvem estiver vazia mas temos planilha local, envia a planilha local para a nuvem
+        if (STORE.rawRows && STORE.packedRows && STORE.packedRows.length) {
+          saveMonitorToFirestore(STORE.rawRows, STORE.updatedAt || Date.now());
+        }
+        return;
+      }
+      // Se os dados locais forem mais recentes que os da nuvem, preserva os locais e atualiza a nuvem
+      if (STORE.updatedAt && docData.t && STORE.updatedAt > docData.t && STORE.packedRows && STORE.packedRows.length) {
+        saveMonitorToFirestore(STORE.rawRows, STORE.updatedAt);
+        return;
+      }
+      const sig = `${docData.t || 0}_${docData.rows.length}_${JSON.stringify(docData.params || {})}`;
+      if (sig !== lastMonitorSig) {
+        lastMonitorSig = sig;
+        STORE.packedRows = docData.rows;
+        STORE.rawRows = unpack(docData.rows);
+        STORE.updatedAt = docData.t || Date.now();
+        if (docData.params) {
+          STORE.params = Object.assign({}, STORE.params, docData.params);
+          syncParamsInputs();
+        }
+        saveLocalCache();
+        $('updatedAtText').textContent = 'Atualizado em ' + fmtDate(STORE.updatedAt);
+        recomputeStore();
+        renderActiveScreen();
+      }
+    }
+
+    function applyCloudGuardioesData(d, sigKey) {
+      if (!d || typeof d !== 'object') return;
+      const sig = String(sigKey || JSON.stringify(d).length);
+      if (sig !== lastGuardioesSig) {
+        lastGuardioesSig = sig;
+        STORE.gData = {
+          squads: d.squads && Object.keys(d.squads).length ? d.squads : JSON.parse(JSON.stringify(INITIAL_GUARDIOES_DATA.squads)),
+          guardioes: d.guardioes && Object.keys(d.guardioes).length ? d.guardioes : JSON.parse(JSON.stringify(INITIAL_GUARDIOES_DATA.guardioes)),
+          vinculos: d.vinculos || JSON.parse(JSON.stringify(INITIAL_GUARDIOES_DATA.vinculos)),
+          pendencias: d.pendencias || {},
+          acompanhamentos: d.acompanhamentos || {}
+        };
+        saveLocalCache();
+        renderActiveScreen();
+        if (STORE.ui.drawerEjCod) renderDrawerBody();
+      }
+    }
+
     async function initFirebase() {
       try {
         if (!firebase.apps.length) {
           firebase.initializeApp(firebaseConfig);
         }
-        DB = firebase.firestore();
-        // Aguarda a ativação do cache offline persistente ANTES de iniciar listeners/operações
-        try {
-          await Promise.race([
-            DB.enablePersistence({ synchronizeTabs: true }),
-            new Promise(res => setTimeout(res, 1500))
-          ]);
-        } catch (e) {
-          // Se outra aba já detiver o lock ou navegador bloquear IndexedDB, segue normalmente
+        try { RTDB = firebase.database(); } catch (e) { console.warn('RTDB init:', e); }
+        try { DB = firebase.firestore(); } catch (e) { console.warn('Firestore init:', e); }
+        if (DB) {
+          try {
+            await Promise.race([
+              DB.enablePersistence({ synchronizeTabs: true }),
+              new Promise(res => setTimeout(res, 1200))
+            ]);
+          } catch (e) { }
         }
         attachFirestoreListeners(false);
       } catch (err) {
-        console.error('Erro ao inicializar Firestore:', err);
-        setCloudStatus('offline', 'Erro na nuvem');
+        console.error('Erro ao inicializar Firebase:', err);
+        setCloudStatus('offline', 'Modo local');
       }
     }
 
     function attachFirestoreListeners(isRetry = false) {
-      if (!DB) return;
       if (isRetry) {
         if (unsubMonitor) { try { unsubMonitor(); } catch (e) { } unsubMonitor = null; }
         if (unsubGuardioes) { try { unsubGuardioes(); } catch (e) { } unsubGuardioes = null; }
       }
-      if (unsubMonitor && unsubGuardioes) return; // Nunca recriar ao trocar de tela ou filtro
 
       setCloudStatus('syncing', 'Sincronizando');
 
-      // 1) Listener único na coleção 'monitor' (lê resumo e latest)
-      unsubMonitor = DB.collection('monitor').onSnapshot(
-        { includeMetadataChanges: false },
-        snap => {
-          if (snap.metadata && snap.metadata.hasPendingWrites) return;
-          backoffStep = 0;
-          clearTimeout(backoffTimer);
-          setCloudStatus('online', 'Nuvem ativa');
+      // 1) Listener em tempo real no Realtime Database (garante compatibilidade total com roadmap-76391)
+      if (RTDB && !rtdbAttached) {
+        rtdbAttached = true;
+        try {
+          RTDB.ref('monitor/latest').on('value', snap => {
+            backoffStep = 0;
+            clearTimeout(backoffTimer);
+            setCloudStatus('online', 'Nuvem ativa');
+            const val = snap.val();
+            if (val) applyCloudMonitorDoc(val);
+          }, err => console.warn('RTDB monitor listener:', err));
 
-          let latestDoc = null;
-          let resumoDoc = null;
-          snap.forEach(doc => {
-            if (doc.id === 'latest') latestDoc = doc.data();
-            if (doc.id === 'resumo') resumoDoc = doc.data();
-          });
+          RTDB.ref('guardioes_mod').on('value', snap => {
+            const val = snap.val();
+            if (val && (val.squads || val.guardioes)) {
+              applyCloudGuardioesData(val, val.t || JSON.stringify(val).length);
+            }
+          }, err => console.warn('RTDB guardioes listener:', err));
+        } catch (e) { }
+      }
 
-          if (resumoDoc) STORE.summaryDoc = resumoDoc;
+      // 2) Listener único nos documentos do Firestore ('monitor/latest' e 'guardioes_mod/bundle')
+      if (DB && !unsubMonitor) {
+        unsubMonitor = DB.collection('monitor').doc('latest').onSnapshot(
+          { includeMetadataChanges: false },
+          doc => {
+            if (doc.metadata && doc.metadata.hasPendingWrites) return;
+            backoffStep = 0;
+            clearTimeout(backoffTimer);
+            setCloudStatus('online', 'Nuvem ativa');
+            if (doc.exists) {
+              applyCloudMonitorDoc(doc.data());
+            } else if (!(doc.metadata && doc.metadata.fromCache)) {
+              applyCloudMonitorDoc(null);
+            }
+          },
+          err => {
+            console.warn('Firestore monitor/latest listener erro:', err);
+            if (!RTDB) scheduleReconnect();
+          }
+        );
+      }
 
-          if (latestDoc && Array.isArray(latestDoc.rows)) {
-            const sig = `${latestDoc.t || 0}_${latestDoc.rows.length}_${JSON.stringify(latestDoc.params || {})}`;
-            if (sig !== lastMonitorSig) {
-              lastMonitorSig = sig;
-              STORE.packedRows = latestDoc.rows;
-              STORE.rawRows = unpack(latestDoc.rows);
-              STORE.updatedAt = latestDoc.t || Date.now();
-              if (latestDoc.params) {
-                STORE.params = Object.assign({}, STORE.params, latestDoc.params);
-                syncParamsInputs();
+      if (DB && !unsubGuardioes) {
+        unsubGuardioes = DB.collection('guardioes_mod').doc('bundle').onSnapshot(
+          { includeMetadataChanges: false },
+          doc => {
+            if (doc.metadata && doc.metadata.hasPendingWrites) return;
+            if (doc.exists) {
+              const bundle = doc.data();
+              if (bundle && bundle.data) {
+                applyCloudGuardioesData(bundle.data, bundle.t);
               }
-              $('updatedAtText').textContent = 'Atualizado em ' + fmtDate(STORE.updatedAt);
-              recomputeStore();
-              renderActiveScreen();
+            } else if (!(doc.metadata && doc.metadata.fromCache)) {
+              saveGuardioesBundle();
             }
+          },
+          err => {
+            console.warn('Firestore guardioes_mod/bundle listener erro:', err);
           }
-        },
-        err => {
-          console.warn('Firestore monitor listener erro:', err);
-          scheduleReconnect();
-        }
-      );
-
-      // 2) Listener único na coleção 'guardioes_mod' (documento bundle)
-      unsubGuardioes = DB.collection('guardioes_mod').onSnapshot(
-        { includeMetadataChanges: false },
-        snap => {
-          if (snap.metadata && snap.metadata.hasPendingWrites) return;
-          let bundle = null;
-          snap.forEach(doc => {
-            if (doc.id === 'bundle') bundle = doc.data();
-          });
-
-          if (bundle && bundle.data) {
-            const sig = String(bundle.t || JSON.stringify(bundle.data).length);
-            if (sig !== lastGuardioesSig) {
-              lastGuardioesSig = sig;
-              const d = bundle.data;
-              STORE.gData = {
-                squads: d.squads && Object.keys(d.squads).length ? d.squads : JSON.parse(JSON.stringify(INITIAL_GUARDIOES_DATA.squads)),
-                guardioes: d.guardioes && Object.keys(d.guardioes).length ? d.guardioes : JSON.parse(JSON.stringify(INITIAL_GUARDIOES_DATA.guardioes)),
-                vinculos: d.vinculos || JSON.parse(JSON.stringify(INITIAL_GUARDIOES_DATA.vinculos)),
-                pendencias: d.pendencias || {},
-                acompanhamentos: d.acompanhamentos || {}
-              };
-              renderActiveScreen();
-              if (STORE.ui.drawerEjCod) renderDrawerBody();
-            }
-          } else if (!(snap.metadata && snap.metadata.fromCache)) {
-            // Se banco remoto estiver vazio, garante seed inicial em memória e salva
-            saveGuardioesBundle();
-          }
-        },
-        err => {
-          console.warn('Firestore guardioes_mod listener erro:', err);
-        }
-      );
+        );
+      }
     }
 
-    // Salva dados da planilha + documento de resumo em um único writeBatch
+    // Salva dados da planilha no cache local (imediato) + Realtime Database + Firestore writeBatch
     async function saveMonitorToFirestore(rows, ts) {
       STORE.rawRows = rows;
       STORE.packedRows = pack(rows);
       STORE.updatedAt = ts || Date.now();
       recomputeStore();
+      saveLocalCache();
       $('updatedAtText').textContent = 'Atualizado em ' + fmtDate(STORE.updatedAt);
       renderActiveScreen();
 
-      if (!DB) return;
-      try {
-        setCloudStatus('syncing', 'Salvando…');
-        const batch = DB.batch();
-        const latestRef = DB.collection('monitor').doc('latest');
-        const resumoRef = DB.collection('monitor').doc('resumo');
+      setCloudStatus('syncing', 'Salvando…');
 
-        const latestPayload = JSON.parse(JSON.stringify({
-          t: STORE.updatedAt,
-          rows: STORE.packedRows,
-          params: STORE.params
-        }));
+      const latestPayload = JSON.parse(JSON.stringify({
+        t: STORE.updatedAt,
+        rows: STORE.packedRows,
+        params: STORE.params
+      }));
 
-        const resumoPayload = JSON.parse(JSON.stringify({
-          t: STORE.updatedAt,
-          metrics: STORE.metrics,
-          params: STORE.params
-        }));
+      const resumoPayload = JSON.parse(JSON.stringify({
+        t: STORE.updatedAt,
+        metrics: STORE.metrics,
+        params: STORE.params
+      }));
 
-        batch.set(latestRef, latestPayload);
-        batch.set(resumoRef, resumoPayload);
+      let savedOk = false;
 
-        // Com cache persistente ativo, a gravação local é imediata; usamos race para não travar a UI caso a rede demore
-        await Promise.race([
-          batch.commit(),
-          new Promise(res => setTimeout(res, 3500))
-        ]);
+      // 1. Grava no Realtime Database
+      if (RTDB) {
+        try {
+          await Promise.race([
+            Promise.all([
+              RTDB.ref('monitor/latest').set(latestPayload),
+              RTDB.ref('monitor/resumo').set(resumoPayload)
+            ]),
+            new Promise(res => setTimeout(res, 3500))
+          ]);
+          savedOk = true;
+        } catch (e) {
+          console.warn('Erro ao salvar em RTDB:', e);
+        }
+      }
+
+      // 2. Grava no Firestore via writeBatch
+      if (DB) {
+        try {
+          const batch = DB.batch();
+          const latestRef = DB.collection('monitor').doc('latest');
+          const resumoRef = DB.collection('monitor').doc('resumo');
+          batch.set(latestRef, latestPayload);
+          batch.set(resumoRef, resumoPayload);
+          await Promise.race([
+            batch.commit(),
+            new Promise(res => setTimeout(res, 3500))
+          ]);
+          savedOk = true;
+        } catch (err) {
+          console.warn('Erro ao salvar lote no Firestore:', err);
+        }
+      }
+
+      if (savedOk) {
         setCloudStatus('online', 'Nuvem ativa');
-      } catch (err) {
-        console.error('Erro ao salvar lote no Firestore:', err);
-        setCloudStatus('offline', 'Erro ao salvar');
+      } else {
+        setCloudStatus('online', 'Salvo neste dispositivo');
       }
     }
 
-    // Salva alterações de Squads/Guardiões/Pendências/Acompanhamentos via writeBatch
+    // Salva alterações de Squads/Guardiões/Pendências/Acompanhamentos localmente + nuvem
     async function saveGuardioesBundle() {
+      saveLocalCache();
       renderActiveScreen();
       if (STORE.ui.drawerEjCod) renderDrawerBody();
-      if (!DB) return;
-      try {
-        const batch = DB.batch();
-        const ref = DB.collection('guardioes_mod').doc('bundle');
-        const cleanData = JSON.parse(JSON.stringify(STORE.gData));
-        batch.set(ref, {
-          data: cleanData,
-          t: Date.now()
-        });
-        await Promise.race([
-          batch.commit(),
-          new Promise(res => setTimeout(res, 3500))
-        ]);
-        setCloudStatus('online', 'Nuvem ativa');
-      } catch (err) {
-        console.error('Erro ao salvar guardiões:', err);
+
+      const cleanData = JSON.parse(JSON.stringify(STORE.gData));
+      const now = Date.now();
+
+      if (RTDB) {
+        try {
+          await Promise.race([
+            RTDB.ref('guardioes_mod').set(Object.assign({}, cleanData, { t: now })),
+            new Promise(res => setTimeout(res, 3000))
+          ]);
+        } catch (e) { }
+      }
+
+      if (DB) {
+        try {
+          const batch = DB.batch();
+          const ref = DB.collection('guardioes_mod').doc('bundle');
+          batch.set(ref, {
+            data: cleanData,
+            t: now
+          });
+          await Promise.race([
+            batch.commit(),
+            new Promise(res => setTimeout(res, 3000))
+          ]);
+          setCloudStatus('online', 'Nuvem ativa');
+        } catch (err) {
+          console.warn('Erro ao salvar guardiões no Firestore:', err);
+        }
       }
     }
 
@@ -3640,6 +3773,8 @@
           STORE.rawRows = rows;
           STORE.packedRows = pack(rows);
           STORE.updatedAt = now;
+          lastMonitorSig = `${now}_${STORE.packedRows.length}_${JSON.stringify(STORE.params || {})}`;
+          saveLocalCache();
           recomputeStore();
           $('updatedAtText').textContent = 'Atualizado em ' + fmtDate(now);
           renderActiveScreen();
@@ -3930,8 +4065,9 @@
           5: $('espC5').value.trim()
         };
         recomputeStore();
+        saveLocalCache();
         if (STORE.rawRows) {
-          await saveMonitorToFirestore(STORE.rawRows, STORE.updatedAt || Date.now());
+          saveMonitorToFirestore(STORE.rawRows, Date.now());
         }
         switchScreen('monitoramento');
       });
@@ -4119,8 +4255,9 @@
       });
     }
 
-    // Inicialização
+    // Inicialização: restaura planilha salva imediatamente antes mesmo da rede responder
     initParamsSelects();
+    loadLocalCache();
     bindEvents();
     recomputeStore();
     renderActiveScreen();
