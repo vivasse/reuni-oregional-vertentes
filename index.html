@@ -5369,7 +5369,6 @@ function nav() {
 
   let gSubHtml = '';
   if (OPEN_G) {
-    gSubHtml += `<button class="nv sub nv-g-sub${isGuardioesGeneral ? ' on' : ''}" data-v="guardioes-geral" title="Visão Geral de todos os Squads e Guardiões"><span class="nv-g-avatar-mini" style="background:rgba(56,189,248,.32)">★</span><span class="lb">Visão Geral (Squads)</span><span class="bw"><span class="bg g-cnt" title="${guardioesList.length} guardiões cadastrados">${guardioesList.length}</span></span></button>`;
     guardioesList.forEach(g => {
       const gEjs = (D && D.length && typeof getEjGuardiao === 'function')
         ? D.filter(d => getEjGuardiao(d)?.id === g.id)
@@ -5382,12 +5381,11 @@ function nav() {
       const sqName = (G_DATA && G_DATA.squads && G_DATA.squads[g.squad]) ? G_DATA.squads[g.squad].nome : ('Squad ' + (g.squad || ''));
       gSubHtml += `<button class="nv sub nv-g-sub${VW === 'guardiao:' + g.id ? ' on' : ''}" data-v="guardiao:${g.id}" title="Perfil de ${esc(g.nome)} (${esc(sqName)}) · ${gEjs.length} EJ(s)"><span class="nv-g-avatar-mini" style="background:${sqColor}">${esc(initials)}</span><span class="lb">${g.isLider ? '👑 ' : ''}${esc(g.nome)}</span><span class="bw">${gRed ? `<span class="bg r" title="${gRed} EJ(s) em vermelho">${gRed}</span>` : ''}<span class="bg g-cnt" title="${gEjs.length} EJ(s) na carteira">${gEjs.length}</span></span></button>`;
     });
-    gSubHtml += `<button class="nv sub nv-g-add" data-v="new-guardiao" title="Cadastrar novo guardião"><span class="nv-g-avatar-mini" style="background:rgba(56,189,248,.22);color:#38bdf8">+</span><span class="lb">+ Novo Guardião</span></button>`;
   }
 
   $('nav').innerHTML = `<button class="nv${VW === 'geral' ? ' on' : ''}" data-v="geral" title="MONITORAMENTO">${ico('geral')}<span class="lb">MONITORAMENTO</span><span class="car${OPEN ? '' : ' cl'}">${ico('chev')}</span></button>` +
     (OPEN ? sub.map(([k, l]) => `<button class="nv sub${k === VW ? ' on' : ''}" data-v="${k}" title="${l}${badgeTip(k)}">${ico(k)}<span class="lb">${l}</span><span class="bw">${badge(k)}</span></button>`).join('') : '') +
-    `<button class="nv${(isGuardioesGeneral || isGuardiaoProfile) ? ' on' : ''}" data-v="guardioes" title="Perfil dos Guardiões e Carteira de EJs">${ico('guardioes')}<span class="lb">GUARDIÕES</span><span class="bw">${gBadge}</span><span class="car${OPEN_G ? '' : ' cl'}">${ico('chev')}</span></button>` +
+    `<button class="nv${isGuardioesGeneral ? ' on' : ''}" data-v="guardioes" title="Módulo Guardiões">${ico('guardioes')}<span class="lb">Guardiões</span><span class="bw">${gBadge}</span><span class="car${OPEN_G ? '' : ' cl'}">${ico('chev')}</span></button>` +
     gSubHtml +
     `<div class="sep"></div><button class="nv${VW === 'upd' ? ' on' : ''}" data-v="upd" title="Atualizar dados">${ico('upd')}<span class="lb">Atualizar dados</span></button>`;
 }
@@ -5397,19 +5395,9 @@ $('nav').onclick = e => {
   const b = e.target.closest('.nv');
   if (!b) return;
   const v = b.dataset.v;
-  if (v === 'new-guardiao') {
-    if (typeof openNovoGuardiaoModal === 'function') openNovoGuardiaoModal();
-    return;
-  }
   if (v === 'geral') OPEN = VW === 'geral' ? !OPEN : true;
   if (v === 'guardioes') {
     OPEN_G = (VW === 'guardioes') ? !OPEN_G : true;
-    go('guardioes');
-    scrollTo({ top: 0 });
-    return;
-  }
-  if (v === 'guardioes-geral') {
-    OPEN_G = true;
     go('guardioes');
     scrollTo({ top: 0 });
     return;
@@ -6655,6 +6643,8 @@ let G_PROFILE_FILTER = {
   q: ''
 };
 
+let G_CONFIG_OPEN = false;
+
 function renderGuardioesView() {
   ensureGuardioesData();
   const container = $('guardioes');
@@ -6662,14 +6652,12 @@ function renderGuardioesView() {
 
   if (!D || !D.length) {
     container.innerHTML = `
-      ${renderGuardioesDropdownBar('')}
       <div class="card" style="padding:48px 20px;text-align:center">
         <div style="font-size:32px;margin-bottom:12px">🛡️</div>
         <h2 style="margin:0 0 8px;font-size:18px">Carregando dados das EJs…</h2>
         <p style="color:var(--mut);margin:0;font-size:13px">Aguardando a sincronização da planilha para exibir a governança dos Guardiões.</p>
       </div>
     `;
-    bindGuardioesDropdownBar();
     return;
   }
 
@@ -6748,34 +6736,56 @@ function renderGuardioesView() {
     { id: "3", accent: "#10b981" }
   ];
 
-  let html = `
-    <!-- Menu Suspenso Rápido de Perfil do Guardião -->
-    ${renderGuardioesDropdownBar('')}
+  const guardioesConfigList = Object.values((G_DATA && G_DATA.guardioes) || {}).sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
 
-    <!-- Topo Hero & Ações -->
-    <div class="g-hero-card">
-      <div class="g-hero-titles">
-        <h2>
-          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:22px;height:22px;color:var(--ac)"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          Governança &amp; Acompanhamento de Guardiões
-        </h2>
-        <p>Selecione um guardião no menu suspenso acima (ou na barra lateral) para abrir o Perfil do Guardião e ver todas as suas EJs.</p>
-      </div>
-      <div class="g-hero-actions">
-        <button id="btnGNewGuardian" class="g-btn g-btn-primary" type="button" title="Cadastrar novo guardião">
-          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
-          <span>+ Novo Guardião</span>
-        </button>
-        <button id="btnGMeetings" class="g-btn" type="button" title="Atas de reuniões quinzenais dos squads">
-          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          <span>Atas Quinzenais</span>
-        </button>
-        <button id="btnGResetSeed" class="g-btn" type="button" title="Restaurar a estrutura inicial padrão">
-          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M21 12a9 9 0 0 1-15.4 6.4L3 16"/><path d="M3 12a9 9 0 0 1 15.4-6.4L21 8"/><path d="M21 3v5h-5"/><path d="M3 21v-5h5"/></svg>
-          <span>Restaurar Inicial</span>
-        </button>
-      </div>
+  let html = `
+    <!-- Barra Minimalista da Aba Guardiões com Botão de Configurações -->
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:-4px">
+      <span style="font-size:11.5px;font-weight:800;color:var(--mut);text-transform:uppercase;letter-spacing:0.6px">
+        Visão Geral do Módulo Guardiões
+      </span>
+      <button id="btnToggleGConfig" class="g-btn${G_CONFIG_OPEN ? ' g-btn-primary' : ''}" type="button" style="padding:6px 12px;font-size:12px" title="Abrir configurações de guardiões, atas e estrutura">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span>Configurações</span>
+      </button>
     </div>
+
+    ${G_CONFIG_OPEN ? `
+      <div class="g-hero-card" style="border-color:rgba(99,102,241,0.35);background:linear-gradient(135deg, rgba(99,102,241,0.06), rgba(6,182,212,0.03))">
+        <div class="g-hero-titles">
+          <h2 style="font-size:15px">
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--ac)"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            Configurações &amp; Gestão de Guardiões
+          </h2>
+          <p>Cadastre novos guardiões, edite ou transfira carteiras de EJs, acesse atas quinzenais ou restaure a base inicial.</p>
+        </div>
+        <div class="g-hero-actions" style="width:100%;justify-content:space-between;padding-top:8px;border-top:1px solid var(--bd)">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <select id="gConfigSelectGuardiao" class="g-select" style="min-width:220px" title="Selecione um guardião para editar ou transferir suas EJs">
+              <option value="">Selecionar guardião para editar/transferir…</option>
+              ${guardioesConfigList.map(g => `<option value="${esc(g.id)}">👤 ${esc(g.nome)}</option>`).join('')}
+            </select>
+            <button id="btnGConfigEditGuardian" class="g-btn" type="button">
+              <span>Editar / Transferir Carteira</span>
+            </button>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <button id="btnGNewGuardian" class="g-btn g-btn-primary" type="button" title="Cadastrar novo guardião">
+              <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+              <span>+ Novo Guardião</span>
+            </button>
+            <button id="btnGMeetings" class="g-btn" type="button" title="Atas de reuniões quinzenais dos squads">
+              <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <span>Atas Quinzenais</span>
+            </button>
+            <button id="btnGResetSeed" class="g-btn" type="button" title="Restaurar a estrutura inicial padrão">
+              <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M21 12a9 9 0 0 1-15.4 6.4L3 16"/><path d="M3 12a9 9 0 0 1 15.4-6.4L21 8"/><path d="M21 3v5h-5"/><path d="M3 21v-5h5"/></svg>
+              <span>Restaurar Inicial</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    ` : ''}
 
     <!-- 5 KPIs de Governança -->
     <div class="g-kpis-grid">
@@ -7055,7 +7065,28 @@ function renderGuardioesView() {
   container.innerHTML = html;
 
   // 4. Vinculação de Eventos Interativos
-  // Botões do Hero
+  const btnToggleCfg = $('btnToggleGConfig');
+  if (btnToggleCfg) {
+    btnToggleCfg.onclick = () => {
+      G_CONFIG_OPEN = !G_CONFIG_OPEN;
+      renderGuardioesView();
+    };
+  }
+
+  const btnEditCfgG = $('btnGConfigEditGuardian');
+  const selEditCfgG = $('gConfigSelectGuardiao');
+  if (btnEditCfgG && selEditCfgG) {
+    btnEditCfgG.onclick = () => {
+      const gid = selEditCfgG.value;
+      if (!gid) {
+        alert("Selecione um guardião na lista para editar ou transferir sua carteira.");
+        return;
+      }
+      openGuardianProfileModal(gid);
+    };
+  }
+
+  // Botões do Painel de Configurações
   const btnReset = $('btnGResetSeed');
   if (btnReset) {
     btnReset.onclick = async () => {
@@ -7158,14 +7189,12 @@ function renderGuardioesView() {
     };
   }
 
-  bindGuardioesDropdownBar();
-
-  // Clique em chips de guardião abre o Perfil Dedicado do Guardião
+  // Clique em chips de guardião na aba Guardiões abre o Modal de Edição / Transferência do Guardião
   container.querySelectorAll('.chip-guardiao, .guardian-chip-pill').forEach(el => {
     el.onclick = e => {
       e.stopPropagation();
       const gid = el.dataset.gid;
-      if (gid) go('guardiao:' + gid);
+      if (gid) openGuardianProfileModal(gid);
     };
   });
 
@@ -7314,7 +7343,7 @@ function renderGuardioesViewFast() {
     el.onclick = e => {
       e.stopPropagation();
       const gid = el.dataset.gid;
-      if (gid) go('guardiao:' + gid);
+      if (gid) openGuardianProfileModal(gid);
     };
   });
 }
@@ -7339,14 +7368,12 @@ function renderGuardiaoProfileView(guardianId) {
 
   if (!D || !D.length) {
     container.innerHTML = `
-      ${renderGuardioesDropdownBar(guardianId)}
       <div class="card" style="padding:48px 20px;text-align:center">
         <div style="font-size:32px;margin-bottom:12px">🛡️</div>
         <h2 style="margin:0 0 8px;font-size:18px">Carregando carteira de ${esc(g.nome)}…</h2>
         <p style="color:var(--mut);margin:0;font-size:13px">Aguardando a sincronização da planilha.</p>
       </div>
     `;
-    bindGuardioesDropdownBar();
     return;
   }
 
@@ -7370,33 +7397,6 @@ function renderGuardiaoProfileView(guardianId) {
     const days = getEjDaysSinceUpdate(d);
     if (days === null || days > 15) lateRegCount++;
   });
-
-  // Opções para vincular nova EJ ao perfil deste guardião
-  const otherEjs = D.filter(d => getEjGuardiao(d)?.id !== guardianId).sort((a, b) => {
-    const ga = getEjGuardiao(a);
-    const gb = getEjGuardiao(b);
-    if (!!ga !== !!gb) return ga ? 1 : -1;
-    return (a.nome || '').localeCompare(b.nome || '');
-  });
-
-  let assignOptsHtml = `<option value="">+ Selecionar EJ para adicionar à carteira de ${esc(g.nome)}...</option>`;
-  const unassignedList = otherEjs.filter(d => !getEjGuardiao(d));
-  const assignedOtherList = otherEjs.filter(d => !!getEjGuardiao(d));
-  if (unassignedList.length) {
-    assignOptsHtml += `<optgroup label="⚠️ EJs Sem Guardião (${unassignedList.length})">`;
-    unassignedList.forEach(d => {
-      assignOptsHtml += `<option value="${esc(getEjCode(d))}">➕ ${esc(d.nome)} (#${esc(getEjCode(d))}) — Sem guardião</option>`;
-    });
-    assignOptsHtml += `</optgroup>`;
-  }
-  if (assignedOtherList.length) {
-    assignOptsHtml += `<optgroup label="🔄 EJs com outro Guardião (Transferir para ${esc(g.nome)})">`;
-    assignedOtherList.forEach(d => {
-      const curG = getEjGuardiao(d);
-      assignOptsHtml += `<option value="${esc(getEjCode(d))}">🔄 ${esc(d.nome)} (atual: ${esc(curG ? curG.nome : '')})</option>`;
-    });
-    assignOptsHtml += `</optgroup>`;
-  }
 
   // Aplicar filtro de abas e busca nas EJs do guardião
   let visibleEjs = myEjs.slice();
@@ -7424,9 +7424,6 @@ function renderGuardiaoProfileView(guardianId) {
   }
 
   let html = `
-    <!-- Menu Suspenso Rápido de Perfil do Guardião -->
-    ${renderGuardioesDropdownBar(guardianId)}
-
     <!-- Hero do Perfil do Guardião -->
     <div class="g-profile-hero" style="--g-sq-color:${sqColor}">
       <div class="g-profile-identity">
@@ -7443,15 +7440,6 @@ function renderGuardiaoProfileView(guardianId) {
             <span class="chip ${openPendCount > 0 ? 'y' : 'n'}">${openPendCount} pendência${openPendCount === 1 ? '' : 's'} aberta${openPendCount === 1 ? '' : 's'}</span>
           </div>
         </div>
-      </div>
-
-      <div class="g-assign-ej-bar" style="flex:1;max-width:520px">
-        <select id="gProfileQuickAssignSelect" title="Vincular uma EJ diretamente à carteira deste guardião">
-          ${assignOptsHtml}
-        </select>
-        <button type="button" class="g-btn g-btn-primary" id="btnGProfileQuickAssign">
-          <span>+ Vincular EJ</span>
-        </button>
       </div>
     </div>
 
@@ -7505,7 +7493,7 @@ function renderGuardiaoProfileView(guardianId) {
       <div class="card" style="padding:42px 20px;text-align:center">
         <div style="font-size:32px;margin-bottom:10px">📂</div>
         <h3 style="margin:0 0 6px;font-size:16px">${myEjs.length === 0 ? `${esc(g.nome)} ainda não possui EJs vinculadas` : 'Nenhuma EJ encontrada neste filtro'}</h3>
-        <p style="color:var(--mut);margin:0;font-size:13px">${myEjs.length === 0 ? 'Use o seletor "+ Vincular EJ" acima para adicionar EJs à carteira deste guardião.' : 'Experimente mudar a aba de filtro ou limpar a busca.'}</p>
+        <p style="color:var(--mut);margin:0;font-size:13px">${myEjs.length === 0 ? 'Para vincular ou transferir EJs para este guardião, acesse a aba principal "Guardiões".' : 'Experimente mudar a aba de filtro ou limpar a busca.'}</p>
       </div>
     `;
   } else {
@@ -7599,11 +7587,8 @@ function renderGuardiaoProfileView(guardianId) {
           `}
 
           <!-- Rodapé do Card -->
-          <div class="g-ej-card-actions">
-            <button type="button" class="g-btn" data-unassign-code="${esc(code)}" data-unassign-name="${esc(d.nome)}" style="padding:6px 10px;font-size:11.5px;color:var(--mut)" title="Remover EJ da carteira deste guardião">
-              Desvincular
-            </button>
-            <button type="button" class="g-btn g-btn-primary btn-open-ej" data-ej="${esc(d.nome)}" style="padding:7px 14px;font-size:12.5px">
+          <div class="g-ej-card-actions" style="justify-content:flex-end">
+            <button type="button" class="g-btn g-btn-primary btn-open-ej" data-ej="${esc(d.nome)}" style="padding:7px 14px;font-size:12.5px;width:100%;justify-content:center">
               <span>Abrir Perfil &amp; Acompanhar EJ</span>
               <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polyline points="9 18 15 12 9 6"></polyline></svg>
             </button>
@@ -7615,29 +7600,6 @@ function renderGuardiaoProfileView(guardianId) {
   }
 
   container.innerHTML = html;
-
-  // Eventos do Perfil do Guardião
-  bindGuardioesDropdownBar();
-
-  // Botão Vincular EJ rapidamente
-  const btnQuickAssign = $('btnGProfileQuickAssign');
-  const selQuickAssign = $('gProfileQuickAssignSelect');
-  if (btnQuickAssign && selQuickAssign) {
-    btnQuickAssign.onclick = async () => {
-      const code = selQuickAssign.value;
-      if (!code) {
-        alert("Selecione uma EJ na lista para vincular à carteira de " + g.nome + ".");
-        return;
-      }
-      const ejObj = D.find(x => getEjCode(x) === code);
-      await guardioesSet(`vinculos/${code}/guardiaoId`, guardianId);
-      if (ejObj && (!G_DATA.vinculos[code] || !G_DATA.vinculos[code].nomeEJ)) {
-        await guardioesSet(`vinculos/${code}/nomeEJ`, ejObj.nome);
-      }
-      renderGuardiaoProfileView(guardianId);
-      nav();
-    };
-  }
 
   // Abas de filtro
   container.querySelectorAll('.g-pf-pill').forEach(btn => {
@@ -7670,20 +7632,6 @@ function renderGuardiaoProfileView(guardianId) {
       if (ejName && typeof openEjProfile === 'function') {
         openEjProfile(ejName);
       }
-    };
-  });
-
-  // Desvincular EJ rapidamente
-  container.querySelectorAll('[data-unassign-code]').forEach(btn => {
-    btn.onclick = async e => {
-      e.stopPropagation();
-      const code = btn.dataset.unassignCode;
-      const name = btn.dataset.unassignName;
-      if (!code) return;
-      if (!confirm(`Deseja desvincular a EJ "${name}" da carteira de ${g.nome}?`)) return;
-      await guardioesSet(`vinculos/${code}/guardiaoId`, null);
-      renderGuardiaoProfileView(guardianId);
-      nav();
     };
   });
 }
