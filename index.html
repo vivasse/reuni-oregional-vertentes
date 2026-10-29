@@ -1724,8 +1724,8 @@
                 <input type="number" class="input" id="paramTrk" min="1" max="12" value="6" style="width:100%;">
               </div>
               <div class="form-group">
-                <label class="form-label" for="paramCmin">CSAT mínimo (0 a 5 ou %)</label>
-                <input type="number" class="input" id="paramCmin" step="0.05" value="4.25" style="width:100%;">
+                <label class="form-label" for="paramCmin">CSAT mín. (quando EJ sem meta)</label>
+                <input type="number" class="input" id="paramCmin" step="0.1" value="3.5" style="width:100%;">
               </div>
             </div>
 
@@ -1976,7 +1976,7 @@
         mes: new Date().getMonth() + 1,
         corte: new Date().getMonth() + 1,
         trk: 6,
-        cmin: 4.25,
+        cmin: 3.5,
         espC: { 1: '', 2: '', 3: '', 4: '', 5: '' }
       },
       gData: JSON.parse(JSON.stringify(INITIAL_GUARDIOES_DATA)),
@@ -2144,48 +2144,46 @@
         const gap = Math.max(0, meta - fat);
         const pct = meta > 0 ? (fat / meta) : 0;
 
-        // 1. Faturamento
+        // 1. Faturamento (fórmula original da planilha: coluna 29 vs coluna 20)
         let fa;
         if (fat <= 0) fa = ['Sem movimento', 'n'];
-        else if (meta > 0 && fat >= meta) fa = ['Meta batida', 'm'];
+        else if (fat >= meta) fa = ['Meta batida', 'm'];
         else if (fat >= esp) fa = ['No ritmo', 'g'];
         else if (fat >= prevEsp) fa = ['Atenção', 'y'];
         else fa = ['Abaixo do esperado', 'r'];
 
-        // 2. ECM (meta de 75% ou coluna 22)
+        // 2. ECM (fórmula original da planilha: coluna 74 engajados vs coluna 22 meta % própria da EJ * coluna 90 membros)
         const eng = g(74);
-        const ecmPctMeta = g(22) > 0 ? g(22) : 75;
+        const ecmPctMeta = g(22);
         const ealvo = Math.round((ecmPctMeta / 100) * mem);
         let ecm;
-        if (mem <= 0) ecm = ['Sem movimento', 'n'];
-        else if (eng >= ealvo) ecm = ['Meta batida', 'm'];
-        else if (eng >= Math.max(1, ealvo - 1)) ecm = ['Atenção', 'y'];
-        else ecm = ['Abaixo do esperado', 'r'];
+        if (mem === 0) ecm = ['Sem movimento', 'n'];
+        else ecm = eng >= ealvo ? ['Meta batida', 'm'] : ['Abaixo do esperado', 'r'];
 
-        // 3. CSAT (meta 85% / 4.25 e mínimo da classe)
+        // 3. CSAT (fórmula original da planilha: coluna 13 nota vs coluna 25 meta própria da EJ ou P.cmin = 3.5; coluna 55 contratos)
         const nota = g(13);
         const ctr = g(55);
         const coleta = g(96);
-        const calvo = g(25) || P.cmin || 4.25;
+        const calvo = g(25) || P.cmin || 3.5;
         let cs;
-        if (ctr <= 0 || nota <= 0) cs = ['Sem movimento', 'n'];
+        if (ctr === 0) cs = ['Sem movimento', 'n'];
         else {
-          const ok = g(25) === 0 ? nota >= P.cmin : nota >= g(25);
+          const ok = g(25) === 0 ? nota > P.cmin : nota >= g(25);
           cs = ok ? ['Meta batida', 'm'] : ['Abaixo do esperado', 'r'];
         }
 
-        // 4. Colaborativo
+        // 4. Colaborativo (fórmula original da planilha: coluna 94 realizado vs coluna 95 meta colaborativa da EJ)
         const cesp = (cm / 12) * (P.trk || 6);
         const cprev = (cm / 12) * Math.max(0, (P.trk || 6) - 1);
         const projColab = g(76);
         let co;
         if (colab <= 0) co = ['Sem movimento', 'n'];
         else if (cm === 0 || colab >= cm) co = ['Meta batida', 'm'];
-        else if (colab >= cesp) co = ['No ritmo', 'g'];
+        else if (colab > cesp) co = ['No ritmo', 'g'];
         else if (colab >= cprev) co = ['Atenção', 'y'];
         else co = ['Abaixo do esperado', 'r'];
 
-        // 5. Cluster
+        // 5. Cluster (fórmula original da planilha: colunas 10, 29, 55, 75, 76, 94, 96, 97)
         let cu, idx = 0, targetManut = 0, targetSubida = 0;
         if (cl < 1 || cl > 5) {
           cu = ['Sem cluster', 'n'];
@@ -2333,6 +2331,7 @@
             STORE.rawRows = unpack(parsed.rows);
             STORE.updatedAt = parsed.t || Date.now();
             if (parsed.params) {
+              if (parsed.params.cmin === 4.25) parsed.params.cmin = 3.5;
               STORE.params = Object.assign({}, STORE.params, parsed.params);
               syncParamsInputs();
             }
@@ -2940,97 +2939,102 @@
       } else if (ind === 'ecm') {
         const totEng = ejs.reduce((s, d) => s + d.eng, 0);
         const totMem = ejs.reduce((s, d) => s + d.mem, 0);
+        const totAlvo = ejs.reduce((s, d) => s + d.ealvo, 0);
         const totFaltam = ejs.reduce((s, d) => s + Math.max(0, d.ealvo - d.eng), 0);
         const pctEcm = totMem > 0 ? Math.round((totEng / totMem) * 100) : 0;
+        const batidasEcm = M.counts.ecm['Meta batida'] || 0;
+        const naoBatidasEcm = M.counts.ecm['Abaixo do esperado'] || 0;
 
-        $('indStatusSentence').innerHTML = `ECM do núcleo em ${pctEcm}% de membros executando <span class="muted">· Meta de 75% · Faltam ${totFaltam} membros no total</span>`;
+        $('indStatusSentence').innerHTML = `ECM do núcleo: ${totEng} engajados de ${totMem} membros (${pctEcm}%) <span class="muted">· ${batidasEcm} EJs com meta batida · Faltam ${totFaltam} membros p/ as metas individuais das EJs</span>`;
         $('indKpiRow').innerHTML = `
       <div class="kpi-block">
-        <div class="kpi-label">Membros executando vs. Total</div>
+        <div class="kpi-label">Engajados vs. Membros no núcleo</div>
         <div class="kpi-val">${totEng} <span style="font-size:16px;font-weight:500;color:var(--text-muted);">de ${totMem}</span></div>
-        <div class="kpi-sub">${M.counts.ecm['Meta batida'] || 0} EJs com meta batida</div>
+        <div class="kpi-sub">Soma dos engajados necessários nas EJs: ${totAlvo}</div>
       </div>
       <div class="kpi-block">
-        <div class="kpi-label">Progresso (Meta de 75%)</div>
-        <div class="kpi-val">${pctEcm}%</div>
-        <div class="prog-track">
-          <div class="prog-fill ${pctEcm >= 75 ? 'good' : 'danger'}" style="width:${Math.min(100, pctEcm)}%;"></div>
-          <div class="prog-marker" style="left:75%;" data-label="Meta 75%"></div>
-        </div>
+        <div class="kpi-label">EJs com meta de ECM batida</div>
+        <div class="kpi-val">${batidasEcm} <span style="font-size:16px;font-weight:500;color:var(--text-muted);">de ${ejs.length}</span></div>
+        <div class="kpi-sub">${naoBatidasEcm} EJs abaixo da sua meta · ${M.counts.ecm['Sem movimento'] || 0} sem membros</div>
       </div>
       <div class="kpi-block">
-        <div class="kpi-label">Quantos membros faltam</div>
+        <div class="kpi-label">Membros faltantes (soma dos gaps)</div>
         <div class="kpi-val" style="color:${totFaltam > 0 ? 'var(--danger)' : 'var(--good)'};">${totFaltam}</div>
-        <div class="kpi-sub">Para todas as EJs atingirem 75%</div>
+        <div class="kpi-sub">Para cada EJ atingir sua própria meta de engajamento</div>
       </div>
     `;
         $('indVisualBox').innerHTML = renderIndicatorEjTable('ecm', [
-          { label: 'Membros executando', num: true, fn: d => d.eng },
-          { label: 'Total de membros', num: true, fn: d => d.mem },
-          { label: 'Meta (75%)', num: true, fn: d => d.ealvo },
-          { label: 'Faltam', num: true, fn: d => Math.max(0, d.ealvo - d.eng) || '—' },
+          { label: 'Membros', num: true, fn: d => d.mem || 0 },
+          { label: 'Meta de engajamento', num: true, fn: d => d.mem ? (d.ecmP.toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + '%') : '–' },
+          { label: 'Engajados necessários', num: true, fn: d => d.mem ? d.ealvo : '–' },
+          { label: 'Engajados', num: true, fn: d => d.mem ? d.eng : '–' },
+          { label: 'Gap', num: true, fn: d => !d.mem ? '–' : (d.ealvo - d.eng > 0 ? `<span style="color:var(--danger);font-weight:600;">Faltam ${d.ealvo - d.eng}</span>` : `<span style="color:var(--good);">+${d.eng - d.ealvo} acima</span>`) },
           { label: 'Status', fn: d => renderTag(d.ecm) }
         ]);
       } else if (ind === 'csat') {
-        const comNota = ejs.filter(d => d.ctr > 0 && d.nota > 0);
-        const mediaNota = comNota.length ? (comNota.reduce((s, d) => s + d.nota, 0) / comNota.length) : 0;
+        const comCtr = ejs.filter(d => d.ctr > 0);
+        const comColeta = comCtr.filter(d => d.coleta > 0);
+        const mediaNota = comCtr.length ? (comCtr.reduce((s, d) => s + d.nota, 0) / comCtr.length) : 0;
+        const mediaColeta = comColeta.length ? (comColeta.reduce((s, d) => s + d.coleta, 0) / comColeta.length) : 0;
         const totResp = ejs.reduce((s, d) => s + d.ctr, 0);
-        const notaFmt = mediaNota <= 5 ? (mediaNota.toFixed(2) + ' / 5,00 (' + Math.round((mediaNota / 5) * 100) + '%)') : (Math.round(mediaNota) + '%');
 
-        $('indStatusSentence').innerHTML = `CSAT médio de ${notaFmt} <span class="muted">· Meta de 85% (4,25) · ${M.counts.cs['Meta batida'] || 0} EJs com meta batida</span>`;
+        $('indStatusSentence').innerHTML = `CSAT médio de ${comCtr.length ? mediaNota.toFixed(2) : '–'} em ${comCtr.length} EJs avaliadas <span class="muted">· ${M.counts.cs['Meta batida'] || 0} EJs com meta batida · Coleta média de ${comColeta.length ? mediaColeta.toFixed(1) + '%' : '–'}</span>`;
         $('indKpiRow').innerHTML = `
       <div class="kpi-block">
-        <div class="kpi-label">Nota média (Meta 85%)</div>
-        <div class="kpi-val">${mediaNota ? mediaNota.toFixed(2) : '—'}</div>
-        <div class="kpi-sub">Referência mínima: ${P.cmin}</div>
+        <div class="kpi-label">Nota média do núcleo</div>
+        <div class="kpi-val">${comCtr.length ? mediaNota.toFixed(2) : '—'}</div>
+        <div class="kpi-sub">${comCtr.length} EJs com contratos respondidos (mín. padrão: ${P.cmin})</div>
       </div>
       <div class="kpi-block">
-        <div class="kpi-label">Respostas vs. Mínimo do cluster</div>
+        <div class="kpi-label">Contratos respondidos & Coleta</div>
         <div class="kpi-val">${totResp}</div>
-        <div class="kpi-sub">Contratos/respostas registradas em ${comNota.length} EJs</div>
+        <div class="kpi-sub">Taxa média de coleta: ${comColeta.length ? mediaColeta.toFixed(1) + '%' : '—'}</div>
       </div>
       <div class="kpi-block">
-        <div class="kpi-label">EJs abaixo do esperado</div>
-        <div class="kpi-val" style="color:var(--danger);">${M.counts.cs['Abaixo do esperado'] || 0}</div>
-        <div class="kpi-sub">${M.counts.cs['Sem movimento'] || 0} EJs sem movimento de CSAT</div>
+        <div class="kpi-label">Meta batida vs. Abaixo da meta</div>
+        <div class="kpi-val">${M.counts.cs['Meta batida'] || 0} <span style="font-size:16px;font-weight:500;color:var(--text-muted);">batidas</span></div>
+        <div class="kpi-sub">${M.counts.cs['Abaixo do esperado'] || 0} abaixo da meta · ${M.counts.cs['Sem movimento'] || 0} sem CSAT</div>
       </div>
     `;
         $('indVisualBox').innerHTML = renderIndicatorEjTable('cs', [
-          { label: 'Cluster', fn: d => d.cl ? 'Cluster ' + d.cl : '—' },
-          { label: 'Nota CSAT', num: true, fn: d => d.nota ? d.nota.toFixed(2) : '—' },
-          { label: 'Mínimo do cluster', num: true, fn: d => d.calvo ? d.calvo.toFixed(2) : '—' },
-          { label: 'Respostas / Contratos', num: true, fn: d => d.ctr },
-          { label: 'Coleta (%)', num: true, fn: d => Math.round(d.coleta || 0) + '%' },
+          { label: 'Contratos finalizados', num: true, fn: d => d.ctr || 0 },
+          { label: 'Coleta', num: true, fn: d => d.ctr && d.coleta ? d.coleta.toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + '%' : '–' },
+          { label: 'Nota', num: true, fn: d => d.ctr ? d.nota.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 2 }) : '–' },
+          { label: 'Meta da EJ', num: true, fn: d => d.calvo ? d.calvo.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 2 }) : '–' },
+          { label: 'Diferença', num: true, fn: d => !d.ctr ? '–' : ((d.nota - d.calvo >= 0 ? '+' : '') + (d.nota - d.calvo).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 2 })) },
           { label: 'Status', fn: d => renderTag(d.cs) }
         ]);
       } else if (ind === 'colaborativo') {
         const sumColab = ejs.reduce((s, d) => s + d.colab, 0);
         const sumCm = ejs.reduce((s, d) => s + d.cm, 0);
-        const totProj = ejs.reduce((s, d) => s + (d.projColab || (d.colab > 0 ? 1 : 0)), 0);
+        const sumGapColab = ejs.reduce((s, d) => s + Math.max(0, d.cm - d.colab), 0);
+        const pctColab = sumCm > 0 ? Math.round((sumColab / sumCm) * 100) : 0;
 
-        $('indStatusSentence').innerHTML = `Faturamento colaborativo em ${RC(sumColab)} vs. meta de ${RC(sumCm)} <span class="muted">· ${totProj} projetos colaborativos</span>`;
+        $('indStatusSentence').innerHTML = `Faturamento colaborativo em ${RC(sumColab)} vs. meta anual de ${RC(sumCm)} (${pctColab}%) <span class="muted">· Gap p/ meta anual: ${RC(sumGapColab)}</span>`;
         $('indKpiRow').innerHTML = `
       <div class="kpi-block">
-        <div class="kpi-label">Realizado vs. Meta colaborativa</div>
+        <div class="kpi-label">Realizado vs. Meta anual</div>
         <div class="kpi-val">${RC(sumColab)}</div>
-        <div class="kpi-sub">Meta colaborativa: ${RC(sumCm)}</div>
+        <div class="kpi-sub">Meta anual somada das EJs: ${RC(sumCm)} (${pctColab}%)</div>
       </div>
       <div class="kpi-block">
-        <div class="kpi-label">Nº de projetos colaborativos</div>
-        <div class="kpi-val">${totProj}</div>
-        <div class="kpi-sub">${ejs.filter(d => d.colab > 0).length} EJs com movimento colaborativo</div>
+        <div class="kpi-label">Gap p/ meta colaborativa</div>
+        <div class="kpi-val" style="color:var(--danger);">${RC(sumGapColab)}</div>
+        <div class="kpi-sub">${ejs.filter(d => d.cm > d.colab).length} EJs abaixo da meta colaborativa</div>
       </div>
       <div class="kpi-block">
         <div class="kpi-label">EJs com meta batida / no ritmo</div>
         <div class="kpi-val">${(M.counts.co['Meta batida'] || 0) + (M.counts.co['No ritmo'] || 0)}</div>
-        <div class="kpi-sub">Tracking de ${P.trk} meses</div>
+        <div class="kpi-sub">${M.counts.co['Meta batida'] || 0} com 100% da meta · Tracking de ${P.trk} meses</div>
       </div>
     `;
         $('indVisualBox').innerHTML = renderIndicatorEjTable('co', [
-          { label: 'Realizado Colab.', num: true, fn: d => R(d.colab) },
-          { label: 'Meta Colaborativa', num: true, fn: d => R(d.cm) },
-          { label: 'Esperado no tracking', num: true, fn: d => R(d.cesp) },
-          { label: 'Nº Projetos', num: true, fn: d => d.projColab || (d.colab > 0 ? 1 : 0) },
+          { label: 'Realizado', num: true, fn: d => R(d.colab) },
+          { label: 'Meta anual', num: true, fn: d => d.cm > 0 ? R(d.cm) : '–' },
+          { label: '% da meta', num: true, fn: d => d.cm > 0 ? Math.round((d.colab / d.cm) * 100) + '%' : '–' },
+          { label: 'Gap p/ meta anual', num: true, fn: d => d.cm > 0 ? (d.cm - d.colab > 0 ? R(d.cm - d.colab) : 'Acima da meta') : '–' },
+          { label: 'Esperado (tracking)', num: true, fn: d => d.cm > 0 ? R(d.cesp) : '–' },
+          { label: 'Diferença p/ esperado', num: true, fn: d => d.cm > 0 ? ((d.colab - d.cesp >= 0 ? '+' : '-') + R(Math.abs(d.colab - d.cesp))) : '–' },
           { label: 'Status', fn: d => renderTag(d.co) }
         ]);
       } else if (ind === 'cluster') {
@@ -3582,7 +3586,7 @@
             ${renderTag(d.ecm)}
           </div>
           <div style="font-size:13px;color:var(--text-secondary);">
-            ${d.eng} de ${d.mem} membros executando · Meta (75%): ${d.ealvo} membros · Faltam: ${Math.max(0, d.ealvo - d.eng)}
+            ${d.eng} de ${d.mem} membros engajados · Meta da EJ (${(d.ecmP || 0).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%): ${d.ealvo} membros · ${d.eng >= d.ealvo ? `Acima da meta (+${d.eng - d.ealvo})` : `Faltam: ${d.ealvo - d.eng}`}
           </div>
         </div>
 
@@ -3592,7 +3596,7 @@
             ${renderTag(d.cs)}
           </div>
           <div style="font-size:13px;color:var(--text-secondary);">
-            Nota média: ${d.nota ? d.nota.toFixed(2) : '—'} (Mínimo: ${d.calvo.toFixed(2)}) · Respostas: ${d.ctr} · Coleta: ${Math.round(d.coleta || 0)}%
+            Nota: ${d.ctr ? d.nota.toFixed(2) : '—'} (Meta da EJ: ${d.calvo.toFixed(2)}) · Contratos respondidos: ${d.ctr} · Coleta: ${d.coleta != null ? Math.round(d.coleta) + '%' : '—'}
           </div>
         </div>
 
@@ -3602,7 +3606,7 @@
             ${renderTag(d.co)}
           </div>
           <div style="font-size:13px;color:var(--text-secondary);">
-            Realizado: ${R(d.colab)} vs. Meta colaborativa: ${R(d.cm)} · Esperado no tracking: ${R(d.cesp)}
+            Realizado: ${R(d.colab)} vs. Meta da EJ: ${d.cm > 0 ? R(d.cm) : 'Sem meta'} · Esperado (${STORE.params.trk || 6}m): ${d.cm > 0 ? R(d.cesp) : '—'}
           </div>
         </div>
 
@@ -4020,7 +4024,7 @@
       if ($('paramMes')) $('paramMes').value = P.mes || (new Date().getMonth() + 1);
       if ($('paramCorte')) $('paramCorte').value = P.corte || P.mes || (new Date().getMonth() + 1);
       if ($('paramTrk')) $('paramTrk').value = P.trk || 6;
-      if ($('paramCmin')) $('paramCmin').value = P.cmin || 4.25;
+      if ($('paramCmin')) $('paramCmin').value = P.cmin || 3.5;
       for (let c = 1; c <= 5; c++) {
         const el = $('espC' + c);
         if (el) el.value = (P.espC && P.espC[c] != null) ? P.espC[c] : '';
@@ -4586,17 +4590,31 @@
     // --- ECM (ecm) ---
     registrarMetrica({
       id: 'ecm_pct',
-      rotulo: 'ECM — % de Membros Executando',
+      rotulo: 'ECM — % de Membros Engajados (Realizado)',
       indicador: 'ECM',
       tipo: 'percentual',
       extrair: (ej) => (Number(ej.mem) || 0) > 0 ? ((Number(ej.eng) || 0) / Number(ej.mem)) * 100 : 0
     });
     registrarMetrica({
+      id: 'ecm_meta_pct',
+      rotulo: 'ECM — Meta de Engajamento da EJ (%)',
+      indicador: 'ECM',
+      tipo: 'percentual',
+      extrair: (ej) => Number(ej.ecmP) || 0
+    });
+    registrarMetrica({
       id: 'ecm_executando',
-      rotulo: 'ECM — Nº de Membros Executando',
+      rotulo: 'ECM — Nº de Membros Engajados',
       indicador: 'ECM',
       tipo: 'numero',
       extrair: (ej) => Number(ej.eng) || 0
+    });
+    registrarMetrica({
+      id: 'ecm_meta_membros',
+      rotulo: 'ECM — Engajados Necessários (Meta da EJ)',
+      indicador: 'ECM',
+      tipo: 'numero',
+      extrair: (ej) => Number(ej.ealvo) || 0
     });
     registrarMetrica({
       id: 'ecm_membros',
@@ -4607,7 +4625,7 @@
     });
     registrarMetrica({
       id: 'ecm_faltam',
-      rotulo: 'ECM — Membros que Faltam para a Meta',
+      rotulo: 'ECM — Membros que Faltam para a Meta da EJ',
       indicador: 'ECM',
       tipo: 'numero',
       extrair: (ej) => Math.max(0, (Number(ej.ealvo) || 0) - (Number(ej.eng) || 0))
@@ -4617,12 +4635,12 @@
       rotulo: 'ECM — Status',
       indicador: 'ECM',
       tipo: 'status',
-      opcoes: ['Meta batida', 'Atenção', 'Abaixo do esperado', 'Sem movimento'],
+      opcoes: ['Meta batida', 'Abaixo do esperado', 'Sem movimento'],
       extrair: (ej) => Array.isArray(ej.ecm) ? ej.ecm[0] : (ej.ecm || 'Sem movimento')
     });
     registrarMetrica({
       id: 'ecm_meta_batida',
-      rotulo: 'ECM — Meta Batida?',
+      rotulo: 'ECM — Meta da EJ Batida?',
       indicador: 'ECM',
       tipo: 'booleano',
       extrair: (ej) => Array.isArray(ej.ecm) ? ej.ecm[0] === 'Meta batida' : false
@@ -4662,7 +4680,7 @@
     });
     registrarMetrica({
       id: 'cs_minimo',
-      rotulo: 'CSAT — Mínimo Exigido do Cluster',
+      rotulo: 'CSAT — Meta de Nota da EJ',
       indicador: 'CSAT',
       tipo: 'numero',
       extrair: (ej) => Number(ej.calvo) || 0
@@ -4672,7 +4690,7 @@
       rotulo: 'CSAT — Status',
       indicador: 'CSAT',
       tipo: 'status',
-      opcoes: ['Meta batida', 'Atenção', 'Abaixo do esperado', 'Sem movimento'],
+      opcoes: ['Meta batida', 'Abaixo do esperado', 'Sem movimento'],
       extrair: (ej) => Array.isArray(ej.cs) ? ej.cs[0] : (ej.cs || 'Sem movimento')
     });
     registrarMetrica({
