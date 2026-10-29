@@ -3490,8 +3490,14 @@
     // ============================================================================
     // 10. PERFIL DA EJ (PAINEL LATERAL COM 4 ABAS E PAGINAÇÃO SOB DEMANDA)
     // ============================================================================
-    function openEjDrawer(cod) {
-      const ej = STORE.ejs.find(d => String(d.cod) === String(cod));
+    function openEjDrawer(codOrName) {
+      if (codOrName == null) return;
+      const q = String(codOrName).trim().toLowerCase();
+      const ej = STORE.ejs.find(d =>
+        String(d.cod).trim().toLowerCase() === q ||
+        String(d.id).trim().toLowerCase() === q ||
+        String(d.nome || '').trim().toLowerCase() === q
+      );
       if (!ej) return;
       STORE.ui.drawerEjCod = ej.cod;
       STORE.ui.drawerAcompLimit = 5;
@@ -3505,6 +3511,9 @@
       $('ejDrawer').classList.add('open');
       renderDrawerBody();
     }
+
+    const openEjProfile = openEjDrawer;
+    window.openEjProfile = openEjDrawer;
 
     function closeEjDrawer() {
       STORE.ui.drawerEjCod = null;
@@ -4251,7 +4260,7 @@
         STORE.params.mes = num($('paramMes').value) || 10;
         STORE.params.corte = num($('paramCorte').value) || STORE.params.mes;
         STORE.params.trk = num($('paramTrk').value) || 6;
-        STORE.params.cmin = num($('paramCmin').value) || 4.25;
+        STORE.params.cmin = num($('paramCmin').value) || 3.5;
         STORE.params.espC = {
           1: $('espC1').value.trim(),
           2: $('espC2').value.trim(),
@@ -4513,6 +4522,8 @@
       }
       return Boolean(v);
     }
+
+    const fmtBRL = v => typeof R === 'function' ? R(v) : ('R$ ' + Math.round(Number(v) || 0).toLocaleString('pt-BR'));
 
     // --- Faturamento (fa) ---
     registrarMetrica({
@@ -7367,7 +7378,8 @@
 
       // Clique no nome da EJ abre openEjProfile(cod)
       container.querySelectorAll('[data-open-ej]').forEach(link => {
-        link.addEventListener('click', () => {
+        link.addEventListener('click', (e) => {
+          e.stopPropagation();
           openEjProfile(link.dataset.openEj);
         });
       });
