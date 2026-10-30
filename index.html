@@ -4473,6 +4473,97 @@
      */
     const METRICAS = {};
 
+    // Lista oficial das 6 métricas exibidas nos seletores da aba de Palcos (Palcos das EJs e Palcos do Núcleo)
+    const METRICAS_PALCOS_IDS = [
+      'ecm_pct',
+      'ecm_pct_meta',
+      'fa_pct_meta',
+      'cs_coleta',
+      'co_pct_meta',
+      'cu_subindo_mes'
+    ];
+
+    function obterMesContexto(ctx) {
+      const m = Number(ctx && ctx.mesSelecionado) || (typeof STORE !== 'undefined' && STORE.params ? Number(STORE.params.mes) : 12) || 12;
+      return Math.min(12, Math.max(1, Math.round(m)));
+    }
+
+    /**
+     * Calcula se a EJ está subindo de Cluster no mês selecionado (1 a 12),
+     * comparando a pontuação atual com a régua de subida proporcional ao mês (régua anual × mês/12)
+     * e respeitando a trava de projeto colaborativo para subida aos Clusters 4 e 5.
+     */
+    function avaliarSubidaClusterNoMes(ej, mesRef) {
+      const mes = Math.min(12, Math.max(1, Math.round(Number(mesRef) || 12)));
+      const cl = Number(ej && ej.cl) || 0;
+      const mesNome = MN[mes - 1] || `Mês ${mes}`;
+      if (cl < 1 || cl > 5) {
+        return {
+          subindo: false,
+          mes,
+          mesNome,
+          pontuacaoAtual: 0,
+          reguaAnual: 0,
+          reguaSubidaMes: 0,
+          faltaPontos: 0,
+          travaColabBloqueada: false,
+          motivo: 'EJ sem cluster definido'
+        };
+      }
+      if (cl === 5) {
+        return {
+          subindo: false,
+          mes,
+          mesNome,
+          pontuacaoAtual: Number(ej.idx) || 0,
+          reguaAnual: LOW[4],
+          reguaSubidaMes: 0,
+          faltaPontos: 0,
+          travaColabBloqueada: false,
+          motivo: 'já está no Cluster 5 (nível máximo)'
+        };
+      }
+
+      const reguaAnual = (Number(ej.targetSubida) || 0) > 0 ? Number(ej.targetSubida) : LOW[cl];
+      const reguaSubidaMes = reguaAnual * (mes / 12);
+      const pontuacaoAtual = Number(ej.idx) || 0;
+      const projColab = (ej.projColab !== undefined && ej.projColab !== null)
+        ? (Number(ej.projColab) || 0)
+        : ((Number(ej.colab) || 0) > 0 ? 1 : 0);
+      const exigeColab = (cl === 3 || cl === 4);
+      const travaColabBloqueada = exigeColab && projColab <= 0;
+      const atingiuPontos = pontuacaoAtual + 1e-6 >= reguaSubidaMes;
+      const subindo = atingiuPontos && !travaColabBloqueada;
+      const faltaPontos = Math.max(0, reguaSubidaMes - pontuacaoAtual);
+
+      const fmtPts = v => v >= 1e6
+        ? (v / 1e6).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' M'
+        : Math.round(v).toLocaleString('pt-BR') + ' pts';
+
+      let motivo = '';
+      if (subindo) {
+        motivo = `subindo para Cluster ${cl + 1} em ${mesNome} (${fmtPts(pontuacaoAtual)} ≥ ${fmtPts(reguaSubidaMes)})`;
+      } else if (!atingiuPontos && travaColabBloqueada) {
+        motivo = `atual ${fmtPts(pontuacaoAtual)} vs. régua de ${mesNome} ${fmtPts(reguaSubidaMes)} (faltam ${fmtPts(faltaPontos)} e 1 projeto colaborativo)`;
+      } else if (!atingiuPontos) {
+        motivo = `atual ${fmtPts(pontuacaoAtual)} vs. régua de ${mesNome} ${fmtPts(reguaSubidaMes)} (faltam ${fmtPts(faltaPontos)})`;
+      } else if (travaColabBloqueada) {
+        motivo = `pontuação atingida (${fmtPts(pontuacaoAtual)} ≥ ${fmtPts(reguaSubidaMes)}), mas falta projeto colaborativo p/ Cluster ${cl + 1}`;
+      }
+
+      return {
+        subindo,
+        mes,
+        mesNome,
+        pontuacaoAtual,
+        reguaAnual,
+        reguaSubidaMes,
+        faltaPontos,
+        travaColabBloqueada,
+        motivo
+      };
+    }
+
     function registrarMetrica(def) {
       if (!def || !def.id) throw new Error('Métrica inválida: id obrigatório.');
       METRICAS[def.id] = {
@@ -4481,15 +4572,19 @@
         indicador: def.indicador || 'Geral',
         tipo: def.tipo || 'numero',
         opcoes: def.opcoes || null,
+        palco: Boolean(def.palco),
         extrair: typeof def.extrair === 'function'
-          ? (ej) => {
+          ? (ej, ctx) => {
               if (!ej) return null;
               if (Object.prototype.hasOwnProperty.call(ej, def.id) && ej[def.id] !== undefined) {
                 return ej[def.id];
               }
-              return def.extrair(ej);
+              return def.extrair(ej, ctx);
             }
           : (ej) => (ej ? ej[def.id] : null),
+        extrairNucleo: typeof def.extrairNucleo === 'function' ? def.extrairNucleo : null,
+        formatoNucleo: typeof def.formatoNucleo === 'function' ? def.formatoNucleo : null,
+        detalharCondicao: typeof def.detalharCondicao === 'function' ? def.detalharCondicao : null,
         formatar: typeof def.formatar === 'function'
           ? def.formatar
           : (v) => formatarValorMetricaPadrao(v, def.tipo)
@@ -4528,10 +4623,20 @@
     // --- Faturamento (fa) ---
     registrarMetrica({
       id: 'fa_pct_meta',
-      rotulo: 'Faturamento — % da Meta Anual',
+      rotulo: 'Faturamento — % da Meta Batida',
       indicador: 'Faturamento',
       tipo: 'percentual',
-      extrair: (ej) => (Number(ej.pct) || 0) * 100
+      palco: true,
+      extrair: (ej) => {
+        if (ej.pct !== undefined && ej.pct !== null) return (Number(ej.pct) || 0) * 100;
+        const meta = Number(ej.meta) || 0;
+        return meta > 0 ? ((Number(ej.fat) || 0) / meta) * 100 : 0;
+      },
+      extrairNucleo: (ejs) => {
+        const sumFat = ejs.reduce((s, d) => s + (Number(d.fat) || 0), 0);
+        const sumMeta = ejs.reduce((s, d) => s + (Number(d.meta) || 0), 0);
+        return sumMeta > 0 ? (sumFat / sumMeta) * 100 : 0;
+      }
     });
     registrarMetrica({
       id: 'fa_realizado',
@@ -4601,10 +4706,47 @@
     // --- ECM (ecm) ---
     registrarMetrica({
       id: 'ecm_pct',
-      rotulo: 'ECM — % de Membros Engajados (Realizado)',
+      rotulo: 'ECM — % Batida Geral',
       indicador: 'ECM',
       tipo: 'percentual',
-      extrair: (ej) => (Number(ej.mem) || 0) > 0 ? ((Number(ej.eng) || 0) / Number(ej.mem)) * 100 : 0
+      palco: true,
+      extrair: (ej) => (Number(ej.mem) || 0) > 0 ? ((Number(ej.eng) || 0) / Number(ej.mem)) * 100 : 0,
+      extrairNucleo: (ejs) => {
+        const totMem = ejs.reduce((s, d) => s + (Number(d.mem) || 0), 0);
+        const totEng = ejs.reduce((s, d) => s + (Number(d.eng) || 0), 0);
+        return totMem > 0 ? (totEng / totMem) * 100 : 0;
+      }
+    });
+    registrarMetrica({
+      id: 'ecm_pct_meta',
+      rotulo: 'ECM — % Batido da Meta',
+      indicador: 'ECM',
+      tipo: 'percentual',
+      palco: true,
+      extrair: (ej) => {
+        const mem = Number(ej.mem) || 0;
+        if (mem <= 0) return 0;
+        const eng = Number(ej.eng) || 0;
+        const ealvo = (ej.ealvo !== undefined && ej.ealvo !== null)
+          ? (Number(ej.ealvo) || 0)
+          : Math.round(((Number(ej.ecmP) || 0) / 100) * mem);
+        if (ealvo > 0) return (eng / ealvo) * 100;
+        const ecmP = Number(ej.ecmP) || 0;
+        if (ecmP > 0) return (((eng / mem) * 100) / ecmP) * 100;
+        return eng > 0 ? 100 : 0;
+      },
+      extrairNucleo: (ejs) => {
+        let totEng = 0, totAlvo = 0;
+        ejs.forEach(d => {
+          const mem = Number(d.mem) || 0;
+          if (mem <= 0) return;
+          totEng += Number(d.eng) || 0;
+          totAlvo += (d.ealvo !== undefined && d.ealvo !== null)
+            ? (Number(d.ealvo) || 0)
+            : Math.round(((Number(d.ecmP) || 0) / 100) * mem);
+        });
+        return totAlvo > 0 ? (totEng / totAlvo) * 100 : 0;
+      }
     });
     registrarMetrica({
       id: 'ecm_meta_pct',
@@ -4684,10 +4826,17 @@
     });
     registrarMetrica({
       id: 'cs_coleta',
-      rotulo: 'CSAT — Taxa de Coleta (%)',
+      rotulo: 'CSAT — % Coletada',
       indicador: 'CSAT',
       tipo: 'percentual',
-      extrair: (ej) => Number(ej.coleta) || 0
+      palco: true,
+      extrair: (ej) => Number(ej.coleta) || 0,
+      extrairNucleo: (ejs) => {
+        const comCtr = ejs.filter(d => (Number(d.ctr) || 0) > 0);
+        const comColeta = (comCtr.length ? comCtr : ejs).filter(d => (Number(d.coleta) || 0) > 0);
+        if (!comColeta.length) return 0;
+        return comColeta.reduce((s, d) => s + (Number(d.coleta) || 0), 0) / comColeta.length;
+      }
     });
     registrarMetrica({
       id: 'cs_minimo',
@@ -4734,10 +4883,16 @@
       rotulo: 'Colaborativo — % da Meta',
       indicador: 'Colaborativo',
       tipo: 'percentual',
+      palco: true,
       extrair: (ej) => {
         const cm = Number(ej.cm) || 0;
         const colab = Number(ej.colab) || 0;
         return cm > 0 ? (colab / cm) * 100 : (colab > 0 ? 100 : 0);
+      },
+      extrairNucleo: (ejs) => {
+        const sumColab = ejs.reduce((s, d) => s + (Number(d.colab) || 0), 0);
+        const sumCm = ejs.reduce((s, d) => s + (Number(d.cm) || 0), 0);
+        return sumCm > 0 ? (sumColab / sumCm) * 100 : 0;
       }
     });
     registrarMetrica({
@@ -4764,6 +4919,36 @@
     });
 
     // --- Cluster (cu) ---
+    registrarMetrica({
+      id: 'cu_subindo_mes',
+      rotulo: 'Cluster — Subindo de Cluster no Mês Selecionado',
+      indicador: 'Cluster',
+      tipo: 'booleano',
+      palco: true,
+      extrair: (ej, ctx) => avaliarSubidaClusterNoMes(ej, obterMesContexto(ctx)).subindo,
+      extrairNucleo: (ejs, ctx) => {
+        const mes = obterMesContexto(ctx);
+        return ejs.filter(d => avaliarSubidaClusterNoMes(d, mes).subindo).length;
+      },
+      formatoNucleo: (v) => `${Math.round(Number(v) || 0)} EJs`,
+      detalharCondicao: (ej, ctx, bateu, valorAtual, valorExigido, operador) => {
+        const det = avaliarSubidaClusterNoMes(ej, obterMesContexto(ctx));
+        const atualFmt = det.subindo ? 'Sim' : 'Não';
+        const exigFmt = normalizarBooleano(valorExigido) ? 'Sim' : 'Não';
+        if (bateu) {
+          return {
+            diferenca: 0,
+            diferencaFmt: '',
+            explicacao: `Cluster — Subindo em ${det.mesNome}: ${atualFmt} (${det.motivo})`
+          };
+        }
+        return {
+          diferenca: det.faltaPontos || 0,
+          diferencaFmt: det.motivo,
+          explicacao: `Cluster — Subindo em ${det.mesNome}: ${atualFmt} vs. exigido ${operador} ${exigFmt} (${det.motivo})`
+        };
+      }
+    });
     registrarMetrica({
       id: 'cu_atual',
       rotulo: 'Cluster — Nível Atual (1 a 5)',
@@ -4874,7 +5059,7 @@
      * Avalia uma única condição { metrica, operador, valor } para uma EJ.
      * Retorna explicação detalhada (valor atual vs. exigido e quanto falta).
      */
-    function avaliarCondicao(condicao, ej) {
+    function avaliarCondicao(condicao, ej, ctx) {
       if (!condicao || !condicao.metrica) {
         return {
           bateu: true,
@@ -4900,12 +5085,32 @@
       };
 
       const operador = condicao.operador || '>=';
-      const valorAtual = def.extrair(ej);
+      const valorAtual = def.extrair(ej, ctx);
       const valorExigido = condicao.valor;
       const bateu = compararValores(valorAtual, operador, valorExigido, def.tipo);
 
       const valorAtualFmt = def.formatar(valorAtual);
       const valorExigidoFmt = def.formatar(valorExigido);
+
+      if (typeof def.detalharCondicao === 'function') {
+        const det = def.detalharCondicao(ej, ctx, bateu, valorAtual, valorExigido, operador);
+        if (det && typeof det === 'object') {
+          return {
+            bateu,
+            metrica: def.id,
+            rotulo: def.rotulo,
+            tipo: def.tipo,
+            operador,
+            valorAtual,
+            valorExigido,
+            valorAtualFmt,
+            valorExigidoFmt,
+            diferenca: det.diferenca ?? 0,
+            diferencaFmt: det.diferencaFmt ?? '',
+            explicacao: det.explicacao || `${def.rotulo}: ${valorAtualFmt}`
+          };
+        }
+      }
 
       let diferenca = 0;
       let diferencaFmt = '';
@@ -4947,7 +5152,7 @@
      *   { logica: 'E' | 'OU', condicoes: [ { metrica, operador, valor } | SubRequisito ] }
      * ou um array direto de condições (tratado como 'E').
      */
-    function avaliarRequisito(requisito, ej) {
+    function avaliarRequisito(requisito, ej, ctx) {
       if (!requisito) {
         return {
           bateu: true,
@@ -4961,7 +5166,7 @@
 
       // Se uma condição única foi passada diretamente como requisito
       if (requisito.metrica && !Array.isArray(requisito.condicoes)) {
-        const av = avaliarCondicao(requisito, ej);
+        const av = avaliarCondicao(requisito, ej, ctx);
         return {
           bateu: av.bateu,
           logica: 'E',
@@ -4996,7 +5201,7 @@
 
       for (const item of lista) {
         if (item && (Array.isArray(item.condicoes) || Array.isArray(item))) {
-          const sub = avaliarRequisito(item, ej);
+          const sub = avaliarRequisito(item, ej, ctx);
           avaliacoes.push(sub);
           if (sub.bateu) {
             condicoesBatidas.push(...sub.condicoesBatidas);
@@ -5004,7 +5209,7 @@
             condicoesFalhas.push(...sub.condicoesFalhas);
           }
         } else {
-          const av = avaliarCondicao(item, ej);
+          const av = avaliarCondicao(item, ej, ctx);
           avaliacoes.push(av);
           if (av.bateu) {
             condicoesBatidas.push(av);
@@ -5041,13 +5246,17 @@
      * Regra 1: a EJ fica no MAIOR nível em que cumpre todo o requisito.
      * Se exigirNiveisAnteriores=true, só sobe se cumpriu todos os níveis anteriores em ordem.
      */
-    function avaliarPalcoEj(palco, dadosEjs) {
+    function avaliarPalcoEj(palco, dadosEjs, ctx) {
+      const ctxPalco = Object.assign({}, ctx || {});
+      if (palco && palco.mesReferencia) {
+        ctxPalco.mesSelecionado = Math.min(12, Math.max(1, Math.round(Number(palco.mesReferencia))));
+      }
       const niveisOrdenados = [...(palco.niveis || [])].sort((a, b) => (Number(a.ordem) || 0) - (Number(b.ordem) || 0));
       const exigirAnteriores = Boolean(palco.exigirNiveisAnteriores);
 
       const resultadosPorEj = dadosEjs.map(ej => {
         const avaliacoesPorNivel = niveisOrdenados.map(nivel => {
-          const av = avaliarRequisito(nivel.requisito, ej);
+          const av = avaliarRequisito(nivel.requisito, ej, ctxPalco);
           return {
             ordem: Number(nivel.ordem) || 0,
             nome: nivel.nome || `Nível ${nivel.ordem}`,
@@ -5134,9 +5343,9 @@
 
     /**
      * Avalia um agregado do Núcleo sobre todas as EJs:
-     * agregado = { tipo: "contagem"|"percentual"|"soma"|"media", metrica?, condicaoEj?: requisito, operador, valor }
+     * agregado = { tipo: "consolidado"|"contagem"|"percentual"|"soma"|"media", metrica?, condicaoEj?: requisito, operador, valor }
      */
-    function avaliarAgregadoNucleo(agregado, dadosEjs) {
+    function avaliarAgregadoNucleo(agregado, dadosEjs, ctx) {
       if (!agregado) {
         return {
           bateu: true,
@@ -5165,42 +5374,76 @@
          (Array.isArray(agregado.condicaoEj) && agregado.condicaoEj.length > 0))
       );
 
+      const defMetrica = agregado.metrica ? METRICAS[agregado.metrica] : null;
       const ejsQueCumprem = [];
       const ejsPendentes = [];
 
-      dadosEjs.forEach(ej => {
-        const av = temCondicaoEj ? avaliarRequisito(agregado.condicaoEj, ej) : { bateu: true, resumoFalta: '' };
-        if (av.bateu) {
-          ejsQueCumprem.push({ cod: ej.cod, nome: ej.nome });
-        } else {
-          ejsPendentes.push({ cod: ej.cod, nome: ej.nome, oQueFalta: av.resumoFalta });
-        }
-      });
+      if (tipo === 'consolidado' && defMetrica && !temCondicaoEj) {
+        // Detalhamento informativo por EJ em relação à própria métrica consolidada
+        const condInfo = defMetrica.tipo === 'booleano'
+          ? { metrica: defMetrica.id, operador: '=', valor: true }
+          : { metrica: defMetrica.id, operador, valor: valorExigido };
+        dadosEjs.forEach(ej => {
+          const av = avaliarCondicao(condInfo, ej, ctx);
+          if (av.bateu) {
+            ejsQueCumprem.push({ cod: ej.cod, nome: ej.nome });
+          } else {
+            ejsPendentes.push({ cod: ej.cod, nome: ej.nome, oQueFalta: av.explicacao });
+          }
+        });
+      } else {
+        dadosEjs.forEach(ej => {
+          const av = temCondicaoEj ? avaliarRequisito(agregado.condicaoEj, ej, ctx) : { bateu: true, resumoFalta: '' };
+          if (av.bateu) {
+            ejsQueCumprem.push({ cod: ej.cod, nome: ej.nome });
+          } else {
+            ejsPendentes.push({ cod: ej.cod, nome: ej.nome, oQueFalta: av.resumoFalta });
+          }
+        });
+      }
 
-      const defMetrica = agregado.metrica ? METRICAS[agregado.metrica] : null;
-      const baseCalculo = temCondicaoEj ? dadosEjs.filter(ej => avaliarRequisito(agregado.condicaoEj, ej).bateu) : dadosEjs;
+      const baseCalculo = temCondicaoEj ? dadosEjs.filter(ej => avaliarRequisito(agregado.condicaoEj, ej, ctx).bateu) : dadosEjs;
 
       let valorAtual = 0;
       let formatarValor = (v) => Number(v || 0).toLocaleString('pt-BR', { maximumFractionDigits: 2 });
 
-      if (tipo === 'contagem') {
+      if (tipo === 'consolidado') {
+        const m = defMetrica || METRICAS.fa_pct_meta;
+        if (typeof m.extrairNucleo === 'function') {
+          valorAtual = Number(m.extrairNucleo(baseCalculo, ctx)) || 0;
+        } else if (m.tipo === 'booleano') {
+          valorAtual = baseCalculo.filter(ej => normalizarBooleano(m.extrair(ej, ctx))).length;
+        } else {
+          const soma = baseCalculo.reduce((acc, ej) => acc + (Number(m.extrair(ej, ctx)) || 0), 0);
+          valorAtual = baseCalculo.length > 0 ? soma / baseCalculo.length : 0;
+        }
+        formatarValor = m.formatoNucleo
+          ? m.formatoNucleo
+          : (m.tipo === 'booleano' ? (v => `${Math.round(Number(v) || 0)} EJs`) : m.formatar);
+      } else if (tipo === 'contagem') {
         valorAtual = ejsQueCumprem.length;
         formatarValor = (v) => `${Math.round(Number(v) || 0)} EJs`;
       } else if (tipo === 'percentual') {
         if (temCondicaoEj || !defMetrica) {
           valorAtual = totalEjs > 0 ? (ejsQueCumprem.length / totalEjs) * 100 : 0;
         } else {
-          const soma = baseCalculo.reduce((acc, ej) => acc + (Number(defMetrica.extrair(ej)) || 0), 0);
+          const soma = baseCalculo.reduce((acc, ej) => acc + (Number(defMetrica.extrair(ej, ctx)) || 0), 0);
           valorAtual = baseCalculo.length > 0 ? soma / baseCalculo.length : 0;
         }
         formatarValor = (v) => `${(Number(v) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 1 })}%`;
       } else if (tipo === 'soma') {
-        valorAtual = baseCalculo.reduce((acc, ej) => acc + (defMetrica ? (Number(defMetrica.extrair(ej)) || 0) : 0), 0);
+        valorAtual = baseCalculo.reduce((acc, ej) => acc + (defMetrica ? (Number(defMetrica.extrair(ej, ctx)) || 0) : 0), 0);
         if (defMetrica) formatarValor = defMetrica.formatar;
       } else if (tipo === 'media') {
-        const soma = baseCalculo.reduce((acc, ej) => acc + (defMetrica ? (Number(defMetrica.extrair(ej)) || 0) : 0), 0);
-        valorAtual = baseCalculo.length > 0 ? soma / baseCalculo.length : 0;
-        if (defMetrica) formatarValor = defMetrica.formatar;
+        if (defMetrica && defMetrica.tipo === 'booleano') {
+          const qtd = baseCalculo.filter(ej => normalizarBooleano(defMetrica.extrair(ej, ctx))).length;
+          valorAtual = baseCalculo.length > 0 ? (qtd / baseCalculo.length) * 100 : 0;
+          formatarValor = (v) => `${(Number(v) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 1 })}%`;
+        } else {
+          const soma = baseCalculo.reduce((acc, ej) => acc + (defMetrica ? (Number(defMetrica.extrair(ej, ctx)) || 0) : 0), 0);
+          valorAtual = baseCalculo.length > 0 ? soma / baseCalculo.length : 0;
+          if (defMetrica) formatarValor = defMetrica.formatar;
+        }
       }
 
       const bateu = compararValores(valorAtual, operador, valorExigido, 'numero');
@@ -5219,9 +5462,13 @@
         }
       }
 
+      const prefixoMetrica = (tipo === 'consolidado' || tipo === 'media' || tipo === 'soma') && defMetrica
+        ? `${defMetrica.rotulo} — `
+        : '';
+
       const explicacao = bateu
-        ? `Atingido: ${valorAtualFmt} (meta: ${operador} ${valorExigidoFmt})`
-        : `Atual: ${valorAtualFmt} vs. exigido ${operador} ${valorExigidoFmt}${diferencaFmt ? ` (${diferencaFmt})` : ''}`;
+        ? `${prefixoMetrica}Atingido: ${valorAtualFmt} (meta: ${operador} ${valorExigidoFmt})`
+        : `${prefixoMetrica}Atual: ${valorAtualFmt} vs. exigido ${operador} ${valorExigidoFmt}${diferencaFmt ? ` (${diferencaFmt})` : ''}`;
 
       return {
         bateu,
@@ -5241,15 +5488,67 @@
     }
 
     /**
+     * Avalia um nível de Palco do Núcleo (suporta `nivel.agregado` único ou múltiplos `nivel.agregados` combinados por E / OU).
+     */
+    function avaliarNivelPalcoNucleo(nivel, dadosEjs, ctx) {
+      const lista = (Array.isArray(nivel.agregados) && nivel.agregados.length > 0)
+        ? nivel.agregados
+        : (nivel.agregado ? [nivel.agregado] : []);
+      if (lista.length <= 1) {
+        return avaliarAgregadoNucleo(lista[0] || null, dadosEjs, ctx);
+      }
+      const logica = String(nivel.logica || 'E').toUpperCase() === 'OU' ? 'OU' : 'E';
+      const subAvs = lista.map(ag => avaliarAgregadoNucleo(ag, dadosEjs, ctx));
+      const bateu = logica === 'OU' ? subAvs.some(a => a.bateu) : subAvs.every(a => a.bateu);
+      const joiner = logica === 'OU' ? ' OU ' : ' | ';
+      const explicacao = subAvs.map(a => a.explicacao).join(joiner);
+      const falhas = subAvs.filter(a => !a.bateu);
+
+      // União/interseção de EJs nos critérios
+      const mapPend = new Map();
+      subAvs.forEach(a => {
+        (a.ejsPendentes || []).forEach(p => {
+          if (!mapPend.has(p.cod)) mapPend.set(p.cod, { cod: p.cod, nome: p.nome, motivos: [] });
+          if (p.oQueFalta) mapPend.get(p.cod).motivos.push(p.oQueFalta);
+        });
+      });
+      const ejsQueCumprem = [];
+      const ejsPendentes = [];
+      dadosEjs.forEach(ej => {
+        if (!mapPend.has(ej.cod)) {
+          ejsQueCumprem.push({ cod: ej.cod, nome: ej.nome });
+        } else {
+          const item = mapPend.get(ej.cod);
+          ejsPendentes.push({ cod: ej.cod, nome: ej.nome, oQueFalta: item.motivos.join(' · ') });
+        }
+      });
+
+      return {
+        bateu,
+        logica,
+        subAvaliacoes: subAvs,
+        diferenca: falhas[0] ? falhas[0].diferenca : 0,
+        diferencaFmt: falhas.map(f => f.diferencaFmt).filter(Boolean).join(joiner),
+        explicacao,
+        ejsQueCumprem,
+        ejsPendentes
+      };
+    }
+
+    /**
      * Avalia um Palco do Núcleo sobre todas as EJs.
      * Regra 2: O nível atingido é o maior cujo agregado é satisfeito.
      */
-    function avaliarPalcoNucleo(palcoNucleo, dadosEjs) {
+    function avaliarPalcoNucleo(palcoNucleo, dadosEjs, ctx) {
+      const ctxPalco = Object.assign({}, ctx || {});
+      if (palcoNucleo && palcoNucleo.mesReferencia) {
+        ctxPalco.mesSelecionado = Math.min(12, Math.max(1, Math.round(Number(palcoNucleo.mesReferencia))));
+      }
       const niveisOrdenados = [...(palcoNucleo.niveis || [])].sort((a, b) => (Number(a.ordem) || 0) - (Number(b.ordem) || 0));
       const exigirAnteriores = Boolean(palcoNucleo.exigirNiveisAnteriores);
 
       const niveisAvaliados = niveisOrdenados.map(nivel => {
-        const av = avaliarAgregadoNucleo(nivel.agregado, dadosEjs);
+        const av = avaliarNivelPalcoNucleo(nivel, dadosEjs, ctxPalco);
         return {
           ordem: Number(nivel.ordem) || 0,
           nome: nivel.nome || `Nível ${nivel.ordem}`,
@@ -5304,13 +5603,13 @@
      * Compara duas EJs segundo uma lista de critérios de ordenação [{ metrica, ordem: 'maior'|'menor' }].
      * Retorna < 0 se A vem antes de B, > 0 se B vem antes de A, e 0 se empatarem em todos os critérios.
      */
-    function compararEjsPorCriterios(ejA, ejB, criterios) {
+    function compararEjsPorCriterios(ejA, ejB, criterios, ctx) {
       const eps = 1e-9;
       for (const crit of criterios) {
         if (!crit || !crit.metrica) continue;
         const def = METRICAS[crit.metrica];
-        const vA = def ? (Number(def.extrair(ejA)) || 0) : (Number(ejA[crit.metrica]) || 0);
-        const vB = def ? (Number(def.extrair(ejB)) || 0) : (Number(ejB[crit.metrica]) || 0);
+        const vA = def ? (Number(def.extrair(ejA, ctx)) || 0) : (Number(ejA[crit.metrica]) || 0);
+        const vB = def ? (Number(def.extrair(ejB, ctx)) || 0) : (Number(ejB[crit.metrica]) || 0);
         if (Math.abs(vA - vB) > eps) {
           const menorPrimeiro = String(crit.ordem || 'maior').toLowerCase() === 'menor';
           return menorPrimeiro ? (vA - vB) : (vB - vA);
@@ -5327,7 +5626,7 @@
      * - modo "topN": ranking pela métrica principal + desempate em ordem; se ainda empatar, mantém empatadas e sinaliza.
      * - Explicabilidade completa para vencedoras e não vencedoras.
      */
-    function avaliarPremiacoes(premiacoes, dadosEjs) {
+    function avaliarPremiacoes(premiacoes, dadosEjs, ctx) {
       const listaOrdenada = [...(premiacoes || [])].sort((a, b) => {
         const pA = Number(a.prioridade) || 9999;
         const pB = Number(b.prioridade) || 9999;
@@ -5366,7 +5665,7 @@
 
         dadosEjs.forEach(ej => {
           const codStr = String(ej.cod);
-          const avElegibilidade = avaliarRequisito(prem.elegibilidade, ej);
+          const avElegibilidade = avaliarRequisito(prem.elegibilidade, ej, ctx);
 
           // Verifica se esta EJ já venceu alguma premiação listada em naoAcumulaCom
           const premiosConflitantes = [];
@@ -5379,7 +5678,7 @@
 
           const valoresRanking = criteriosRanking.map(c => {
             const def = METRICAS[c.metrica];
-            const val = def ? def.extrair(ej) : ej[c.metrica];
+            const val = def ? def.extrair(ej, ctx) : ej[c.metrica];
             return {
               metrica: c.metrica,
               rotulo: def ? def.rotulo : c.metrica,
@@ -5452,14 +5751,14 @@
           });
         } else {
           // Ordena candidatas pelos critérios (ranking principal + desempates)
-          candidatas.sort((a, b) => compararEjsPorCriterios(a.ej, b.ej, criteriosRanking));
+          candidatas.sort((a, b) => compararEjsPorCriterios(a.ej, b.ej, criteriosRanking, ctx));
 
           // Atribui posição de ranking ("competition ranking": 1, 2, 2, 4...)
           for (let i = 0; i < candidatas.length; i++) {
             if (i === 0) {
               candidatas[i].posicao = 1;
             } else {
-              const cmp = compararEjsPorCriterios(candidatas[i - 1].ej, candidatas[i].ej, criteriosRanking);
+              const cmp = compararEjsPorCriterios(candidatas[i - 1].ej, candidatas[i].ej, criteriosRanking, ctx);
               candidatas[i].posicao = (cmp === 0) ? candidatas[i - 1].posicao : (i + 1);
             }
           }
@@ -5538,6 +5837,8 @@
           calculadoEm: new Date().toISOString(),
           congelado: false,
           totalEjs: 0,
+          mesReferencia: 12,
+          mesReferenciaNome: 'Dezembro',
           palcosEj: [],
           palcosNucleo: [],
           premiacoes: []
@@ -5552,16 +5853,21 @@
         };
       }
 
+      const mesBruto = Number(opcoes.mesReferencia || evento.mesReferencia) || (typeof STORE !== 'undefined' && STORE.params ? Number(STORE.params.mes) : 12) || 12;
+      const mesSelecionado = Math.min(12, Math.max(1, Math.round(mesBruto)));
+      const ctx = { mesSelecionado };
       const listaEjs = Array.isArray(dadosEjs) ? dadosEjs : [];
 
-      const palcosEj = (evento.palcosEj || []).map(palco => avaliarPalcoEj(palco, listaEjs));
-      const palcosNucleo = (evento.palcosNucleo || []).map(palco => avaliarPalcoNucleo(palco, listaEjs));
-      const premiacoes = avaliarPremiacoes(evento.premiacoes || [], listaEjs);
+      const palcosEj = (evento.palcosEj || []).map(palco => avaliarPalcoEj(palco, listaEjs, ctx));
+      const palcosNucleo = (evento.palcosNucleo || []).map(palco => avaliarPalcoNucleo(palco, listaEjs, ctx));
+      const premiacoes = avaliarPremiacoes(evento.premiacoes || [], listaEjs, ctx);
 
       return {
         eventoId: evento.id || null,
         eventoNome: evento.nome || '',
         statusEvento: evento.status || 'rascunho',
+        mesReferencia: mesSelecionado,
+        mesReferenciaNome: MN[mesSelecionado - 1] || `Mês ${mesSelecionado}`,
         calculadoEm: new Date().toISOString(),
         congelado: false,
         totalEjs: listaEjs.length,
@@ -5575,10 +5881,11 @@
      * Suite de testes automatizados do motor de eventos (rodável no console via rodarTestesMotorEventos()).
      * Cobre:
      * 1. Palcos das EJs (exigirNiveisAnteriores = false vs true) e explicabilidade ("o que falta").
-     * 2. Palcos do Núcleo (contagem, percentual, soma).
+     * 2. Palcos do Núcleo (contagem, percentual, soma, consolidado).
      * 3. Premiações com ordem de prioridade e exclusão seletiva (naoAcumulaCom).
      * 4. Premiações Top N com desempate resolvido e com empate persistente sinalizado (sem escolha arbitrária).
      * 5. Congelamento de resultado quando status = "encerrado".
+     * 6. As 6 métricas oficiais de Palcos (ECM % Batida Geral, ECM % Batido da Meta, Faturamento % da Meta Batida, CSAT % Coletada, Colaborativo % da Meta e Cluster Subindo no Mês Selecionado).
      */
     function rodarTestesMotorEventos() {
       const resultados = [];
@@ -5628,6 +5935,7 @@
         id: 'evt_teste_1',
         nome: 'RR Vertentes — Teste Motor',
         status: 'em_andamento',
+        mesReferencia: 10,
         palcosEj: [
           {
             id: 'palco_1',
@@ -5804,6 +6112,22 @@
       const resCongelado = avaliarEvento(eventoEncerrado, []);
       assert('Evento encerrado retorna resultadoCongelado intacto', resCongelado.congelado === true && resCongelado.marcadorTesteCongelado === 12345);
 
+      // 8. Testes das 6 métricas de Palcos (ECM % Batida Geral, ECM % Batido da Meta, Fat % da Meta, CSAT % Coletada, Colab % da Meta, Cluster Subindo no Mês)
+      assert('Catálogo Palcos possui exatamente as 6 métricas oficiais', METRICAS_PALCOS_IDS.length === 6 && METRICAS_PALCOS_IDS.every(id => Boolean(METRICAS[id])));
+      assert('ECM % Batida Geral (EJ1: 18/20 = 90%)', Math.abs(METRICAS.ecm_pct.extrair(mockEjs[0]) - 90) < 1e-6);
+      assert('ECM % Batido da Meta (EJ1: 18/15 = 120%; EJ4: 10/15 = 66,67%)', Math.abs(METRICAS.ecm_pct_meta.extrair(mockEjs[0]) - 120) < 1e-6 && Math.abs(METRICAS.ecm_pct_meta.extrair(mockEjs[3]) - (1000 / 15)) < 1e-4);
+      assert('CSAT % Coletada (EJ1: 90%; EJ4: 100%)', METRICAS.cs_coleta.extrair(mockEjs[0]) === 90 && METRICAS.cs_coleta.extrair(mockEjs[3]) === 100);
+      assert('Cluster Subindo no Mês: EJ2 (45k / régua anual 50k) sobe em Outubro (mês 10 -> régua 41,67k) e não sobe em Dezembro (mês 12 -> régua 50k)',
+        METRICAS.cu_subindo_mes.extrair(mockEjs[1], { mesSelecionado: 10 }) === true &&
+        METRICAS.cu_subindo_mes.extrair(mockEjs[1], { mesSelecionado: 12 }) === false
+      );
+      const ejCl3SemColab = { cod: 'EJC3', nome: 'Trava Jr', cl: 3, idx: 70000, targetSubida: 60000, projColab: 0 };
+      assert('Cluster Subindo no Mês: Cluster 3 sem projeto colaborativo fica bloqueado mesmo batendo pontuação',
+        METRICAS.cu_subindo_mes.extrair(ejCl3SemColab, { mesSelecionado: 10 }) === false
+      );
+      const avNucEcmMeta = avaliarAgregadoNucleo({ tipo: 'consolidado', metrica: 'ecm_pct_meta', operador: '>=', valor: 95 }, mockEjs, { mesSelecionado: 10 });
+      assert('Palco Núcleo Consolidado ECM % Batido da Meta (60 engajados / 60 necessários = 100%)', avNucEcmMeta.bateu === true && Math.abs(avNucEcmMeta.valorAtual - 100) < 1e-6);
+
       const totalPassou = resultados.filter(r => r.passou).length;
       console.table(resultados);
       return {
@@ -5817,6 +6141,8 @@
 
     // Expõe API da Fase 1 no escopo global para inspeção e testes no console
     window.METRICAS = METRICAS;
+    window.METRICAS_PALCOS_IDS = METRICAS_PALCOS_IDS;
+    window.avaliarSubidaClusterNoMes = avaliarSubidaClusterNoMes;
     window.registrarMetrica = registrarMetrica;
     window.avaliarCondicao = avaliarCondicao;
     window.avaliarRequisito = avaliarRequisito;
@@ -5830,11 +6156,17 @@
     function normalizarEventoObj(ev) {
       if (!ev || typeof ev !== 'object') return null;
       const id = String(ev.id || ('evt_' + Date.now()));
+      const mesPadrao = (typeof STORE !== 'undefined' && STORE.params && Number(STORE.params.mes))
+        ? Number(STORE.params.mes)
+        : (new Date().getMonth() + 1);
+      const mesRefBruto = Number(ev.mesReferencia) || mesPadrao;
+      const mesReferencia = Math.min(12, Math.max(1, Math.round(mesRefBruto)));
       return {
         id,
         nome: String(ev.nome || 'Novo Evento').trim(),
         data: String(ev.data || ''),
         periodoReferencia: String(ev.periodoReferencia || ''),
+        mesReferencia,
         status: ['rascunho', 'em_andamento', 'encerrado'].includes(ev.status) ? ev.status : 'rascunho',
         palcosEj: Array.isArray(ev.palcosEj) ? ev.palcosEj : [],
         palcosNucleo: Array.isArray(ev.palcosNucleo) ? ev.palcosNucleo : [],
@@ -5950,12 +6282,14 @@
 
     async function criarNovoEvento() {
       const hoje = new Date().toISOString().slice(0, 10);
-      const mesAtualNome = MN[(STORE.params.mes || 1) - 1] || 'Outubro';
+      const mesAtual = Math.min(12, Math.max(1, Math.round(Number(STORE.params.mes) || (new Date().getMonth() + 1))));
+      const mesAtualNome = MN[mesAtual - 1] || 'Outubro';
       const novo = normalizarEventoObj({
         id: 'evt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
         nome: 'Novo Evento Regional',
         data: hoje,
         periodoReferencia: `Acumulado até ${mesAtualNome}`,
+        mesReferencia: mesAtual,
         status: 'rascunho',
         palcosEj: [],
         palcosNucleo: [],
@@ -5993,8 +6327,24 @@
     // CONSTRUTOR VISUAL DE CONDIÇÕES REUTILIZÁVEL
     // ----------------------------------------------------------------------------
 
-    function obterGruposMetricas() {
+    function obterGruposMetricas(opts = {}) {
       const grupos = {};
+      if (opts && opts.apenasPalcos) {
+        METRICAS_PALCOS_IDS.forEach(id => {
+          const m = METRICAS[id];
+          if (!m) return;
+          const ind = m.indicador || 'Geral';
+          if (!grupos[ind]) grupos[ind] = [];
+          grupos[ind].push(m);
+        });
+        if (opts.incluirExtraId && !METRICAS_PALCOS_IDS.includes(opts.incluirExtraId) && METRICAS[opts.incluirExtraId]) {
+          const extra = METRICAS[opts.incluirExtraId];
+          const ind = extra.indicador || 'Geral';
+          if (!grupos[ind]) grupos[ind] = [];
+          grupos[ind].push(extra);
+        }
+        return grupos;
+      }
       Object.values(METRICAS).forEach(m => {
         const ind = m.indicador || 'Geral';
         if (!grupos[ind]) grupos[ind] = [];
@@ -6039,26 +6389,32 @@
      * Gera o HTML de um Construtor de Condições reutilizável.
      * @param {string} builderId Identificador único do construtor no DOM.
      * @param {object} requisito Objeto { logica: 'E'|'OU', condicoes: [{ metrica, operador, valor }] }
-     * @param {object} opts Opções extras { titulo, textoVazio, mostrarPreview }
+     * @param {object} opts Opções extras { titulo, textoVazio, mostrarPreview, apenasPalcos, mesReferencia, bloqueado }
      */
     function gerarHtmlConstrutorCondicoes(builderId, requisito, opts = {}) {
       const req = garantirRequisitoValido(requisito);
-      const grupos = obterGruposMetricas();
       const titulo = opts.titulo || 'Requisitos / Condições';
       const textoVazio = opts.textoVazio || 'Nenhuma condição configurada (qualquer EJ cumpre por padrão).';
       const mostrarPreview = opts.mostrarPreview !== false;
+      const bloqueado = Boolean(opts.bloqueado);
+      const ctx = { mesSelecionado: obterMesContexto({ mesSelecionado: opts.mesReferencia }) };
 
       const linhasHtml = req.condicoes.length === 0
         ? `<div style="font-size:12.5px;color:var(--text-muted);padding:8px 4px;">${esc(textoVazio)}</div>`
         : req.condicoes.map((cond, idx) => {
             const def = METRICAS[cond.metrica] || METRICAS.fa_pct_meta;
+            const grupos = obterGruposMetricas({
+              apenasPalcos: Boolean(opts.apenasPalcos),
+              incluirExtraId: def.id
+            });
             const ops = obterOperadoresParaTipo(def.tipo);
             const opValido = ops.some(o => o.op === cond.operador) ? cond.operador : ops[0].op;
 
             const selectMetricaHtml = Object.keys(grupos).map(nomeGrupo => {
-              const options = grupos[nomeGrupo].map(m =>
-                `<option value="${esc(m.id)}" ${m.id === def.id ? 'selected' : ''}>${esc(m.rotulo)}</option>`
-              ).join('');
+              const options = grupos[nomeGrupo].map(m => {
+                const sufixoLegado = (opts.apenasPalcos && !METRICAS_PALCOS_IDS.includes(m.id)) ? ' (Legado)' : '';
+                return `<option value="${esc(m.id)}" ${m.id === def.id ? 'selected' : ''}>${esc(m.rotulo + sufixoLegado)}</option>`;
+              }).join('');
               return `<optgroup label="${esc(nomeGrupo)}">${options}</optgroup>`;
             }).join('');
 
@@ -6070,7 +6426,7 @@
             if (def.tipo === 'booleano') {
               const valBool = normalizarBooleano(cond.valor);
               campoValorHtml = `
-                <select class="select" data-cb-field="valor" data-cb-idx="${idx}" style="width:100%;">
+                <select class="select" data-cb-field="valor" data-cb-idx="${idx}" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
                   <option value="true" ${valBool ? 'selected' : ''}>Sim (Verdadeiro)</option>
                   <option value="false" ${!valBool ? 'selected' : ''}>Não (Falso)</option>
                 </select>
@@ -6078,7 +6434,7 @@
             } else if (def.tipo === 'status' && Array.isArray(def.opcoes)) {
               const valStr = String(cond.valor ?? def.opcoes[0]);
               campoValorHtml = `
-                <select class="select" data-cb-field="valor" data-cb-idx="${idx}" style="width:100%;">
+                <select class="select" data-cb-field="valor" data-cb-idx="${idx}" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
                   ${def.opcoes.map(op => `<option value="${esc(op)}" ${op === valStr ? 'selected' : ''}>${esc(op)}</option>`).join('')}
                 </select>
               `;
@@ -6086,20 +6442,20 @@
               const numVal = (cond.valor !== undefined && cond.valor !== null && cond.valor !== '') ? Number(cond.valor) : 0;
               const placeholder = def.tipo === 'percentual' ? 'Ex.: 80 (%)' : 'Valor numérico';
               campoValorHtml = `
-                <input type="number" step="any" class="input" data-cb-field="valor" data-cb-idx="${idx}" value="${esc(isNaN(numVal) ? 0 : numVal)}" placeholder="${esc(placeholder)}" style="width:100%;">
+                <input type="number" step="any" class="input" data-cb-field="valor" data-cb-idx="${idx}" value="${esc(isNaN(numVal) ? 0 : numVal)}" placeholder="${esc(placeholder)}" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
               `;
             }
 
             return `
               <div class="cond-row" data-cb-row="${idx}">
-                <select class="select" data-cb-field="metrica" data-cb-idx="${idx}" style="width:100%;">
+                <select class="select" data-cb-field="metrica" data-cb-idx="${idx}" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
                   ${selectMetricaHtml}
                 </select>
-                <select class="select" data-cb-field="operador" data-cb-idx="${idx}" style="width:100%;">
+                <select class="select" data-cb-field="operador" data-cb-idx="${idx}" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
                   ${selectOperadorHtml}
                 </select>
                 <div>${campoValorHtml}</div>
-                <button type="button" class="btn btn-sm" data-cb-remove="${idx}" title="Remover condição" style="color:var(--danger);padding:5px 9px;">✕</button>
+                ${!bloqueado ? `<button type="button" class="btn btn-sm" data-cb-remove="${idx}" title="Remover condição" style="color:var(--danger);padding:5px 9px;">✕</button>` : ''}
               </div>
             `;
           }).join('');
@@ -6107,11 +6463,11 @@
       let previewHtml = '';
       if (mostrarPreview) {
         const total = (STORE.ejs || []).length;
-        const qtdCumprem = (STORE.ejs || []).filter(ej => avaliarRequisito(req, ej).bateu).length;
+        const qtdCumprem = (STORE.ejs || []).filter(ej => avaliarRequisito(req, ej, ctx).bateu).length;
         previewHtml = `
           <div class="cond-preview-bar">
             <span>Conector atual: <strong>${req.logica === 'OU' ? 'OU (basta 1 condição bater)' : 'E (todas as condições devem bater)'}</strong></span>
-            <span>Prévia com dados atuais: <strong>${qtdCumprem} de ${total} EJs</strong> cumprem este requisito</span>
+            <span>Prévia com dados atuais (${esc(MN[ctx.mesSelecionado - 1])}): <strong>${qtdCumprem} de ${total} EJs</strong> cumprem este requisito</span>
           </div>
         `;
       }
@@ -6122,10 +6478,10 @@
             <span style="font-size:12.5px;font-weight:600;color:var(--text);">${esc(titulo)}</span>
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
               <div class="cond-logic-toggle" title="Alternar entre E (todas) e OU (qualquer uma)">
-                <button type="button" class="cond-logic-btn ${req.logica === 'E' ? 'active' : ''}" data-cb-logic="E">E (Todas)</button>
-                <button type="button" class="cond-logic-btn ${req.logica === 'OU' ? 'active' : ''}" data-cb-logic="OU">OU (Qualquer)</button>
+                <button type="button" class="cond-logic-btn ${req.logica === 'E' ? 'active' : ''}" data-cb-logic="E" ${bloqueado ? 'disabled' : ''}>E (Todas)</button>
+                <button type="button" class="cond-logic-btn ${req.logica === 'OU' ? 'active' : ''}" data-cb-logic="OU" ${bloqueado ? 'disabled' : ''}>OU (Qualquer)</button>
               </div>
-              <button type="button" class="btn btn-sm" data-cb-add="1">+ Adicionar condição</button>
+              ${!bloqueado ? `<button type="button" class="btn btn-sm" data-cb-add="1">+ Adicionar condição</button>` : ''}
             </div>
           </div>
           <div class="cond-list">
@@ -6141,10 +6497,11 @@
      * Sempre que o usuário adiciona/remove condição, troca métrica/operador/valor ou alterna E/OU,
      * atualiza o objeto `requisito` e invoca `onChange(requisito)`.
      */
-    function vincularConstrutorCondicoes(builderId, requisitoRef, onChange) {
+    function vincularConstrutorCondicoes(builderId, requisitoRef, onChange, opts = {}) {
       const container = document.getElementById('cb_' + builderId);
       if (!container) return;
 
+      const ctx = { mesSelecionado: obterMesContexto({ mesSelecionado: opts.mesReferencia }) };
       const req = garantirRequisitoValido(requisitoRef);
       requisitoRef.logica = req.logica;
       requisitoRef.condicoes = req.condicoes;
@@ -6196,11 +6553,14 @@
 
         const handler = () => {
           if (field === 'metrica') {
+            const tipoAnterior = (METRICAS[cond.metrica] || {}).tipo;
             const novaMetrica = input.value;
             const def = METRICAS[novaMetrica] || METRICAS.fa_pct_meta;
             cond.metrica = novaMetrica;
             const ops = obterOperadoresParaTipo(def.tipo);
-            if (!ops.some(o => o.op === cond.operador)) {
+            if ((tipoAnterior === 'booleano' || tipoAnterior === 'status') && (def.tipo === 'percentual' || def.tipo === 'numero')) {
+              cond.operador = '>=';
+            } else if (!ops.some(o => o.op === cond.operador)) {
               cond.operador = ops[0].op;
             }
             if (def.tipo === 'booleano') {
@@ -6228,10 +6588,10 @@
             const previewBar = container.querySelector('.cond-preview-bar');
             if (previewBar) {
               const total = (STORE.ejs || []).length;
-              const qtdCumprem = (STORE.ejs || []).filter(ej => avaliarRequisito(requisitoRef, ej).bateu).length;
+              const qtdCumprem = (STORE.ejs || []).filter(ej => avaliarRequisito(requisitoRef, ej, ctx).bateu).length;
               previewBar.innerHTML = `
                 <span>Conector atual: <strong>${requisitoRef.logica === 'OU' ? 'OU (basta 1 condição bater)' : 'E (todas as condições devem bater)'}</strong></span>
-                <span>Prévia com dados atuais: <strong>${qtdCumprem} de ${total} EJs</strong> cumprem este requisito</span>
+                <span>Prévia com dados atuais (${esc(MN[ctx.mesSelecionado - 1])}): <strong>${qtdCumprem} de ${total} EJs</strong> cumprem este requisito</span>
               `;
             }
           }
@@ -6345,6 +6705,10 @@
 
     function renderEventoTabDados(ev, container) {
       const bloqueado = ev.status === 'encerrado';
+      const mesRefAtual = obterMesContexto({ mesSelecionado: ev.mesReferencia });
+      const opcoesMesHtml = MN.map((nomeMes, i) =>
+        `<option value="${i + 1}" ${(i + 1) === mesRefAtual ? 'selected' : ''}>${esc(nomeMes)}</option>`
+      ).join('');
 
       container.innerHTML = `
         <div class="clean-card" style="max-width:760px;margin-bottom:24px;">
@@ -6362,7 +6726,13 @@
               <label class="form-label" for="evtInputPeriodo">Período de referência</label>
               <input type="text" class="input" id="evtInputPeriodo" value="${esc(ev.periodoReferencia || '')}" placeholder="Ex.: Jan a Out / 2026" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
             </div>
-            <div class="form-group" style="grid-column:1 / -1;">
+            <div class="form-group">
+              <label class="form-label" for="evtInputMesRef">Mês selecionado (Palcos / Subida de Cluster)</label>
+              <select class="select" id="evtInputMesRef" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
+                ${opcoesMesHtml}
+              </select>
+            </div>
+            <div class="form-group">
               <label class="form-label" for="evtInputStatus">Status do evento</label>
               <select class="select" id="evtInputStatus" style="width:100%;">
                 <option value="rascunho" ${ev.status === 'rascunho' ? 'selected' : ''}>Rascunho (em configuração)</option>
@@ -6379,8 +6749,8 @@
 
         <div class="clean-card" style="max-width:760px;">
           <div style="margin-bottom:12px;">
-            <h3 class="section-title" style="margin-bottom:4px;">Simulador do Construtor de Condições (Validação Fase 2)</h3>
-            <p style="font-size:12.5px;color:var(--text-muted);">Este componente visual é reutilizado nos Palcos das EJs, Palcos do Núcleo e Premiações. Adicione condições, alterne entre <strong>E / OU</strong> e veja quantas EJs da planilha atual cumprem o requisito em tempo real.</p>
+            <h3 class="section-title" style="margin-bottom:4px;">Simulador de Condições dos Palcos</h3>
+            <p style="font-size:12.5px;color:var(--text-muted);">Simule regras com as 6 métricas oficiais de Palcos (<strong>ECM</strong>, <strong>Faturamento</strong>, <strong>CSAT</strong>, <strong>Colaborativo</strong> e <strong>Cluster no mês selecionado</strong>), alterne entre <strong>E / OU</strong> e veja quantas EJs cumprem o requisito em tempo real.</p>
           </div>
           <div id="sandboxCondBuilderWrap"></div>
           <div id="sandboxPreviewEjsList" style="margin-top:12px;font-size:12.5px;color:var(--text-secondary);"></div>
@@ -6392,6 +6762,7 @@
         ev.nome = $('evtInputNome').value.trim() || 'Evento sem nome';
         ev.data = $('evtInputData').value;
         ev.periodoReferencia = $('evtInputPeriodo').value.trim();
+        ev.mesReferencia = Math.min(12, Math.max(1, Math.round(Number($('evtInputMesRef').value) || 12)));
 
         if (novoStatus === 'encerrado' && ev.status !== 'encerrado') {
           ev.status = 'encerrado';
@@ -6403,17 +6774,26 @@
         await salvarEventoNoBanco(ev, true);
       });
 
+      const obterMesSimulador = () => {
+        const sel = $('evtInputMesRef');
+        return Math.min(12, Math.max(1, Math.round(Number(sel ? sel.value : ev.mesReferencia) || 12)));
+      };
+
       const renderSandbox = () => {
         const wrap = $('sandboxCondBuilderWrap');
         const listEl = $('sandboxPreviewEjsList');
         if (!wrap) return;
+        const mesSim = obterMesSimulador();
+        const ctxSim = { mesSelecionado: mesSim };
         wrap.innerHTML = gerarHtmlConstrutorCondicoes('sandbox_fase2', STORE.ui.sandboxRequisito, {
-          titulo: 'Requisito de teste',
-          mostrarPreview: true
+          titulo: 'Requisito de teste (Palcos)',
+          mostrarPreview: true,
+          apenasPalcos: true,
+          mesReferencia: mesSim
         });
         const atualizarListaPreview = () => {
           if (!listEl) return;
-          const aprovadas = (STORE.ejs || []).filter(ej => avaliarRequisito(STORE.ui.sandboxRequisito, ej).bateu);
+          const aprovadas = (STORE.ejs || []).filter(ej => avaliarRequisito(STORE.ui.sandboxRequisito, ej, ctxSim).bateu);
           if (aprovadas.length === 0) {
             listEl.innerHTML = `<span style="color:var(--text-muted);">Nenhuma EJ cumpre este requisito no momento.</span>`;
           } else {
@@ -6426,8 +6806,17 @@
         vincularConstrutorCondicoes('sandbox_fase2', STORE.ui.sandboxRequisito, (req, reRenderDom) => {
           if (reRenderDom) renderSandbox();
           else atualizarListaPreview();
-        });
+        }, { apenasPalcos: true, mesReferencia: mesSim });
       };
+
+      const selMesRef = $('evtInputMesRef');
+      if (selMesRef && !bloqueado) {
+        selMesRef.addEventListener('change', () => {
+          ev.mesReferencia = obterMesSimulador();
+          persistirEdicaoEvento(ev, false);
+          renderSandbox();
+        });
+      }
 
       renderSandbox();
     }
@@ -6449,12 +6838,100 @@
       }
     }
 
+    function gerarHtmlPainelMetricasPalcos(ev, bloqueado = false) {
+      const mesRef = obterMesContexto({ mesSelecionado: ev.mesReferencia });
+      const mesNome = MN[mesRef - 1] || `Mês ${mesRef}`;
+      const ctx = { mesSelecionado: mesRef };
+      const ejs = STORE.ejs || [];
+      const totalEjs = ejs.length;
+
+      const ecmGeralVal = METRICAS.ecm_pct.extrairNucleo(ejs, ctx);
+      const ecmMetaVal = METRICAS.ecm_pct_meta.extrairNucleo(ejs, ctx);
+      const fatMetaVal = METRICAS.fa_pct_meta.extrairNucleo(ejs, ctx);
+      const csatColetaVal = METRICAS.cs_coleta.extrairNucleo(ejs, ctx);
+      const colabMetaVal = METRICAS.co_pct_meta.extrairNucleo(ejs, ctx);
+      const clusterSubindoVal = METRICAS.cu_subindo_mes.extrairNucleo(ejs, ctx);
+
+      const opcoesMes = MN.map((nm, i) =>
+        `<option value="${i + 1}" ${(i + 1) === mesRef ? 'selected' : ''}>${esc(nm)}</option>`
+      ).join('');
+
+      return `
+        <div class="clean-card" style="margin-bottom:18px;padding:14px 16px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px;">
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--text);">Métricas dos Indicadores de Palcos (Consolidado Atual · ${totalEjs} EJs)</div>
+              <div style="font-size:12px;color:var(--text-muted);">ECM (% Batida Geral e % Batido da Meta), Faturamento (% da Meta Batida), CSAT (% Coletada), Colaborativo (% da Meta) e Cluster (Subindo no mês)</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <label class="form-label" style="margin:0;font-size:12px;white-space:nowrap;">Mês selecionado (Cluster):</label>
+              <select class="select" data-palco-mes-ref="1" style="min-width:145px;" ${bloqueado ? 'disabled' : ''}>
+                ${opcoesMes}
+              </select>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(185px, 1fr));gap:10px;">
+            <div style="padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-subtle);">
+              <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.03em;margin-bottom:4px;">ECM</div>
+              <div style="font-size:12.5px;color:var(--text-secondary);display:flex;justify-content:space-between;gap:6px;">
+                <span>% Batida Geral:</span>
+                <strong style="color:var(--text);">${esc(METRICAS.ecm_pct.formatar(ecmGeralVal))}</strong>
+              </div>
+              <div style="font-size:12.5px;color:var(--text-secondary);display:flex;justify-content:space-between;gap:6px;margin-top:2px;">
+                <span>% Batido da Meta:</span>
+                <strong style="color:var(--text);">${esc(METRICAS.ecm_pct_meta.formatar(ecmMetaVal))}</strong>
+              </div>
+            </div>
+            <div style="padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-subtle);">
+              <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.03em;margin-bottom:4px;">Faturamento</div>
+              <div style="font-size:12.5px;color:var(--text-secondary);display:flex;justify-content:space-between;gap:6px;">
+                <span>% da Meta Batida:</span>
+                <strong style="color:var(--text);">${esc(METRICAS.fa_pct_meta.formatar(fatMetaVal))}</strong>
+              </div>
+            </div>
+            <div style="padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-subtle);">
+              <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.03em;margin-bottom:4px;">CSAT</div>
+              <div style="font-size:12.5px;color:var(--text-secondary);display:flex;justify-content:space-between;gap:6px;">
+                <span>% Coletada:</span>
+                <strong style="color:var(--text);">${esc(METRICAS.cs_coleta.formatar(csatColetaVal))}</strong>
+              </div>
+            </div>
+            <div style="padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-subtle);">
+              <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.03em;margin-bottom:4px;">Colaborativo</div>
+              <div style="font-size:12.5px;color:var(--text-secondary);display:flex;justify-content:space-between;gap:6px;">
+                <span>% da Meta:</span>
+                <strong style="color:var(--text);">${esc(METRICAS.co_pct_meta.formatar(colabMetaVal))}</strong>
+              </div>
+            </div>
+            <div style="padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-subtle);">
+              <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.03em;margin-bottom:4px;">Cluster (${esc(mesNome)})</div>
+              <div style="font-size:12.5px;color:var(--text-secondary);display:flex;justify-content:space-between;gap:6px;">
+                <span>Subindo no mês:</span>
+                <strong style="color:var(--text);">${clusterSubindoVal} de ${totalEjs} EJs</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function vincularPainelMetricasPalcos(ev, container, bloqueado = false) {
+      if (bloqueado) return;
+      container.querySelectorAll('[data-palco-mes-ref]').forEach(sel => {
+        sel.addEventListener('change', () => {
+          ev.mesReferencia = Math.min(12, Math.max(1, Math.round(Number(sel.value) || 12)));
+          persistirEdicaoEvento(ev, true);
+        });
+      });
+    }
+
     // ----------------------------------------------------------------------------
     // ABA: PALCOS DAS EJs
     // ----------------------------------------------------------------------------
     function renderEventoTabPalcosEj(ev, container) {
       const bloqueado = ev.status === 'encerrado';
       if (!Array.isArray(ev.palcosEj)) ev.palcosEj = [];
+      const mesRef = obterMesContexto({ mesSelecionado: ev.mesReferencia });
 
       const palcosHtml = ev.palcosEj.length === 0
         ? `
@@ -6490,7 +6967,10 @@
                       <div id="wrap_${cbId}">
                         ${gerarHtmlConstrutorCondicoes(cbId, nivel.requisito, {
                           titulo: `Requisito para atingir "${nivel.nome || ('Nível ' + (nivel.ordem || (nIdx + 1)))}"`,
-                          mostrarPreview: true
+                          mostrarPreview: true,
+                          apenasPalcos: true,
+                          mesReferencia: mesRef,
+                          bloqueado
                         })}
                       </div>
                     </div>
@@ -6538,8 +7018,11 @@
             ${!bloqueado ? `<button type="button" class="btn btn-primary" id="btnSavePalcosEjNow">Salvar alterações</button>` : ''}
           </div>
         </div>
+        ${gerarHtmlPainelMetricasPalcos(ev, bloqueado)}
         ${palcosHtml}
       `;
+
+      vincularPainelMetricasPalcos(ev, container, bloqueado);
 
       // Bind de adicionar palco
       container.querySelectorAll('[data-add-palco-ej]').forEach(btn => {
@@ -6658,7 +7141,7 @@
           if (!bloqueado) {
             vincularConstrutorCondicoes(cbId, nivel.requisito, (req, reRenderDom) => {
               persistirEdicaoEvento(ev, reRenderDom);
-            });
+            }, { apenasPalcos: true, mesReferencia: mesRef });
           }
         });
       });
@@ -6667,20 +7150,55 @@
     // ----------------------------------------------------------------------------
     // ABA: PALCOS DO NÚCLEO
     // ----------------------------------------------------------------------------
-    function obterMetricasNumericasCatalogo() {
-      return Object.values(METRICAS).filter(m => m.tipo === 'numero' || m.tipo === 'percentual');
+    function obterOptionsMetricasPalcosHtml(metricaSelecionada) {
+      const grupos = obterGruposMetricas({ apenasPalcos: true, incluirExtraId: metricaSelecionada });
+      return Object.keys(grupos).map(nomeGrupo => {
+        const opts = grupos[nomeGrupo].map(m => {
+          const sufixoLegado = !METRICAS_PALCOS_IDS.includes(m.id) ? ' (Legado)' : '';
+          return `<option value="${esc(m.id)}" ${m.id === metricaSelecionada ? 'selected' : ''}>${esc(m.rotulo + sufixoLegado)}</option>`;
+        }).join('');
+        return `<optgroup label="${esc(nomeGrupo)}">${opts}</optgroup>`;
+      }).join('');
+    }
+
+    function garantirAgregadosNivelNucleo(nivel) {
+      const criarPadrao = () => ({
+        tipo: 'consolidado',
+        metrica: 'fa_pct_meta',
+        condicaoEj: { logica: 'E', condicoes: [] },
+        operador: '>=',
+        valor: 80
+      });
+      if (!Array.isArray(nivel.agregados) || nivel.agregados.length === 0) {
+        if (nivel.agregado && typeof nivel.agregado === 'object') {
+          nivel.agregados = [nivel.agregado];
+        } else {
+          nivel.agregados = [criarPadrao()];
+        }
+      }
+      nivel.agregados.forEach(ag => {
+        if (!ag.tipo) ag.tipo = 'consolidado';
+        if (!ag.metrica) ag.metrica = 'fa_pct_meta';
+        if (!ag.operador) ag.operador = '>=';
+        if (ag.valor === undefined || ag.valor === null) ag.valor = 80;
+        if (!ag.condicaoEj) ag.condicaoEj = { logica: 'E', condicoes: [] };
+      });
+      nivel.logica = String(nivel.logica || 'E').toUpperCase() === 'OU' ? 'OU' : 'E';
+      nivel.agregado = nivel.agregados[0];
+      return nivel.agregados;
     }
 
     function renderEventoTabPalcosNucleo(ev, container) {
       const bloqueado = ev.status === 'encerrado';
       if (!Array.isArray(ev.palcosNucleo)) ev.palcosNucleo = [];
-      const metricasNum = obterMetricasNumericasCatalogo();
+      const mesRef = obterMesContexto({ mesSelecionado: ev.mesReferencia });
+      const ctx = { mesSelecionado: mesRef };
 
       const palcosHtml = ev.palcosNucleo.length === 0
         ? `
           <div class="clean-card" style="text-align:center;padding:36px 24px;">
             <p style="font-size:15px;font-weight:600;margin-bottom:6px;">Nenhum Palco do Núcleo configurado</p>
-            <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">Configure metas coletivas do Núcleo Vertentes (ex.: "15 ou mais EJs com meta batida", "Faturamento total >= R$ 2 mi", "% de EJs com CSAT >= 85%").</p>
+            <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">Configure metas coletivas do Núcleo Vertentes com as métricas oficiais de ECM, Faturamento, CSAT, Colaborativo e Cluster no mês selecionado.</p>
             ${!bloqueado ? `<button class="btn btn-primary" data-add-palco-nuc="1">+ Adicionar primeiro Palco do Núcleo</button>` : ''}
           </div>
         `
@@ -6691,20 +7209,90 @@
             const niveisHtml = palco.niveis.length === 0
               ? `<div style="font-size:12.5px;color:var(--text-muted);padding:12px 0;">Nenhum nível cadastrado neste palco do Núcleo.</div>`
               : palco.niveis.map((nivel, nIdx) => {
-                  if (!nivel.agregado) {
-                    nivel.agregado = {
-                      tipo: 'contagem',
-                      metrica: 'fa_realizado',
-                      condicaoEj: { logica: 'E', condicoes: [{ metrica: 'fa_meta_batida', operador: '=', valor: true }] },
-                      operador: '>=',
-                      valor: 6
-                    };
-                  }
-                  const ag = nivel.agregado;
-                  if (!ag.condicaoEj) ag.condicaoEj = { logica: 'E', condicoes: [] };
-                  const precisaMetrica = ag.tipo === 'soma' || ag.tipo === 'media';
-                  const cbId = `pnuc_${pIdx}_${nIdx}`;
-                  const avPreview = avaliarAgregadoNucleo(ag, STORE.ejs || []);
+                  const agregados = garantirAgregadosNivelNucleo(nivel);
+                  const avPreview = avaliarNivelPalcoNucleo(nivel, STORE.ejs || [], ctx);
+
+                  const criteriosHtml = agregados.map((ag, aIdx) => {
+                    const precisaMetrica = ag.tipo === 'consolidado' || ag.tipo === 'media' || ag.tipo === 'soma';
+                    const cbId = `pnuc_${pIdx}_${nIdx}_${aIdx}`;
+                    const temFiltroCond = Array.isArray(ag.condicaoEj?.condicoes) && ag.condicaoEj.condicoes.length > 0;
+                    const unidadeHint = (ag.tipo === 'contagem' || (ag.tipo === 'consolidado' && ag.metrica === 'cu_subindo_mes'))
+                      ? 'Qtd. EJs'
+                      : ((ag.tipo === 'percentual' || ag.tipo === 'consolidado' || ag.tipo === 'media') ? '%' : 'Valor');
+
+                    const rotuloCampoMetrica = ag.tipo === 'consolidado'
+                      ? 'Métrica consolidada do Núcleo'
+                      : (ag.tipo === 'soma' ? 'Métrica a somar' : 'Métrica (média nas EJs)');
+
+                    const construtorHtml = gerarHtmlConstrutorCondicoes(cbId, ag.condicaoEj, {
+                      titulo: precisaMetrica
+                        ? 'Filtro opcional de EJs para entrar na conta (vazio = todas as EJs)'
+                        : 'Condição que a EJ precisa cumprir para entrar nesta contagem / percentual',
+                      mostrarPreview: false,
+                      apenasPalcos: true,
+                      mesReferencia: mesRef,
+                      bloqueado
+                    });
+
+                    return `
+                      <div style="border:1px solid var(--border-subtle);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:8px;background:var(--surface-subtle);">
+                        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;">
+                          <span style="font-size:11.5px;font-weight:600;color:var(--text-secondary);">Critério ${aIdx + 1} do nível</span>
+                          ${!bloqueado && agregados.length > 1
+                            ? `<button type="button" class="btn btn-sm" data-pnuc-del-ag="${pIdx}:${nIdx}:${aIdx}" style="color:var(--danger);padding:2px 8px;font-size:11.5px;">Remover critério</button>`
+                            : ''}
+                        </div>
+                        <div class="kv-grid" style="grid-template-columns:repeat(auto-fit, minmax(170px, 1fr));gap:10px;margin-bottom:${precisaMetrica ? '6px' : '10px'};">
+                          <div class="form-group" style="margin-bottom:0;">
+                            <label class="form-label" style="font-size:11.5px;">Tipo de cálculo no Núcleo</label>
+                            <select class="select" data-pnuc-ag-tipo="${pIdx}:${nIdx}:${aIdx}" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
+                              <option value="consolidado" ${ag.tipo === 'consolidado' ? 'selected' : ''}>Indicador consolidado do Núcleo</option>
+                              <option value="contagem" ${ag.tipo === 'contagem' ? 'selected' : ''}>Contagem de EJs (Nº)</option>
+                              <option value="percentual" ${ag.tipo === 'percentual' ? 'selected' : ''}>% de EJs do Núcleo</option>
+                              <option value="media" ${ag.tipo === 'media' ? 'selected' : ''}>Média da métrica nas EJs</option>
+                              ${ag.tipo === 'soma' ? `<option value="soma" selected>Soma de métrica nas EJs (Legado)</option>` : ''}
+                            </select>
+                          </div>
+
+                          ${precisaMetrica ? `
+                            <div class="form-group" style="margin-bottom:0;">
+                              <label class="form-label" style="font-size:11.5px;">${esc(rotuloCampoMetrica)}</label>
+                              <select class="select" data-pnuc-ag-metrica="${pIdx}:${nIdx}:${aIdx}" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
+                                ${obterOptionsMetricasPalcosHtml(ag.metrica || 'fa_pct_meta')}
+                              </select>
+                            </div>
+                          ` : ''}
+
+                          <div class="form-group" style="margin-bottom:0;">
+                            <label class="form-label" style="font-size:11.5px;">Operador da meta</label>
+                            <select class="select" data-pnuc-ag-op="${pIdx}:${nIdx}:${aIdx}" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
+                              ${['>=', '>', '<=', '<', '=', '!='].map(op => `<option value="${op}" ${(ag.operador || '>=') === op ? 'selected' : ''}>${op}</option>`).join('')}
+                            </select>
+                          </div>
+
+                          <div class="form-group" style="margin-bottom:0;">
+                            <label class="form-label" style="font-size:11.5px;">Valor exigido (${esc(unidadeHint)})</label>
+                            <input type="number" step="any" class="input" data-pnuc-ag-val="${pIdx}:${nIdx}:${aIdx}" value="${esc(Number(ag.valor) || 0)}" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
+                          </div>
+                        </div>
+
+                        ${precisaMetrica ? `
+                          <details ${temFiltroCond ? 'open' : ''} style="margin-top:4px;">
+                            <summary style="cursor:pointer;font-size:11.5px;color:var(--text-muted);">
+                              Filtro opcional de EJs para este cálculo ${temFiltroCond ? `(${ag.condicaoEj.condicoes.length} condição/ões ativa/s)` : '(padrão: todas as EJs do Núcleo)'}
+                            </summary>
+                            <div id="wrap_${cbId}" style="margin-top:8px;">
+                              ${construtorHtml}
+                            </div>
+                          </details>
+                        ` : `
+                          <div id="wrap_${cbId}">
+                            ${construtorHtml}
+                          </div>
+                        `}
+                      </div>
+                    `;
+                  }).join('');
 
                   return `
                     <div style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:12px;background:var(--surface);">
@@ -6716,62 +7304,27 @@
                           </div>
                           <div style="flex:1;">
                             <label class="form-label" style="font-size:11px;margin-bottom:2px;">Nome do nível do Núcleo</label>
-                            <input type="text" class="input" data-pnuc-nivel-nome="${pIdx}:${nIdx}" value="${esc(nivel.nome || `Nível ${nIdx + 1}`)}" placeholder="Ex.: Nível 1 — 6 EJs com Meta Batida" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
+                            <input type="text" class="input" data-pnuc-nivel-nome="${pIdx}:${nIdx}" value="${esc(nivel.nome || `Nível ${nIdx + 1}`)}" placeholder="Ex.: Nível 1 — Reconhecimento Regional" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
                           </div>
                         </div>
-                        <div style="display:flex;align-items:center;gap:8px;">
+                        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                          ${agregados.length > 1 ? `
+                            <div class="cond-logic-toggle" title="Conector entre critérios deste nível">
+                              <button type="button" class="cond-logic-btn ${nivel.logica === 'E' ? 'active' : ''}" data-pnuc-nivel-logica="${pIdx}:${nIdx}:E" ${bloqueado ? 'disabled' : ''}>E (Todos)</button>
+                              <button type="button" class="cond-logic-btn ${nivel.logica === 'OU' ? 'active' : ''}" data-pnuc-nivel-logica="${pIdx}:${nIdx}:OU" ${bloqueado ? 'disabled' : ''}>OU (Qualquer)</button>
+                            </div>
+                          ` : ''}
+                          ${!bloqueado ? `<button type="button" class="btn btn-sm" data-pnuc-add-ag="${pIdx}:${nIdx}">+ Critério</button>` : ''}
                           ${renderTag([avPreview.bateu ? 'Atingido agora' : 'Pendente', avPreview.bateu ? 'g' : 'n'])}
                           ${!bloqueado ? `<button type="button" class="btn btn-sm" data-pnuc-del-nivel="${pIdx}:${nIdx}" style="color:var(--danger);">Remover nível</button>` : ''}
                         </div>
                       </div>
 
-                      <!-- Configuração do Agregado -->
-                      <div class="kv-grid" style="grid-template-columns:repeat(auto-fit, minmax(170px, 1fr));gap:10px;margin-bottom:12px;">
-                        <div class="form-group" style="margin-bottom:0;">
-                          <label class="form-label" style="font-size:11.5px;">Tipo de cálculo no Núcleo</label>
-                          <select class="select" data-pnuc-ag-tipo="${pIdx}:${nIdx}" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
-                            <option value="contagem" ${ag.tipo === 'contagem' ? 'selected' : ''}>Contagem de EJs (Nº)</option>
-                            <option value="percentual" ${ag.tipo === 'percentual' ? 'selected' : ''}>% de EJs do Núcleo</option>
-                            <option value="soma" ${ag.tipo === 'soma' ? 'selected' : ''}>Soma de métrica nas EJs</option>
-                            <option value="media" ${ag.tipo === 'media' ? 'selected' : ''}>Média de métrica nas EJs</option>
-                          </select>
-                        </div>
-
-                        ${precisaMetrica ? `
-                          <div class="form-group" style="margin-bottom:0;">
-                            <label class="form-label" style="font-size:11.5px;">Métrica a ${ag.tipo === 'soma' ? 'somar' : 'calcular média'}</label>
-                            <select class="select" data-pnuc-ag-metrica="${pIdx}:${nIdx}" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
-                              ${metricasNum.map(m => `<option value="${esc(m.id)}" ${m.id === ag.metrica ? 'selected' : ''}>${esc(m.rotulo)}</option>`).join('')}
-                            </select>
-                          </div>
-                        ` : ''}
-
-                        <div class="form-group" style="margin-bottom:0;">
-                          <label class="form-label" style="font-size:11.5px;">Operador da meta</label>
-                          <select class="select" data-pnuc-ag-op="${pIdx}:${nIdx}" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
-                            ${['>=', '>', '<=', '<', '=', '!='].map(op => `<option value="${op}" ${(ag.operador || '>=') === op ? 'selected' : ''}>${op}</option>`).join('')}
-                          </select>
-                        </div>
-
-                        <div class="form-group" style="margin-bottom:0;">
-                          <label class="form-label" style="font-size:11.5px;">Valor exigido (${ag.tipo === 'contagem' ? 'Qtd. EJs' : ag.tipo === 'percentual' ? '%' : 'Valor'})</label>
-                          <input type="number" step="any" class="input" data-pnuc-ag-val="${pIdx}:${nIdx}" value="${esc(Number(ag.valor) || 0)}" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
-                        </div>
-                      </div>
-
-                      <!-- Condição por EJ -->
-                      <div id="wrap_${cbId}">
-                        ${gerarHtmlConstrutorCondicoes(cbId, ag.condicaoEj, {
-                          titulo: precisaMetrica
-                            ? 'Filtro opcional de EJs para entrar na conta (vazio = todas as EJs)'
-                            : 'Condição que a EJ precisa cumprir para entrar nesta contagem / percentual',
-                          mostrarPreview: false
-                        })}
-                      </div>
+                      ${criteriosHtml}
 
                       <div class="cond-preview-bar" data-pnuc-preview="${pIdx}:${nIdx}" style="margin-top:8px;">
-                        <span>Resultado atual do Núcleo neste nível: <strong>${esc(avPreview.explicacao)}</strong></span>
-                        <span>EJs que cumprem a condição: <strong>${avPreview.ejsQueCumprem.length} de ${(STORE.ejs || []).length}</strong></span>
+                        <span>Resultado atual do Núcleo (${esc(MN[mesRef - 1])}): <strong>${esc(avPreview.explicacao)}</strong></span>
+                        <span>EJs alinhadas ao critério: <strong>${avPreview.ejsQueCumprem.length} de ${(STORE.ejs || []).length}</strong></span>
                       </div>
                     </div>
                   `;
@@ -6796,7 +7349,7 @@
                 ${!bloqueado ? `
                   <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--border-subtle);">
                     <button type="button" class="btn btn-sm" data-pnuc-add-nivel="${pIdx}">+ Adicionar nível do Núcleo</button>
-                    <span style="font-size:12px;color:var(--text-muted);">O nível atingido pelo Núcleo será o maior cujo agregado for satisfeito.</span>
+                    <span style="font-size:12px;color:var(--text-muted);">O nível atingido pelo Núcleo será o maior cujos critérios forem satisfeitos.</span>
                   </div>
                 ` : ''}
               </div>
@@ -6807,36 +7360,39 @@
         <div class="section-header" style="margin-bottom:16px;">
           <div>
             <h3 class="section-title" style="margin-bottom:2px;">Configuração dos Palcos do Núcleo</h3>
-            <span style="font-size:12.5px;color:var(--text-muted);">Avalia metas coletivas agregadas sobre todas as EJs (contagem, percentual, soma ou média).</span>
+            <span style="font-size:12.5px;color:var(--text-muted);">Avalia metas coletivas do Núcleo (indicador consolidado do Núcleo, contagem de EJs, % de EJs ou média).</span>
           </div>
           <div style="display:flex;gap:8px;">
             ${!bloqueado ? `<button type="button" class="btn" data-add-palco-nuc="1">+ Novo palco do Núcleo</button>` : ''}
             ${!bloqueado ? `<button type="button" class="btn btn-primary" id="btnSavePalcosNucNow">Salvar alterações</button>` : ''}
           </div>
         </div>
+        ${gerarHtmlPainelMetricasPalcos(ev, bloqueado)}
         ${palcosHtml}
       `;
+
+      vincularPainelMetricasPalcos(ev, container, bloqueado);
 
       // Bind de adicionar palco do núcleo
       container.querySelectorAll('[data-add-palco-nuc]').forEach(btn => {
         btn.addEventListener('click', () => {
+          const agInicial = {
+            tipo: 'consolidado',
+            metrica: 'fa_pct_meta',
+            condicaoEj: { logica: 'E', condicoes: [] },
+            operador: '>=',
+            valor: 80
+          };
           ev.palcosNucleo.push({
             id: 'pnuc_' + Date.now() + '_' + Math.random().toString(36).slice(2, 5),
             nome: `Palco do Núcleo ${ev.palcosNucleo.length + 1}`,
             niveis: [
               {
                 ordem: 1,
-                nome: 'Nível 1 — 6 EJs com Meta de Faturamento Batida',
-                agregado: {
-                  tipo: 'contagem',
-                  metrica: 'fa_realizado',
-                  condicaoEj: {
-                    logica: 'E',
-                    condicoes: [{ metrica: 'fa_meta_batida', operador: '=', valor: true }]
-                  },
-                  operador: '>=',
-                  valor: 6
-                }
+                nome: 'Nível 1',
+                logica: 'E',
+                agregado: agInicial,
+                agregados: [agInicial]
               }
             ]
           });
@@ -6878,19 +7434,19 @@
           if (!palco) return;
           const maxOrdem = (palco.niveis || []).reduce((m, n) => Math.max(m, Number(n.ordem) || 0), 0);
           const novaOrdem = maxOrdem + 1;
+          const agNovo = {
+            tipo: 'consolidado',
+            metrica: 'fa_pct_meta',
+            condicaoEj: { logica: 'E', condicoes: [] },
+            operador: '>=',
+            valor: 100
+          };
           palco.niveis.push({
             ordem: novaOrdem,
             nome: `Nível ${novaOrdem}`,
-            agregado: {
-              tipo: 'contagem',
-              metrica: 'fa_realizado',
-              condicaoEj: {
-                logica: 'E',
-                condicoes: [{ metrica: 'fa_meta_batida', operador: '=', valor: true }]
-              },
-              operador: '>=',
-              valor: 10
-            }
+            logica: 'E',
+            agregado: agNovo,
+            agregados: [agNovo]
           });
           persistirEdicaoEvento(ev, true);
         });
@@ -6926,52 +7482,120 @@
         });
       });
 
+      container.querySelectorAll('[data-pnuc-nivel-logica]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const [pIdxStr, nIdxStr, logStr] = btn.dataset.pnucNivelLogica.split(':');
+          const nivel = ev.palcosNucleo[Number(pIdxStr)]?.niveis[Number(nIdxStr)];
+          if (!nivel) return;
+          nivel.logica = logStr === 'OU' ? 'OU' : 'E';
+          persistirEdicaoEvento(ev, true);
+        });
+      });
+
+      container.querySelectorAll('[data-pnuc-add-ag]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const [pIdx, nIdx] = btn.dataset.pnucAddAg.split(':').map(Number);
+          const nivel = ev.palcosNucleo[pIdx]?.niveis[nIdx];
+          if (!nivel) return;
+          const ags = garantirAgregadosNivelNucleo(nivel);
+          ags.push({
+            tipo: 'consolidado',
+            metrica: 'ecm_pct_meta',
+            condicaoEj: { logica: 'E', condicoes: [] },
+            operador: '>=',
+            valor: 80
+          });
+          nivel.agregado = ags[0];
+          persistirEdicaoEvento(ev, true);
+        });
+      });
+
+      container.querySelectorAll('[data-pnuc-del-ag]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const [pIdx, nIdx, aIdx] = btn.dataset.pnucDelAg.split(':').map(Number);
+          const nivel = ev.palcosNucleo[pIdx]?.niveis[nIdx];
+          if (!nivel || !Array.isArray(nivel.agregados) || nivel.agregados.length <= 1) return;
+          nivel.agregados.splice(aIdx, 1);
+          nivel.agregado = nivel.agregados[0];
+          persistirEdicaoEvento(ev, true);
+        });
+      });
+
       container.querySelectorAll('[data-pnuc-ag-tipo]').forEach(sel => {
         sel.addEventListener('change', () => {
-          const [pIdx, nIdx] = sel.dataset.pnucAgTipo.split(':').map(Number);
-          const ag = ev.palcosNucleo[pIdx]?.niveis[nIdx]?.agregado;
+          const [pIdx, nIdx, aIdx] = sel.dataset.pnucAgTipo.split(':').map(Number);
+          const nivel = ev.palcosNucleo[pIdx]?.niveis[nIdx];
+          const ag = nivel?.agregados?.[aIdx];
           if (!ag) return;
+          const tipoAnt = ag.tipo;
           ag.tipo = sel.value;
-          if ((ag.tipo === 'soma' || ag.tipo === 'media') && !ag.metrica) {
-            ag.metrica = 'fa_realizado';
+          if (!ag.metrica || !METRICAS[ag.metrica]) {
+            ag.metrica = 'fa_pct_meta';
           }
+          if ((ag.tipo === 'consolidado' || ag.tipo === 'media') && (tipoAnt === 'contagem' || tipoAnt === 'percentual')) {
+            ag.condicaoEj = { logica: 'E', condicoes: [] };
+          } else if ((ag.tipo === 'contagem' || ag.tipo === 'percentual') && (!ag.condicaoEj || !Array.isArray(ag.condicaoEj.condicoes) || ag.condicaoEj.condicoes.length === 0)) {
+            const mBase = METRICAS_PALCOS_IDS.includes(ag.metrica) ? ag.metrica : 'fa_pct_meta';
+            ag.condicaoEj = {
+              logica: 'E',
+              condicoes: [
+                mBase === 'cu_subindo_mes'
+                  ? { metrica: 'cu_subindo_mes', operador: '=', valor: true }
+                  : { metrica: mBase, operador: '>=', valor: 100 }
+              ]
+            };
+            if (ag.tipo === 'contagem') ag.valor = 6;
+          }
+          nivel.agregado = nivel.agregados[0];
           persistirEdicaoEvento(ev, true);
         });
       });
 
       container.querySelectorAll('[data-pnuc-ag-metrica]').forEach(sel => {
         sel.addEventListener('change', () => {
-          const [pIdx, nIdx] = sel.dataset.pnucAgMetrica.split(':').map(Number);
-          const ag = ev.palcosNucleo[pIdx]?.niveis[nIdx]?.agregado;
+          const [pIdx, nIdx, aIdx] = sel.dataset.pnucAgMetrica.split(':').map(Number);
+          const nivel = ev.palcosNucleo[pIdx]?.niveis[nIdx];
+          const ag = nivel?.agregados?.[aIdx];
           if (!ag) return;
+          const metricaAnt = ag.metrica;
           ag.metrica = sel.value;
+          if (ag.tipo === 'consolidado' && ag.metrica === 'cu_subindo_mes' && metricaAnt !== 'cu_subindo_mes') {
+            ag.valor = 6;
+          } else if (ag.tipo === 'consolidado' && metricaAnt === 'cu_subindo_mes' && ag.metrica !== 'cu_subindo_mes') {
+            ag.valor = 80;
+          }
+          nivel.agregado = nivel.agregados[0];
           persistirEdicaoEvento(ev, true);
         });
       });
 
       container.querySelectorAll('[data-pnuc-ag-op]').forEach(sel => {
         sel.addEventListener('change', () => {
-          const [pIdx, nIdx] = sel.dataset.pnucAgOp.split(':').map(Number);
-          const ag = ev.palcosNucleo[pIdx]?.niveis[nIdx]?.agregado;
+          const [pIdx, nIdx, aIdx] = sel.dataset.pnucAgOp.split(':').map(Number);
+          const nivel = ev.palcosNucleo[pIdx]?.niveis[nIdx];
+          const ag = nivel?.agregados?.[aIdx];
           if (!ag) return;
           ag.operador = sel.value;
+          nivel.agregado = nivel.agregados[0];
           persistirEdicaoEvento(ev, true);
         });
       });
 
       container.querySelectorAll('[data-pnuc-ag-val]').forEach(inp => {
         inp.addEventListener('input', () => {
-          const [pIdx, nIdx] = inp.dataset.pnucAgVal.split(':').map(Number);
-          const ag = ev.palcosNucleo[pIdx]?.niveis[nIdx]?.agregado;
+          const [pIdx, nIdx, aIdx] = inp.dataset.pnucAgVal.split(':').map(Number);
+          const nivel = ev.palcosNucleo[pIdx]?.niveis[nIdx];
+          const ag = nivel?.agregados?.[aIdx];
           if (!ag) return;
           ag.valor = Number(inp.value) || 0;
+          nivel.agregado = nivel.agregados[0];
           persistirEdicaoEvento(ev, false);
           const prevEl = container.querySelector(`[data-pnuc-preview="${pIdx}:${nIdx}"]`);
           if (prevEl) {
-            const avPreview = avaliarAgregadoNucleo(ag, STORE.ejs || []);
+            const avPreview = avaliarNivelPalcoNucleo(nivel, STORE.ejs || [], ctx);
             prevEl.innerHTML = `
-              <span>Resultado atual do Núcleo neste nível: <strong>${esc(avPreview.explicacao)}</strong></span>
-              <span>EJs que cumprem a condição: <strong>${avPreview.ejsQueCumprem.length} de ${(STORE.ejs || []).length}</strong></span>
+              <span>Resultado atual do Núcleo (${esc(MN[mesRef - 1])}): <strong>${esc(avPreview.explicacao)}</strong></span>
+              <span>EJs alinhadas ao critério: <strong>${avPreview.ejsQueCumprem.length} de ${(STORE.ejs || []).length}</strong></span>
             `;
           }
         });
@@ -6979,14 +7603,17 @@
 
       ev.palcosNucleo.forEach((palco, pIdx) => {
         (palco.niveis || []).forEach((nivel, nIdx) => {
-          if (!nivel.agregado) return;
-          if (!nivel.agregado.condicaoEj) nivel.agregado.condicaoEj = { logica: 'E', condicoes: [] };
-          const cbId = `pnuc_${pIdx}_${nIdx}`;
-          if (!bloqueado) {
-            vincularConstrutorCondicoes(cbId, nivel.agregado.condicaoEj, (req, reRenderDom) => {
-              persistirEdicaoEvento(ev, true);
-            });
-          }
+          const ags = garantirAgregadosNivelNucleo(nivel);
+          ags.forEach((ag, aIdx) => {
+            if (!ag.condicaoEj) ag.condicaoEj = { logica: 'E', condicoes: [] };
+            const cbId = `pnuc_${pIdx}_${nIdx}_${aIdx}`;
+            if (!bloqueado) {
+              vincularConstrutorCondicoes(cbId, ag.condicaoEj, (req, reRenderDom) => {
+                nivel.agregado = nivel.agregados[0];
+                persistirEdicaoEvento(ev, true);
+              }, { apenasPalcos: true, mesReferencia: mesRef });
+            }
+          });
         });
       });
     }
@@ -7049,7 +7676,7 @@
 
                   let detalheExplicacaoHtml = '';
                   if (!r.proximoNivel) {
-                    detalheExplicacaoHtml = `<span style="color:var(--success);font-weight:500;">✓ Nível máximo deste palco atingido</span>`;
+                    detalheExplicacaoHtml = `<span style="color:var(--good);font-weight:500;">✓ Nível máximo deste palco atingido</span>`;
                   } else {
                     const falhas = (r.proximoNivel.condicoesFalhas || []).map(f => `<div style="color:var(--danger);font-size:12px;">• Falta: ${esc(f.explicacao)}</div>`).join('');
                     const batidas = (r.proximoNivel.condicoesBatidas || []).map(b => `<div style="color:var(--text-muted);font-size:11.5px;">✓ Cumprido: ${esc(b.explicacao)}</div>`).join('');
@@ -7162,7 +7789,7 @@
                     <div style="font-size:13px;color:var(--text-secondary);">
                       ${pn.proximoNivel
                         ? `Próximo nível: <strong>${esc(pn.proximoNivel.nome)}</strong> — ${esc(pn.oQueFaltaProximoNivel)}`
-                        : `<span style="color:var(--success);font-weight:600;">✓ O Núcleo atingiu o nível máximo deste palco!</span>`}
+                        : `<span style="color:var(--good);font-weight:600;">✓ O Núcleo atingiu o nível máximo deste palco!</span>`}
                     </div>
                   </div>
                   ${tagAtingido}
@@ -7210,10 +7837,10 @@
                   ${prem.vencedores.map(v => {
                     const metricasTxt = (v.valoresRanking || []).map(vr => `<span>${esc(vr.rotulo)}: <strong>${esc(vr.valorFmt)}</strong></span>`).join(' · ');
                     return `
-                      <div style="border:1px solid var(--border);border-left:4px solid var(--success);border-radius:var(--radius-sm);padding:12px 14px;background:var(--surface);">
+                      <div style="border:1px solid var(--border);border-left:4px solid var(--good);border-radius:var(--radius-sm);padding:12px 14px;background:var(--surface);">
                         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px;">
                           <div style="display:flex;align-items:center;gap:6px;">
-                            <span style="font-size:12px;font-weight:700;color:var(--success);">#${v.posicao}º</span>
+                            <span style="font-size:12px;font-weight:700;color:var(--good);">#${v.posicao}º</span>
                             <a href="javascript:void(0)" data-open-ej="${esc(v.cod)}" style="font-size:14.5px;font-weight:600;color:var(--text);text-decoration:underline;">
                               ${esc(v.nome)}
                             </a>
@@ -7304,6 +7931,7 @@
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
               <span style="font-size:14.5px;font-weight:600;">${resultado.congelado ? '🔒 Resultado Congelado (Evento Encerrado)' : '⚡ Resultado Ao Vivo'}</span>
               ${renderStatusEventoTag(ev.status)}
+              <span class="tag tag-n">Mês selecionado (Cluster): ${esc(resultado.mesReferenciaNome || MN[(ev.mesReferencia || 12) - 1])}</span>
             </div>
             <div style="font-size:12.5px;color:var(--text-muted);">
               ${resultado.congelado
@@ -7537,7 +8165,10 @@
                 <div id="wrap_${cbId}">
                   ${gerarHtmlConstrutorCondicoes(cbId, prem.elegibilidade, {
                     titulo: 'Requisito de Elegibilidade para concorrer a esta premiação',
-                    mostrarPreview: true
+                    mostrarPreview: true,
+                    apenasPalcos: false,
+                    mesReferencia: ev.mesReferencia,
+                    bloqueado
                   })}
                 </div>
 
@@ -7736,7 +8367,7 @@
         if (!bloqueado) {
           vincularConstrutorCondicoes(cbId, prem.elegibilidade, (req, reRenderDom) => {
             persistirEdicaoEvento(ev, true);
-          });
+          }, { apenasPalcos: false, mesReferencia: ev.mesReferencia });
         }
       });
     }
@@ -7802,6 +8433,7 @@
       addRow(['Evento', ev.nome || '']);
       addRow(['Data do Evento', ev.data || '']);
       addRow(['Período de Referência', ev.periodoReferencia || '']);
+      addRow(['Mês Selecionado (Palcos / Cluster)', res.mesReferenciaNome || '']);
       addRow(['Status do Resultado', res.congelado ? 'ENCERRADO (RESULTADO CONGELADO)' : 'AO VIVO']);
       addRow(['Calculado em', fmtDate(res.calculadoEm)]);
       addRow(['Total de EJs Avaliadas', res.totalEjs]);
