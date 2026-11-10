@@ -5155,9 +5155,15 @@
       tipo: 'percentual',
       palco: true,
       extrair: (ej) => {
-        if (ej.pct !== undefined && ej.pct !== null) return (Number(ej.pct) || 0) * 100;
-        const meta = Number(ej.meta) || 0;
-        return meta > 0 ? ((Number(ej.fat) || 0) / meta) * 100 : 0;
+        if (!ej) return 0;
+        if (Object.prototype.hasOwnProperty.call(ej, 'meta')) {
+          const meta = Number(ej.meta) || 0;
+          if (meta <= 0) return 0;
+          if (Object.prototype.hasOwnProperty.call(ej, 'fat')) {
+            return ((Number(ej.fat) || 0) / meta) * 100;
+          }
+        }
+        return (Number(ej.pct) || 0) * 100;
       },
       extrairNucleo: (ejs) => {
         const sumFat = ejs.reduce((s, d) => s + (Number(d.fat) || 0), 0);
@@ -5217,7 +5223,10 @@
       rotulo: 'Faturamento — Meta Anual Batida?',
       indicador: 'Faturamento',
       tipo: 'booleano',
-      extrair: (ej) => (Array.isArray(ej.fa) ? ej.fa[0] === 'Meta batida' : (Number(ej.pct) || 0) >= 1)
+      extrair: (ej) => {
+        if (ej && Object.prototype.hasOwnProperty.call(ej, 'meta') && (Number(ej.meta) || 0) <= 0) return false;
+        return Array.isArray(ej.fa) ? ej.fa[0] === 'Meta batida' : (Number(ej.pct) || 0) * 100 + 0.05 >= 100;
+      }
     });
     registrarMetrica({
       id: 'fa_no_ritmo',
@@ -5276,6 +5285,23 @@
       }
     });
     registrarMetrica({
+      id: 'ecm_pct_atingimento',
+      rotulo: 'ECM — % da Meta de Engajamento com o MEJ',
+      indicador: 'ECM',
+      tipo: 'percentual',
+      extrair: (ej) => {
+        if (!ej) return 0;
+        const mem = Number(ej.mem) || 0;
+        if (mem <= 0) return 0;
+        const eng = Number(ej.eng) || 0;
+        const ealvo = Number(ej.ealvo) || 0;
+        if (ealvo > 0) return (eng / ealvo) * 100;
+        const ecmP = Number(ej.ecmP) || 0;
+        const pctMembros = (eng / mem) * 100;
+        return ecmP > 0 ? (pctMembros / ecmP) * 100 : 100;
+      }
+    });
+    registrarMetrica({
       id: 'ecm_meta_pct',
       rotulo: 'ECM — Meta de Engajamento da EJ (%)',
       indicador: 'ECM',
@@ -5323,7 +5349,18 @@
       rotulo: 'ECM — Meta da EJ Batida?',
       indicador: 'ECM',
       tipo: 'booleano',
-      extrair: (ej) => Array.isArray(ej.ecm) ? ej.ecm[0] === 'Meta batida' : false
+      extrair: (ej) => {
+        if (!ej) return false;
+        if (Object.prototype.hasOwnProperty.call(ej, 'mem')) {
+          const mem = Number(ej.mem) || 0;
+          if (mem <= 0) return false;
+          const ealvo = Number(ej.ealvo) || 0;
+          if (ealvo <= 0) return true;
+          const eng = Number(ej.eng) || 0;
+          return eng >= ealvo;
+        }
+        return Array.isArray(ej.ecm) ? ej.ecm[0] === 'Meta batida' : false;
+      }
     });
 
     // --- CSAT (cs) ---
@@ -5357,7 +5394,11 @@
       indicador: 'CSAT',
       tipo: 'percentual',
       palco: true,
-      extrair: (ej) => Number(ej.coleta) || 0,
+      extrair: (ej) => {
+        if (!ej) return 0;
+        if (Object.prototype.hasOwnProperty.call(ej, 'ctr') && (Number(ej.ctr) || 0) <= 0) return 0;
+        return Number(ej.coleta) || 0;
+      },
       extrairNucleo: (ejs) => {
         const comCtr = ejs.filter(d => (Number(d.ctr) || 0) > 0);
         const comColeta = (comCtr.length ? comCtr : ejs).filter(d => (Number(d.coleta) || 0) > 0);
@@ -5412,8 +5453,11 @@
       tipo: 'percentual',
       palco: true,
       extrair: (ej) => {
+        if (!ej) return 0;
         const cm = Number(ej.cm) || 0;
         const colab = Number(ej.colab) || 0;
+        // Regra do edital e do Monitor: se a EJ não tem meta de colab (cm <= 0), considerar atendido (100%)
+        if (Object.prototype.hasOwnProperty.call(ej, 'cm') && cm <= 0) return 100;
         return cm > 0 ? (colab / cm) * 100 : (colab > 0 ? 100 : 0);
       },
       extrairNucleo: (ejs) => {
@@ -5520,6 +5564,14 @@
       extrair: (ej) => (Array.isArray(ej.cu) ? ej.cu[0] : ej.cu) === 'Sobe'
     });
     registrarMetrica({
+      id: 'cu_sobe_num',
+      rotulo: 'Cluster — Subiu de Cluster (1 = Sim, 0 = Não)',
+      indicador: 'Cluster',
+      tipo: 'numero',
+      extrair: (ej) => ((Array.isArray(ej?.cu) ? ej.cu[0] : ej?.cu) === 'Sobe') ? 1 : 0,
+      formatar: (v) => Number(v) >= 1 ? 'Sim (Sobe)' : 'Não'
+    });
+    registrarMetrica({
       id: 'cu_mantem_ou_sobe',
       rotulo: 'Cluster — Mantém ou Sobe?',
       indicador: 'Cluster',
@@ -5547,8 +5599,129 @@
       }
     });
 
+    // Helper para calcular o atingimento médio das metas (EJ Pertencer) com configuração flexível
+    function calcularAtingimentoMedioEj(ej, cfg = {}) {
+      if (!ej) return 0;
+      const usarFat = cfg.fat !== false;
+      const usarColab = cfg.colab !== false;
+      const usarEcm = cfg.ecm !== false;
+      const usarCsat = cfg.csat !== false;
+      const usarColetaNoCsat = Boolean(cfg.csatUsarColeta);
+      const teto100 = Boolean(cfg.teto100);
+      const cap = (v) => teto100 ? Math.min(100, Math.max(0, v)) : Math.max(0, v);
+
+      const partes = [];
+      if (usarFat) {
+        const pctFat = (Number(ej.meta) || 0) > 0 ? ((Number(ej.fat) || 0) / Number(ej.meta)) * 100 : 0;
+        partes.push(cap(pctFat));
+      }
+      if (usarColab) {
+        const cm = Number(ej.cm) || 0;
+        const colab = Number(ej.colab) || 0;
+        const pctColab = cm > 0 ? (colab / cm) * 100 : 100;
+        partes.push(cap(pctColab));
+      }
+      if (usarEcm) {
+        const pctEcm = METRICAS.ecm_pct_atingimento.extrair(ej);
+        partes.push(cap(pctEcm));
+      }
+      if (usarCsat) {
+        let pctCsat = 0;
+        if ((Number(ej.ctr) || 0) > 0) {
+          if (usarColetaNoCsat) {
+            pctCsat = Number(ej.coleta) || 0;
+          } else {
+            const calvo = Number(ej.calvo) || 3.5;
+            pctCsat = calvo > 0 ? ((Number(ej.nota) || 0) / calvo) * 100 : 0;
+          }
+        }
+        partes.push(cap(pctCsat));
+      }
+      if (!partes.length) return 0;
+      return partes.reduce((a, b) => a + b, 0) / partes.length;
+    }
+
+    registrarMetrica({
+      id: 'atingimento_medio_metas',
+      rotulo: 'Geral — Atingimento Médio das Metas: Fat, Colab, ECM e CSAT (%)',
+      indicador: 'Geral',
+      tipo: 'percentual',
+      extrair: (ej) => {
+        const cfg = (ej && ej.__configMediaPertencer) || {};
+        return calcularAtingimentoMedioEj(ej, cfg);
+      }
+    });
+
+    // Helper para verificar se a EJ possui dados de 2025 preenchidos e calcular o % de crescimento sobre 2025 (EJ Faísca)
+    function ejTemDados2025Preenchidos(ej, dados2025Map) {
+      if (!ej) return false;
+      const map = dados2025Map || (ej && ej.__dados2025Map) || {};
+      const reg = map[String(ej.cod)] || null;
+      if (!reg || typeof reg !== 'object') return false;
+      const chaves = ['mediaManual', 'crescFat', 'crescColab', 'crescEcm', 'crescCsat', 'fat2025', 'colab2025', 'ecm2025', 'csat2025'];
+      return chaves.some(k => reg[k] !== undefined && reg[k] !== '' && reg[k] !== null && !isNaN(Number(reg[k])));
+    }
+
+    function calcularCrescimentoFaisca2025Ej(ej, dados2025Map) {
+      if (!ej) return 0;
+      const map = dados2025Map || (ej && ej.__dados2025Map) || {};
+      const reg = map[String(ej.cod)] || null;
+      if (reg && typeof reg === 'object') {
+        if (reg.mediaManual !== undefined && reg.mediaManual !== '' && reg.mediaManual !== null && !isNaN(Number(reg.mediaManual))) {
+          return Number(reg.mediaManual);
+        }
+        const partes = [];
+        const numVal = (v) => (v !== undefined && v !== '' && v !== null && !isNaN(Number(v))) ? Number(v) : null;
+
+        // 1. Faturamento (% direto ou via meta/base 2025)
+        const cFat = numVal(reg.crescFat);
+        const bFat = numVal(reg.fat2025);
+        if (cFat !== null) partes.push(cFat);
+        else if (bFat !== null && bFat > 0) partes.push((((Number(ej.meta) || 0) - bFat) / bFat) * 100);
+
+        // 2. Colaborativo (% direto ou via meta/base 2025)
+        const cColab = numVal(reg.crescColab);
+        const bColab = numVal(reg.colab2025);
+        if (cColab !== null) partes.push(cColab);
+        else if (bColab !== null && bColab > 0) partes.push((((Number(ej.cm) || 0) - bColab) / bColab) * 100);
+
+        // 3. ECM (% direto ou via meta/base 2025)
+        const cEcm = numVal(reg.crescEcm);
+        const bEcm = numVal(reg.ecm2025);
+        if (cEcm !== null) partes.push(cEcm);
+        else if (bEcm !== null && bEcm > 0) partes.push((((Number(ej.ealvo) || 0) - bEcm) / bEcm) * 100);
+
+        // 4. CSAT (% direto ou via meta/base 2025)
+        const cCsat = numVal(reg.crescCsat);
+        const bCsat = numVal(reg.csat2025);
+        if (cCsat !== null) partes.push(cCsat);
+        else if (bCsat !== null && bCsat > 0) partes.push((((Number(ej.calvo) || 3.5) - bCsat) / bCsat) * 100);
+
+        if (partes.length > 0) {
+          return partes.reduce((a, b) => a + b, 0) / partes.length;
+        }
+      }
+      return 0;
+    }
+
+    registrarMetrica({
+      id: 'faisca_crescimento_2025',
+      rotulo: 'Geral — % Crescimento das Metas sobre 2025 (EJ Faísca)',
+      indicador: 'Geral',
+      tipo: 'percentual',
+      extrair: (ej) => calcularCrescimentoFaisca2025Ej(ej)
+    });
+
+    const TOLERANCIA_ARREDONDAMENTO_PP = 0.05;
+
+    function fmtNumCurto(n) {
+      const v = Number(n) || 0;
+      return v.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 1 });
+    }
+
     /**
      * Compara dois valores segundo um operador ('>=', '>', '<=', '<', '=', '!=') e tipo da métrica.
+     * Aplica tolerância de arredondamento de 0,05 ponto percentual para métricas percentuais.
      */
     function compararValores(valorAtual, operador, valorExigido, tipo) {
       const op = String(operador || '=').trim();
@@ -5568,12 +5741,12 @@
       }
       const a = Number(valorAtual) || 0;
       const b = Number(valorExigido) || 0;
-      const eps = 1e-9;
+      const eps = tipo === 'percentual' ? (TOLERANCIA_ARREDONDAMENTO_PP + 1e-9) : 1e-9;
       switch (op) {
         case '>=': return a + eps >= b;
-        case '>':  return a > b + eps;
+        case '>':  return a > b - 1e-9;
         case '<=': return a - eps <= b;
-        case '<':  return a < b - eps;
+        case '<':  return a < b + 1e-9;
         case '=':
         case '==': return Math.abs(a - b) <= eps;
         case '!=':
@@ -5590,6 +5763,7 @@
       if (!condicao || !condicao.metrica) {
         return {
           bateu: true,
+          inativo: true,
           metrica: null,
           rotulo: 'Sem condição',
           operador: '=',
@@ -5599,7 +5773,8 @@
           valorExigidoFmt: '—',
           diferenca: 0,
           diferencaFmt: '0',
-          explicacao: 'Condição vazia (cumprida por padrão)'
+          explicacao: 'Condição vazia (cumprida por padrão)',
+          explicacaoCurta: ''
         };
       }
 
@@ -5614,7 +5789,39 @@
       const operador = condicao.operador || '>=';
       const valorAtual = def.extrair(ej, ctx);
       const valorExigido = condicao.valor;
-      const bateu = compararValores(valorAtual, operador, valorExigido, def.tipo);
+
+      // Regra de critério ativo nos Palcos:
+      // - Critério percentual/numérico com operador '>=' e valor <= 0 (0 = não exige) é inativo -> cumprido automaticamente.
+      // - ECM quando configurado como não exigido (condicao.inativo === true ou ecm_meta_batida = false em palco) é inativo.
+      if (
+        condicao.inativo === true ||
+        ((operador === '>=') && (def.tipo === 'percentual' || def.tipo === 'numero') && (Number(valorExigido) || 0) <= 0) ||
+        (def.id === 'ecm_meta_batida' && (operador === '=' || operador === '==') && normalizarBooleano(valorExigido) === false)
+      ) {
+        return {
+          bateu: true,
+          inativo: true,
+          metrica: def.id,
+          rotulo: def.rotulo,
+          tipo: def.tipo,
+          operador,
+          valorAtual,
+          valorExigido,
+          valorAtualFmt: def.formatar(valorAtual),
+          valorExigidoFmt: 'Não exige',
+          diferenca: 0,
+          diferencaFmt: '',
+          explicacao: `${def.rotulo}: não exigido`,
+          explicacaoCurta: ''
+        };
+      }
+
+      let bateu = compararValores(valorAtual, operador, valorExigido, def.tipo);
+
+      // Regra explícita do edital: Faturamento — se a meta for <= 0, a EJ não bate
+      if (def.id === 'fa_pct_meta' && (Number(valorExigido) || 0) > 0 && ej && Object.prototype.hasOwnProperty.call(ej, 'meta') && (Number(ej.meta) || 0) <= 0) {
+        bateu = false;
+      }
 
       const valorAtualFmt = def.formatar(valorAtual);
       const valorExigidoFmt = def.formatar(valorExigido);
@@ -5624,6 +5831,7 @@
         if (det && typeof det === 'object') {
           return {
             bateu,
+            inativo: false,
             metrica: def.id,
             rotulo: def.rotulo,
             tipo: def.tipo,
@@ -5634,7 +5842,8 @@
             valorExigidoFmt,
             diferenca: det.diferenca ?? 0,
             diferencaFmt: det.diferencaFmt ?? '',
-            explicacao: det.explicacao || `${def.rotulo}: ${valorAtualFmt}`
+            explicacao: det.explicacao || `${def.rotulo}: ${valorAtualFmt}`,
+            explicacaoCurta: det.diferencaFmt || det.explicacao || ''
           };
         }
       }
@@ -5646,10 +5855,35 @@
         const b = Number(valorExigido) || 0;
         if (operador === '>=' || operador === '>' || operador === '=') {
           diferenca = Math.max(0, b - a);
-          diferencaFmt = `falta ${def.formatar(diferenca)}`;
+          diferencaFmt = def.tipo === 'percentual'
+            ? `falta ${fmtNumCurto(diferenca)} p.p.`
+            : `falta ${def.formatar(diferenca)}`;
         } else if (operador === '<=' || operador === '<') {
           diferenca = Math.max(0, a - b);
           diferencaFmt = `excedeu em ${def.formatar(diferenca)}`;
+        }
+      }
+
+      let explicacaoCurta = '';
+      if (!bateu) {
+        if (def.id === 'fa_pct_meta') {
+          const semMeta = ej && Object.prototype.hasOwnProperty.call(ej, 'meta') && (Number(ej.meta) || 0) <= 0;
+          explicacaoCurta = semMeta
+            ? `Faturamento 0% (sem meta anual)`
+            : `Faturamento ${fmtNumCurto(valorAtual)}% (falta ${fmtNumCurto(diferenca)} p.p.)`;
+        } else if (def.id === 'ecm_meta_batida') {
+          const mem = Number(ej?.mem) || 0;
+          const eng = Number(ej?.eng) || 0;
+          const ealvo = Number(ej?.ealvo) || 0;
+          explicacaoCurta = mem <= 0
+            ? `ECM sem membros (0 membros)`
+            : `ECM ${eng}/${ealvo} engajados (falta ${Math.max(1, ealvo - eng)})`;
+        } else if (def.id === 'cs_coleta') {
+          explicacaoCurta = `CSAT ${fmtNumCurto(valorAtual)}% (falta ${fmtNumCurto(diferenca)} p.p.)`;
+        } else if (def.id === 'co_pct_meta') {
+          explicacaoCurta = `Colaborativo ${fmtNumCurto(valorAtual)}% (falta ${fmtNumCurto(diferenca)} p.p.)`;
+        } else {
+          explicacaoCurta = `${def.rotulo}: ${valorAtualFmt}${diferencaFmt ? ` (${diferencaFmt})` : ''}`;
         }
       }
 
@@ -5659,6 +5893,7 @@
 
       return {
         bateu,
+        inativo: false,
         metrica: def.id,
         rotulo: def.rotulo,
         tipo: def.tipo,
@@ -5669,7 +5904,8 @@
         valorExigidoFmt,
         diferenca,
         diferencaFmt,
-        explicacao
+        explicacao,
+        explicacaoCurta
       };
     }
 
@@ -5687,7 +5923,8 @@
           avaliacoes: [],
           condicoesBatidas: [],
           condicoesFalhas: [],
-          resumoFalta: ''
+          resumoFalta: '',
+          resumoFaltaCurto: ''
         };
       }
 
@@ -5700,7 +5937,8 @@
           avaliacoes: [av],
           condicoesBatidas: av.bateu ? [av] : [],
           condicoesFalhas: av.bateu ? [] : [av],
-          resumoFalta: av.bateu ? '' : av.explicacao
+          resumoFalta: av.bateu ? '' : av.explicacao,
+          resumoFaltaCurto: av.bateu ? '' : (av.explicacaoCurta || av.explicacao)
         };
       }
 
@@ -5718,7 +5956,8 @@
           avaliacoes: [],
           condicoesBatidas: [],
           condicoesFalhas: [],
-          resumoFalta: ''
+          resumoFalta: '',
+          resumoFaltaCurto: ''
         };
       }
 
@@ -5739,23 +5978,31 @@
           const av = avaliarCondicao(item, ej, ctx);
           avaliacoes.push(av);
           if (av.bateu) {
-            condicoesBatidas.push(av);
+            if (!av.inativo) condicoesBatidas.push(av);
           } else {
             condicoesFalhas.push(av);
           }
         }
       }
 
-      const bateu = logica === 'OU'
-        ? avaliacoes.some(a => a.bateu)
-        : avaliacoes.every(a => a.bateu);
+      const avaliacoesAtivas = avaliacoes.filter(a => !a.inativo);
+      const bateu = avaliacoesAtivas.length === 0
+        ? true
+        : (logica === 'OU'
+            ? avaliacoesAtivas.some(a => a.bateu)
+            : avaliacoesAtivas.every(a => a.bateu));
 
       let resumoFalta = '';
+      let resumoFaltaCurto = '';
       if (!bateu) {
         const textosFalhas = condicoesFalhas.map(f => f.explicacao);
+        const textosCurtos = condicoesFalhas.map(f => f.explicacaoCurta || f.explicacao);
         resumoFalta = logica === 'OU'
           ? `Não atingiu nenhuma das opções (${textosFalhas.join(' OU ')})`
           : textosFalhas.join(' | ');
+        resumoFaltaCurto = logica === 'OU'
+          ? textosCurtos.join(' OU ')
+          : textosCurtos.join(' · ');
       }
 
       return {
@@ -5764,14 +6011,32 @@
         avaliacoes,
         condicoesBatidas,
         condicoesFalhas,
-        resumoFalta
+        resumoFalta,
+        resumoFaltaCurto
       };
+    }
+
+    /**
+     * Compara duas EJs para o Ranking dos Palcos:
+     * 1º % da meta de faturamento (decrescente)
+     * 2º Desempate por % de colaborativo (decrescente)
+     * 3º Desempate por % coleta de CSAT (decrescente)
+     * 4º Ordem alfabética
+     */
+    function compararEjsRankingPalco(a, b) {
+      const eps = 1e-6;
+      if (Math.abs(b.pctFat - a.pctFat) > eps) return b.pctFat - a.pctFat;
+      if (Math.abs(b.pctColab - a.pctColab) > eps) return b.pctColab - a.pctColab;
+      if (Math.abs(b.csatColeta - a.csatColeta) > eps) return b.csatColeta - a.csatColeta;
+      return String(a.nome || '').localeCompare(String(b.nome || ''), 'pt-BR');
     }
 
     /**
      * Avalia um Palco das EJs para a lista de EJs.
      * Regra 1: a EJ fica no MAIOR nível em que cumpre todo o requisito.
      * Se exigirNiveisAnteriores=true, só sobe se cumpriu todos os níveis anteriores em ordem.
+     * Também gera, para cada nível (ex.: Bronze, Prata, Ouro), o Ranking das EJs que bateram
+     * e a lista "Quase lá" ordenada por menos critérios faltando.
      */
     function avaliarPalcoEj(palco, dadosEjs, ctx) {
       const ctxPalco = Object.assign({}, ctx || {});
@@ -5790,7 +6055,8 @@
             bateuRequisito: av.bateu,
             condicoesBatidas: av.condicoesBatidas,
             condicoesFalhas: av.condicoesFalhas,
-            resumoFalta: av.resumoFalta
+            resumoFalta: av.resumoFalta,
+            resumoFaltaCurto: av.resumoFaltaCurto || av.resumoFalta
           };
         });
 
@@ -5826,14 +6092,38 @@
               nome: avaliacoesPorNivel[indiceProximo].nome,
               condicoesBatidas: avaliacoesPorNivel[indiceProximo].condicoesBatidas,
               condicoesFalhas: avaliacoesPorNivel[indiceProximo].condicoesFalhas,
-              oQueFalta: avaliacoesPorNivel[indiceProximo].resumoFalta
+              oQueFalta: avaliacoesPorNivel[indiceProximo].resumoFalta,
+              oQueFaltaCurto: avaliacoesPorNivel[indiceProximo].resumoFaltaCurto
             }
           : null;
+
+        const pctFat = METRICAS.fa_pct_meta.extrair(ej);
+        const temMetaFat = !Object.prototype.hasOwnProperty.call(ej, 'meta') || (Number(ej.meta) || 0) > 0;
+        const ecmBatida = METRICAS.ecm_meta_batida.extrair(ej);
+        const pctEcm = METRICAS.ecm_pct_atingimento.extrair(ej);
+        const csatColeta = METRICAS.cs_coleta.extrair(ej);
+        const pctColab = METRICAS.co_pct_meta.extrair(ej);
+        const temMetaColab = !Object.prototype.hasOwnProperty.call(ej, 'cm') || (Number(ej.cm) || 0) > 0;
 
         return {
           cod: ej.cod,
           nome: ej.nome,
           cl: ej.cl,
+          pctFat,
+          temMetaFat,
+          ecmBatida,
+          pctEcm,
+          eng: Number(ej.eng) || 0,
+          ealvo: Number(ej.ealvo) || 0,
+          mem: Number(ej.mem) || 0,
+          ecmP: Number(ej.ecmP) || 0,
+          csatColeta,
+          coletaCsat: csatColeta,
+          ctr: Number(ej.ctr) || 0,
+          pctColab,
+          temMetaColab,
+          semMetaColab: !temMetaColab,
+          semMembrosEcm: (Number(ej.mem) || 0) <= 0,
           nivelAtingido,
           proximoNivel,
           oQueFalta: proximoNivel ? proximoNivel.oQueFalta : 'Nível máximo atingido',
@@ -5841,15 +6131,103 @@
         };
       });
 
-      const resumoNiveis = niveisOrdenados.map(n => {
+      const resumoNiveis = niveisOrdenados.map((n, idxNivel) => {
+        const ordemNivel = Number(n.ordem) || 0;
+        const nomeNivel = n.nome || `Nível ${n.ordem}`;
+
+        // EJs cujo maior nível atingido é este
         const ejsNoNivel = resultadosPorEj.filter(
-          r => r.nivelAtingido && r.nivelAtingido.ordem === (Number(n.ordem) || 0) && r.nivelAtingido.nome === (n.nome || `Nível ${n.ordem}`)
+          r => r.nivelAtingido && r.nivelAtingido.ordem === ordemNivel && r.nivelAtingido.nome === nomeNivel
         );
+
+        // Ranking das EJs que bateram este palco específico
+        const bateramBruto = resultadosPorEj.filter(r => {
+          const avN = r.niveis[idxNivel];
+          if (!avN || !avN.bateuRequisito) return false;
+          if (exigirAnteriores) {
+            for (let k = 0; k < idxNivel; k++) {
+              if (!r.niveis[k].bateuRequisito) return false;
+            }
+          }
+          return true;
+        });
+
+        const rankingBateram = [...bateramBruto].sort(compararEjsRankingPalco).map((r, idxPos, arr) => {
+          let posicao = idxPos + 1;
+          if (idxPos > 0) {
+            const prev = arr[idxPos - 1];
+            if (
+              Math.abs(prev.pctFat - r.pctFat) <= 1e-6 &&
+              Math.abs(prev.pctColab - r.pctColab) <= 1e-6 &&
+              Math.abs(prev.csatColeta - r.csatColeta) <= 1e-6
+            ) {
+              posicao = prev._posicaoCalc || idxPos;
+            }
+          }
+          r._posicaoCalc = posicao;
+          return {
+            posicao,
+            cod: r.cod,
+            nome: r.nome,
+            cl: r.cl,
+            pctFat: r.pctFat,
+            temMetaFat: r.temMetaFat,
+            ecmBatida: r.ecmBatida,
+            pctEcm: r.pctEcm,
+            eng: r.eng,
+            ealvo: r.ealvo,
+            mem: r.mem,
+            semMembrosEcm: r.semMembrosEcm,
+            csatColeta: r.csatColeta,
+            coletaCsat: r.csatColeta,
+            ctr: r.ctr,
+            pctColab: r.pctColab,
+            temMetaColab: r.temMetaColab,
+            semMetaColab: r.semMetaColab,
+            palcoMaisAlto: r.nivelAtingido ? r.nivelAtingido.nome : nomeNivel
+          };
+        });
+
+        // Seção "Quase lá": EJs que não bateram este palco, ordenadas por menos critérios faltando
+        const setBateram = new Set(bateramBruto.map(r => String(r.cod)));
+        const quaseLa = resultadosPorEj
+          .filter(r => !setBateram.has(String(r.cod)))
+          .map(r => {
+            const avN = r.niveis[idxNivel] || { condicoesFalhas: [], resumoFaltaCurto: '' };
+            const falhas = avN.condicoesFalhas || [];
+            const qtdFaltando = Math.max(1, falhas.length);
+            const somaFaltaPp = falhas.reduce((acc, f) => acc + (Number(f.diferenca) > 0 ? Number(f.diferenca) : 25), 0);
+            const textoCurto = avN.resumoFaltaCurto || avN.resumoFalta || 'Requisitos pendentes';
+            return {
+              cod: r.cod,
+              nome: r.nome,
+              cl: r.cl,
+              pctFat: r.pctFat,
+              pctColab: r.pctColab,
+              csatColeta: r.csatColeta,
+              coletaCsat: r.csatColeta,
+              palcoMaisAlto: r.nivelAtingido ? r.nivelAtingido.nome : 'Sem palco',
+              qtdFaltando,
+              somaFaltaPp,
+              oQueFalta: textoCurto,
+              oQueFaltaCurto: textoCurto
+            };
+          })
+          .sort((a, b) => {
+            if (a.qtdFaltando !== b.qtdFaltando) return a.qtdFaltando - b.qtdFaltando;
+            if (Math.abs(a.somaFaltaPp - b.somaFaltaPp) > 1e-6) return a.somaFaltaPp - b.somaFaltaPp;
+            return compararEjsRankingPalco(a, b);
+          });
+
         return {
-          ordem: Number(n.ordem) || 0,
-          nome: n.nome || `Nível ${n.ordem}`,
+          ordem: ordemNivel,
+          nome: nomeNivel,
+          requisito: n.requisito,
           quantidade: ejsNoNivel.length,
-          ejs: ejsNoNivel
+          ejs: ejsNoNivel,
+          quantidadeBateram: rankingBateram.length,
+          rankingBateram,
+          quaseLa
         };
       });
 
@@ -5870,7 +6248,7 @@
 
     /**
      * Avalia um agregado do Núcleo sobre todas as EJs:
-     * agregado = { tipo: "consolidado"|"contagem"|"percentual"|"soma"|"media", metrica?, condicaoEj?: requisito, operador, valor }
+     * agregado = { tipo: "contagem"|"percentual"|"soma"|"media", metrica?, condicaoEj?: requisito, operador, valor }
      */
     function avaliarAgregadoNucleo(agregado, dadosEjs, ctx) {
       if (!agregado) {
@@ -6130,13 +6508,13 @@
      * Compara duas EJs segundo uma lista de critérios de ordenação [{ metrica, ordem: 'maior'|'menor' }].
      * Retorna < 0 se A vem antes de B, > 0 se B vem antes de A, e 0 se empatarem em todos os critérios.
      */
-    function compararEjsPorCriterios(ejA, ejB, criterios, ctx) {
+    function compararEjsPorCriterios(ejA, ejB, criterios) {
       const eps = 1e-9;
       for (const crit of criterios) {
         if (!crit || !crit.metrica) continue;
         const def = METRICAS[crit.metrica];
-        const vA = def ? (Number(def.extrair(ejA, ctx)) || 0) : (Number(ejA[crit.metrica]) || 0);
-        const vB = def ? (Number(def.extrair(ejB, ctx)) || 0) : (Number(ejB[crit.metrica]) || 0);
+        const vA = def ? (Number(def.extrair(ejA)) || 0) : (Number(ejA[crit.metrica]) || 0);
+        const vB = def ? (Number(def.extrair(ejB)) || 0) : (Number(ejB[crit.metrica]) || 0);
         if (Math.abs(vA - vB) > eps) {
           const menorPrimeiro = String(crit.ordem || 'maior').toLowerCase() === 'menor';
           return menorPrimeiro ? (vA - vB) : (vB - vA);
@@ -6153,20 +6531,32 @@
      * - modo "topN": ranking pela métrica principal + desempate em ordem; se ainda empatar, mantém empatadas e sinaliza.
      * - Explicabilidade completa para vencedoras e não vencedoras.
      */
-    function avaliarPremiacoes(premiacoes, dadosEjs, ctx) {
+    function avaliarPremiacoes(premiacoes, dadosEjs, evento = null) {
       const listaOrdenada = [...(premiacoes || [])].sort((a, b) => {
         const pA = Number(a.prioridade) || 9999;
         const pB = Number(b.prioridade) || 9999;
         return pA - pB;
       });
 
+      const dados2025Map = (evento && evento.dados2025 && typeof evento.dados2025 === 'object') ? evento.dados2025 : {};
       // Registro de vencedores já apurados: premiacaoId -> { nome, vencedores: Set(cod) }
       const historicoVencedores = {};
 
       return listaOrdenada.map(prem => {
-        const modo = prem.modo === 'todos' ? 'todos' : 'topN';
+        const modoBase = prem.modo === 'manual' ? 'manual' : (prem.modo === 'todos' ? 'todos' : 'topN');
+        const usarManualFaisca = Boolean(prem.metricaRanking === 'faisca_crescimento_2025' && prem.usarVencedoraManual);
+        const modo = usarManualFaisca ? 'manual' : modoBase;
         const topN = Math.max(1, Number(prem.n) || 1);
         const naoAcumulaIds = Array.isArray(prem.naoAcumulaCom) ? prem.naoAcumulaCom.map(String) : [];
+        const vencedorasManuaisSet = new Set((Array.isArray(prem.vencedorasManuais) ? prem.vencedorasManuais : []).map(String));
+
+        // Injeta contexto dinâmico nas EJs para métricas parametrizadas (EJ Pertencer e EJ Faísca)
+        dadosEjs.forEach(ej => {
+          if (ej && typeof ej === 'object') {
+            ej.__configMediaPertencer = prem.configMediaPertencer || {};
+            ej.__dados2025Map = dados2025Map;
+          }
+        });
 
         // Critérios de ranking (métrica principal + critérios de desempate)
         const criteriosRanking = [];
@@ -6188,11 +6578,15 @@
         }
 
         const candidatas = [];
+        const elegiveisBrutas = [];
         const naoVencedoras = [];
+
+        const ehPremFaisca = prem.metricaRanking === 'faisca_crescimento_2025';
+        const algumaEjTemDados2025 = ehPremFaisca && dadosEjs.some(ej => ejTemDados2025Preenchidos(ej, dados2025Map));
 
         dadosEjs.forEach(ej => {
           const codStr = String(ej.cod);
-          const avElegibilidade = avaliarRequisito(prem.elegibilidade, ej, ctx);
+          const avElegibilidade = avaliarRequisito(prem.elegibilidade, ej);
 
           // Verifica se esta EJ já venceu alguma premiação listada em naoAcumulaCom
           const premiosConflitantes = [];
@@ -6205,7 +6599,7 @@
 
           const valoresRanking = criteriosRanking.map(c => {
             const def = METRICAS[c.metrica];
-            const val = def ? def.extrair(ej, ctx) : ej[c.metrica];
+            const val = def ? def.extrair(ej) : ej[c.metrica];
             return {
               metrica: c.metrica,
               rotulo: def ? def.rotulo : c.metrica,
@@ -6215,21 +6609,100 @@
             };
           });
 
-          if (premiosConflitantes.length > 0) {
-            naoVencedoras.push({
-              cod: ej.cod,
-              nome: ej.nome,
-              cl: ej.cl,
-              elegivel: avElegibilidade.bateu,
-              impedida: true,
-              premiosConflitantes,
-              motivoTipo: 'impedida_nao_acumula',
-              motivoNaoVenceu: `Impedida (não acumula com: ${premiosConflitantes.join(', ')})`,
-              condicoesBatidas: avElegibilidade.condicoesBatidas,
-              condicoesFalhas: avElegibilidade.condicoesFalhas,
-              valoresRanking
-            });
+          if (modo === 'manual') {
+            if (premiosConflitantes.length > 0) {
+              naoVencedoras.push({
+                cod: ej.cod,
+                nome: ej.nome,
+                cl: ej.cl,
+                elegivel: avElegibilidade.bateu,
+                impedida: true,
+                premiosConflitantes,
+                motivoTipo: 'impedida_nao_acumula',
+                motivoNaoVenceu: `Impedida (não acumula com: ${premiosConflitantes.join(', ')})`,
+                condicoesBatidas: avElegibilidade.condicoesBatidas,
+                condicoesFalhas: avElegibilidade.condicoesFalhas,
+                valoresRanking
+              });
+              return;
+            }
+            if (vencedorasManuaisSet.has(codStr)) {
+              candidatas.push({
+                ej,
+                cod: ej.cod,
+                nome: ej.nome,
+                cl: ej.cl,
+                elegivel: true,
+                impedida: false,
+                condicoesBatidas: avElegibilidade.condicoesBatidas,
+                condicoesFalhas: [],
+                valoresRanking
+              });
+            } else {
+              naoVencedoras.push({
+                cod: ej.cod,
+                nome: ej.nome,
+                cl: ej.cl,
+                elegivel: true,
+                impedida: false,
+                motivoTipo: 'manual',
+                motivoNaoVenceu: 'Apuração manual (não marcada como vencedora)',
+                condicoesBatidas: avElegibilidade.condicoesBatidas,
+                condicoesFalhas: [],
+                valoresRanking
+              });
+            }
             return;
+          }
+
+          // Caso especial EJ Faísca: exige dados de 2025 preenchidos (ou seleção manual se nenhum dado de 2025 existir ainda)
+          if (ehPremFaisca) {
+            if (!algumaEjTemDados2025 && vencedorasManuaisSet.size > 0) {
+              if (vencedorasManuaisSet.has(codStr) && premiosConflitantes.length === 0) {
+                candidatas.push({
+                  ej,
+                  cod: ej.cod,
+                  nome: ej.nome,
+                  cl: ej.cl,
+                  elegivel: true,
+                  impedida: false,
+                  condicoesBatidas: avElegibilidade.condicoesBatidas,
+                  condicoesFalhas: [],
+                  valoresRanking
+                });
+              } else {
+                naoVencedoras.push({
+                  cod: ej.cod,
+                  nome: ej.nome,
+                  cl: ej.cl,
+                  elegivel: false,
+                  impedida: premiosConflitantes.length > 0,
+                  premiosConflitantes,
+                  motivoTipo: premiosConflitantes.length > 0 ? 'impedida_nao_acumula' : 'sem_dados_2025',
+                  motivoNaoVenceu: premiosConflitantes.length > 0
+                    ? `Impedida (não acumula com: ${premiosConflitantes.join(', ')})`
+                    : 'Não selecionada manualmente / sem dados de 2025 preenchidos',
+                  condicoesBatidas: [],
+                  condicoesFalhas: [],
+                  valoresRanking
+                });
+              }
+              return;
+            } else if (!ejTemDados2025Preenchidos(ej, dados2025Map)) {
+              naoVencedoras.push({
+                cod: ej.cod,
+                nome: ej.nome,
+                cl: ej.cl,
+                elegivel: false,
+                impedida: false,
+                motivoTipo: 'sem_dados_2025',
+                motivoNaoVenceu: 'Preencha os dados de 2025 desta EJ para entrar na apuração da EJ Faísca',
+                condicoesBatidas: [],
+                condicoesFalhas: [],
+                valoresRanking
+              });
+              return;
+            }
           }
 
           if (!avElegibilidade.bateu) {
@@ -6241,6 +6714,37 @@
               impedida: false,
               motivoTipo: 'inelegivel',
               motivoNaoVenceu: avElegibilidade.resumoFalta || 'Não cumpriu os requisitos de elegibilidade',
+              condicoesBatidas: avElegibilidade.condicoesBatidas,
+              condicoesFalhas: avElegibilidade.condicoesFalhas,
+              valoresRanking
+            });
+            return;
+          }
+
+          // Está elegível nos critérios da premiação (guarda na lista bruta mesmo que impedida por acúmulo)
+          elegiveisBrutas.push({
+            ej,
+            cod: ej.cod,
+            nome: ej.nome,
+            cl: ej.cl,
+            elegivel: true,
+            impedida: premiosConflitantes.length > 0,
+            premiosConflitantes,
+            condicoesBatidas: avElegibilidade.condicoesBatidas,
+            condicoesFalhas: [],
+            valoresRanking
+          });
+
+          if (premiosConflitantes.length > 0) {
+            naoVencedoras.push({
+              cod: ej.cod,
+              nome: ej.nome,
+              cl: ej.cl,
+              elegivel: true,
+              impedida: true,
+              premiosConflitantes,
+              motivoTipo: 'impedida_nao_acumula',
+              motivoNaoVenceu: `Impedida (não acumula com: ${premiosConflitantes.join(', ')})`,
               condicoesBatidas: avElegibilidade.condicoesBatidas,
               condicoesFalhas: avElegibilidade.condicoesFalhas,
               valoresRanking
@@ -6263,34 +6767,85 @@
 
         const vencedores = [];
         let houveEmpate = false;
+        let houveTransferencia = false;
+        let detalheTransferencia = '';
+        let top3Ranking = [];
 
-        if (modo === 'todos') {
-          candidatas.forEach(cand => {
+        if (modo === 'todos' || modo === 'manual') {
+          candidatas.forEach((cand, idx) => {
             vencedores.push({
               cod: cand.cod,
               nome: cand.nome,
               cl: cand.cl,
               posicao: 1,
+              posicaoBruta: idx + 1,
               empatado: false,
+              recebeuTransferencia: false,
               valoresRanking: cand.valoresRanking,
               condicoesBatidas: cand.condicoesBatidas
             });
           });
         } else {
-          // Ordena candidatas pelos critérios (ranking principal + desempates)
-          candidatas.sort((a, b) => compararEjsPorCriterios(a.ej, b.ej, criteriosRanking, ctx));
+          // 1. Ordena todas as elegíveis brutas (incluindo impedidas por acúmulo) para identificar o Top 3 e transferências
+          elegiveisBrutas.sort((a, b) => compararEjsPorCriterios(a.ej, b.ej, criteriosRanking));
+          let posEfetivaCounter = 0;
+          for (let i = 0; i < elegiveisBrutas.length; i++) {
+            if (i === 0) {
+              elegiveisBrutas[i].posicaoBruta = 1;
+            } else {
+              const cmp = compararEjsPorCriterios(elegiveisBrutas[i - 1].ej, elegiveisBrutas[i].ej, criteriosRanking);
+              elegiveisBrutas[i].posicaoBruta = (cmp === 0) ? elegiveisBrutas[i - 1].posicaoBruta : (i + 1);
+            }
+            if (!elegiveisBrutas[i].impedida) {
+              posEfetivaCounter++;
+              elegiveisBrutas[i].ordemEfetivaSeq = posEfetivaCounter;
+            } else {
+              elegiveisBrutas[i].ordemEfetivaSeq = null;
+            }
+          }
 
-          // Atribui posição de ranking ("competition ranking": 1, 2, 2, 4...)
+          // 2. Ordena candidatas efetivas (não impedidas) pelos critérios
+          candidatas.sort((a, b) => compararEjsPorCriterios(a.ej, b.ej, criteriosRanking));
+
+          // Atribui posição de ranking efetivo ("competition ranking": 1, 2, 2, 4...)
           for (let i = 0; i < candidatas.length; i++) {
             if (i === 0) {
               candidatas[i].posicao = 1;
             } else {
-              const cmp = compararEjsPorCriterios(candidatas[i - 1].ej, candidatas[i].ej, criteriosRanking, ctx);
+              const cmp = compararEjsPorCriterios(candidatas[i - 1].ej, candidatas[i].ej, criteriosRanking);
               candidatas[i].posicao = (cmp === 0) ? candidatas[i - 1].posicao : (i + 1);
             }
           }
 
-          // Identifica se há mais de uma candidata na mesma posição
+          // Mapa cod -> posicao efetiva
+          const mapPosEfetiva = {};
+          candidatas.forEach(c => {
+            mapPosEfetiva[String(c.cod)] = c.posicao;
+          });
+          elegiveisBrutas.forEach(eb => {
+            eb.posicaoEfetiva = eb.impedida ? null : (mapPosEfetiva[String(eb.cod)] || null);
+          });
+
+          // Verifica se alguma EJ impedida por acúmulo estava à frente (ou empatada) com as vencedoras efetivas
+          const ultimoIndiceVencedorBruto = elegiveisBrutas.reduce((acc, eb, idx) => {
+            if (!eb.impedida && eb.posicaoEfetiva !== null && eb.posicaoEfetiva <= topN) {
+              return Math.max(acc, idx);
+            }
+            return acc;
+          }, -1);
+
+          const impedidasNoTopo = ultimoIndiceVencedorBruto >= 0
+            ? elegiveisBrutas.slice(0, ultimoIndiceVencedorBruto).filter(eb => eb.impedida)
+            : elegiveisBrutas.filter(eb => eb.impedida && eb.posicaoBruta <= topN);
+
+          if (impedidasNoTopo.length > 0) {
+            houveTransferencia = true;
+            detalheTransferencia = impedidasNoTopo
+              .map(imp => `${imp.nome} (${imp.posicaoBruta}º lugar na métrica) já venceu ${imp.premiosConflitantes.join(', ')} — destaque transferido para a próxima colocada`)
+              .join(' · ');
+          }
+
+          // Identifica se há mais de uma candidata na mesma posição efetiva
           const contagemPorPosicao = {};
           candidatas.forEach(c => {
             contagemPorPosicao[c.posicao] = (contagemPorPosicao[c.posicao] || 0) + 1;
@@ -6298,6 +6853,8 @@
 
           candidatas.forEach(cand => {
             const empatadoNaPosicao = contagemPorPosicao[cand.posicao] > 1;
+            const regBruto = elegiveisBrutas.find(eb => String(eb.cod) === String(cand.cod));
+            const posicaoBruta = regBruto ? regBruto.posicaoBruta : cand.posicao;
             if (cand.posicao <= topN) {
               if (empatadoNaPosicao) houveEmpate = true;
               vencedores.push({
@@ -6305,7 +6862,10 @@
                 nome: cand.nome,
                 cl: cand.cl,
                 posicao: cand.posicao,
+                posicaoBruta,
                 empatado: empatadoNaPosicao,
+                recebeuTransferencia: houveTransferencia,
+                detalheTransferencia: houveTransferencia ? detalheTransferencia : '',
                 valoresRanking: cand.valoresRanking,
                 condicoesBatidas: cand.condicoesBatidas
               });
@@ -6318,15 +6878,32 @@
                 elegivel: true,
                 impedida: false,
                 posicao: cand.posicao,
+                posicaoBruta,
                 empatado: empatadoNaPosicao,
                 motivoTipo: 'ranking',
-                motivoNaoVenceu: `Elegível, mas ficou em ${cand.posicao}º lugar no ranking (limite Top ${topN})${resumoMetricas ? ` — ${resumoMetricas}` : ''}`,
+                motivoNaoVenceu: `Elegível, mas ficou em ${cand.posicao}º lugar no ranking efetivo (limite Top ${topN})${resumoMetricas ? ` — ${resumoMetricas}` : ''}`,
                 condicoesBatidas: cand.condicoesBatidas,
                 condicoesFalhas: [],
                 valoresRanking: cand.valoresRanking
               });
             }
           });
+
+          // Monta o Top 3 da premiação (incluindo o Top 3 efetivo + eventuais EJs no topo que transferiram por acúmulo)
+          top3Ranking = elegiveisBrutas
+            .filter(eb => (eb.posicaoEfetiva !== null && eb.posicaoEfetiva <= 3) || (eb.impedida && eb.posicaoBruta <= 3))
+            .map(eb => ({
+              cod: eb.cod,
+              nome: eb.nome,
+              cl: eb.cl,
+              posicaoBruta: eb.posicaoBruta,
+              posicaoEfetiva: eb.posicaoEfetiva,
+              impedida: eb.impedida,
+              premiosConflitantes: eb.premiosConflitantes || [],
+              vencedora: Boolean(!eb.impedida && eb.posicaoEfetiva !== null && eb.posicaoEfetiva <= topN),
+              recebeuTransferencia: Boolean(!eb.impedida && eb.posicaoEfetiva !== null && eb.posicaoEfetiva <= topN && houveTransferencia),
+              valoresRanking: eb.valoresRanking
+            }));
         }
 
         // Registra os vencedores desta premiação para exclusão de premiações posteriores via naoAcumulaCom
@@ -6338,6 +6915,8 @@
         return {
           id: prem.id,
           nome: prem.nome || 'Premiação',
+          categoria: prem.categoria || '',
+          subtitulo: prem.subtitulo || '',
           prioridade: Number(prem.prioridade) || 1,
           modo,
           n: modo === 'topN' ? topN : null,
@@ -6346,6 +6925,9 @@
           desempate: prem.desempate || [],
           naoAcumulaCom: naoAcumulaIds,
           houveEmpate,
+          houveTransferencia,
+          detalheTransferencia,
+          top3Ranking,
           vencedores,
           naoVencedoras
         };
@@ -6364,8 +6946,6 @@
           calculadoEm: new Date().toISOString(),
           congelado: false,
           totalEjs: 0,
-          mesReferencia: 12,
-          mesReferenciaNome: 'Dezembro',
           palcosEj: [],
           palcosNucleo: [],
           premiacoes: []
@@ -6387,7 +6967,7 @@
 
       const palcosEj = (evento.palcosEj || []).map(palco => avaliarPalcoEj(palco, listaEjs, ctx));
       const palcosNucleo = (evento.palcosNucleo || []).map(palco => avaliarPalcoNucleo(palco, listaEjs, ctx));
-      const premiacoes = avaliarPremiacoes(evento.premiacoes || [], listaEjs, ctx);
+      const premiacoes = avaliarPremiacoes(evento.premiacoes || [], listaEjs, evento);
 
       return {
         eventoId: evento.id || null,
@@ -6408,11 +6988,10 @@
      * Suite de testes automatizados do motor de eventos (rodável no console via rodarTestesMotorEventos()).
      * Cobre:
      * 1. Palcos das EJs (exigirNiveisAnteriores = false vs true) e explicabilidade ("o que falta").
-     * 2. Palcos do Núcleo (contagem, percentual, soma, consolidado).
+     * 2. Palcos do Núcleo (contagem, percentual, soma).
      * 3. Premiações com ordem de prioridade e exclusão seletiva (naoAcumulaCom).
      * 4. Premiações Top N com desempate resolvido e com empate persistente sinalizado (sem escolha arbitrária).
      * 5. Congelamento de resultado quando status = "encerrado".
-     * 6. As 6 métricas oficiais de Palcos (ECM % Batida Geral, ECM % Batido da Meta, Faturamento % da Meta Batida, CSAT % Coletada, Colaborativo % da Meta e Cluster Subindo no Mês Selecionado).
      */
     function rodarTestesMotorEventos() {
       const resultados = [];
@@ -6462,7 +7041,6 @@
         id: 'evt_teste_1',
         nome: 'RR Vertentes — Teste Motor',
         status: 'em_andamento',
-        mesReferencia: 10,
         palcosEj: [
           {
             id: 'palco_1',
@@ -6680,6 +7258,8 @@
     // 15. MÓDULO DE EVENTOS — FASE 2: CRUD SINCRONIZADO, NAVEGAÇÃO E CONSTRUTOR DE CONDIÇÕES
     // ============================================================================
 
+    const ID_EVENTO_PERTENCER_PADRAO = 'evt_pertencer_rr_vertentes';
+
     function normalizarEventoObj(ev) {
       if (!ev || typeof ev !== 'object') return null;
       const id = String(ev.id || ('evt_' + Date.now()));
@@ -6693,15 +7273,252 @@
         nome: String(ev.nome || 'Novo Evento').trim(),
         data: String(ev.data || ''),
         periodoReferencia: String(ev.periodoReferencia || ''),
+        prazoFechamento: String(ev.prazoFechamento || ''),
+        descricao: String(ev.descricao || ''),
         mesReferencia,
         status: ['rascunho', 'em_andamento', 'encerrado'].includes(ev.status) ? ev.status : 'rascunho',
         palcosEj: Array.isArray(ev.palcosEj) ? ev.palcosEj : [],
         palcosNucleo: Array.isArray(ev.palcosNucleo) ? ev.palcosNucleo : [],
         premiacoes: Array.isArray(ev.premiacoes) ? ev.premiacoes : [],
+        dados2025: (ev.dados2025 && typeof ev.dados2025 === 'object') ? ev.dados2025 : {},
         resultadoCongelado: ev.resultadoCongelado || null,
         atualizadoEm: Number(ev.atualizadoEm) || Date.now()
       };
     }
+
+    function criarObjetoEventoPertencerPadrao() {
+      return normalizarEventoObj({
+        id: ID_EVENTO_PERTENCER_PADRAO,
+        nome: 'PERTENCER (RR Vertentes)',
+        data: '2026-12-06',
+        periodoReferencia: 'Prazo de fechamento dos resultados: 03/12, 23:59',
+        prazoFechamento: '03/12, 23:59',
+        descricao:
+          'Reunião regional do núcleo Vertentes, com três pilares: Identidade, Paixão que Inflama e Impacto. Prazo de fechamento dos resultados: 03/12, 23:59.\n\n' +
+          'Premissas do edital (conferidas manualmente — todas as EJs da base entram nos cálculos): membros validados no Portal BJ, selo EJ, presença na RR, semestralidade e prazo de resultados.',
+        status: 'em_andamento',
+        palcosEj: [
+          {
+            id: 'palco_ej_pertencer',
+            nome: 'Palcos das EJs — PERTENCER (Bronze, Prata e Ouro)',
+            exigirNiveisAnteriores: false,
+            niveis: [
+              {
+                ordem: 1,
+                id: 'bronze',
+                nome: 'Bronze',
+                requisito: {
+                  logica: 'E',
+                  condicoes: [
+                    { metrica: 'fa_pct_meta', operador: '>=', valor: 70 },
+                    { metrica: 'ecm_meta_batida', operador: '=', valor: true },
+                    { metrica: 'cs_coleta', operador: '>=', valor: 60 },
+                    { metrica: 'co_pct_meta', operador: '>=', valor: 0 }
+                  ]
+                }
+              },
+              {
+                ordem: 2,
+                id: 'prata',
+                nome: 'Prata',
+                requisito: {
+                  logica: 'E',
+                  condicoes: [
+                    { metrica: 'fa_pct_meta', operador: '>=', valor: 92 },
+                    { metrica: 'ecm_meta_batida', operador: '=', valor: true },
+                    { metrica: 'cs_coleta', operador: '>=', valor: 92 },
+                    { metrica: 'co_pct_meta', operador: '>=', valor: 66 }
+                  ]
+                }
+              },
+              {
+                ordem: 3,
+                id: 'ouro',
+                nome: 'Ouro',
+                requisito: {
+                  logica: 'E',
+                  condicoes: [
+                    { metrica: 'fa_pct_meta', operador: '>=', valor: 100 },
+                    { metrica: 'ecm_meta_batida', operador: '=', valor: true },
+                    { metrica: 'cs_coleta', operador: '>=', valor: 100 },
+                    { metrica: 'co_pct_meta', operador: '>=', valor: 100 }
+                  ]
+                }
+              }
+            ]
+          }
+        ],
+        palcosNucleo: [],
+        premiacoes: [
+          {
+            id: 'prem_identidade',
+            nome: 'Identidade',
+            categoria: 'Essenciais',
+            subtitulo: 'Maior faturamento anual em R$ (valor absoluto)',
+            prioridade: 1,
+            modo: 'topN',
+            n: 1,
+            metricaRanking: 'fa_realizado',
+            ordem: 'maior',
+            desempate: [
+              { metrica: 'fa_pct_meta', ordem: 'maior' },
+              { metrica: 'co_realizado', ordem: 'maior' }
+            ],
+            naoAcumulaCom: [],
+            elegibilidade: { logica: 'E', condicoes: [] }
+          },
+          {
+            id: 'prem_impacto',
+            nome: 'Impacto',
+            categoria: 'Essenciais',
+            subtitulo: 'Maior faturamento colaborativo acumulado em R$ (valor absoluto)',
+            prioridade: 2,
+            modo: 'topN',
+            n: 1,
+            metricaRanking: 'co_realizado',
+            ordem: 'maior',
+            desempate: [
+              { metrica: 'co_pct_meta', ordem: 'maior' },
+              { metrica: 'fa_realizado', ordem: 'maior' }
+            ],
+            naoAcumulaCom: ['prem_identidade'],
+            elegibilidade: { logica: 'E', condicoes: [] }
+          },
+          {
+            id: 'prem_paixao',
+            nome: 'Paixão que Inflama',
+            categoria: 'Essenciais',
+            subtitulo: 'Maior % da meta de engajamento com o MEJ (ECM)',
+            prioridade: 3,
+            modo: 'topN',
+            n: 1,
+            metricaRanking: 'ecm_pct_atingimento',
+            ordem: 'maior',
+            desempate: [
+              { metrica: 'ecm_engajados', ordem: 'maior' },
+              { metrica: 'fa_pct_meta', ordem: 'maior' }
+            ],
+            naoAcumulaCom: ['prem_identidade', 'prem_impacto'],
+            elegibilidade: { logica: 'E', condicoes: [] }
+          },
+          {
+            id: 'prem_raiz',
+            nome: 'Raiz que Pertence',
+            categoria: 'Complementares',
+            subtitulo: 'Política de Diversidade e Inclusão aprovada (envio até 26/11, 23:59)',
+            prioridade: 4,
+            modo: 'manual',
+            vencedorasManuais: [],
+            naoAcumulaCom: [],
+            elegibilidade: { logica: 'E', condicoes: [] }
+          },
+          {
+            id: 'prem_transforma',
+            nome: 'Pertencer que Transforma',
+            categoria: 'Complementares',
+            subtitulo: 'Projeto de impacto submetido e aceito (envio até 20/11, 23:59)',
+            prioridade: 5,
+            modo: 'manual',
+            vencedorasManuais: [],
+            naoAcumulaCom: [],
+            elegibilidade: { logica: 'E', condicoes: [] }
+          },
+          {
+            id: 'prem_nova_identidade',
+            nome: 'Nova Identidade',
+            categoria: 'Complementares',
+            subtitulo: 'Todas as EJs que estão subindo de cluster em 2026 (projeção "Sobe" do indicador de Cluster)',
+            prioridade: 6,
+            modo: 'todos',
+            naoAcumulaCom: [],
+            elegibilidade: {
+              logica: 'E',
+              condicoes: [{ metrica: 'cu_resultado', operador: '=', valor: 'Sobe' }]
+            }
+          },
+          {
+            id: 'prem_faisca',
+            nome: 'EJ Faísca',
+            categoria: 'Destaque',
+            subtitulo: 'Maior % de crescimento das metas (faturamento, colab, ECM e CSAT) sobre 2025 · Desempate: 1º subiu de cluster, 2º maior faturamento, 3º maior CSAT',
+            prioridade: 7,
+            modo: 'topN',
+            n: 1,
+            metricaRanking: 'faisca_crescimento_2025',
+            ordem: 'maior',
+            desempate: [
+              { metrica: 'cu_sobe_num', ordem: 'maior' },
+              { metrica: 'fa_realizado', ordem: 'maior' },
+              { metrica: 'cs_nota', ordem: 'maior' }
+            ],
+            vencedorasManuais: [],
+            usarVencedoraManual: false,
+            naoAcumulaCom: [],
+            elegibilidade: { logica: 'E', condicoes: [] }
+          },
+          {
+            id: 'prem_pertencer',
+            nome: 'EJ Pertencer',
+            categoria: 'Destaque',
+            subtitulo: 'Maior atingimento médio das metas (faturamento, colab, ECM e CSAT — média simples dos % de atingimento)',
+            prioridade: 8,
+            modo: 'topN',
+            n: 1,
+            metricaRanking: 'atingimento_medio_metas',
+            ordem: 'maior',
+            desempate: [
+              { metrica: 'cu_sobe_num', ordem: 'maior' },
+              { metrica: 'fa_pct_meta', ordem: 'maior' },
+              { metrica: 'cs_coleta', ordem: 'maior' }
+            ],
+            configMediaPertencer: {
+              fat: true,
+              colab: true,
+              ecm: true,
+              csat: true,
+              csatUsarColeta: false,
+              teto100: false
+            },
+            naoAcumulaCom: [],
+            elegibilidade: { logica: 'E', condicoes: [] }
+          },
+          {
+            id: 'prem_mais_engajada',
+            nome: 'EJ Mais Engajada',
+            categoria: 'Destaque',
+            subtitulo: 'Mais bem trajada e mais animada (avaliada no domingo do evento)',
+            prioridade: 9,
+            modo: 'manual',
+            vencedorasManuais: [],
+            naoAcumulaCom: [],
+            elegibilidade: { logica: 'E', condicoes: [] }
+          }
+        ],
+        dados2025: {},
+        resultadoCongelado: null,
+        atualizadoEm: Date.now()
+      });
+    }
+
+    function garantirEventoPertencerPadrao() {
+      if (!STORE.eventos || typeof STORE.eventos !== 'object') {
+        STORE.eventos = {};
+      }
+      const existePertencer = Object.values(STORE.eventos).some(ev =>
+        ev && (ev.id === ID_EVENTO_PERTENCER_PADRAO || String(ev.nome || '').toUpperCase().includes('PERTENCER'))
+      );
+      if (!existePertencer) {
+        const padrao = criarObjetoEventoPertencerPadrao();
+        STORE.eventos[padrao.id] = padrao;
+        saveLocalCache();
+      }
+      if (!STORE.ui.activeEventoId && STORE.eventos[ID_EVENTO_PERTENCER_PADRAO]) {
+        STORE.ui.activeEventoId = ID_EVENTO_PERTENCER_PADRAO;
+      }
+    }
+
+    window.criarObjetoEventoPertencerPadrao = criarObjetoEventoPertencerPadrao;
+    window.garantirEventoPertencerPadrao = garantirEventoPertencerPadrao;
 
     function applyCloudEventosMap(cloudMap) {
       if (!cloudMap || typeof cloudMap !== 'object') return;
@@ -6720,6 +7537,7 @@
       });
 
       STORE.eventos = merged;
+      garantirEventoPertencerPadrao();
       saveLocalCache();
       if (STORE.ui.screen === 'eventos') {
         renderEventos();
@@ -6809,14 +7627,12 @@
 
     async function criarNovoEvento() {
       const hoje = new Date().toISOString().slice(0, 10);
-      const mesAtual = Math.min(12, Math.max(1, Math.round(Number(STORE.params.mes) || (new Date().getMonth() + 1))));
-      const mesAtualNome = MN[mesAtual - 1] || 'Outubro';
+      const mesAtualNome = MN[(STORE.params.mes || 1) - 1] || 'Outubro';
       const novo = normalizarEventoObj({
         id: 'evt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
         nome: 'Novo Evento Regional',
         data: hoje,
         periodoReferencia: `Acumulado até ${mesAtualNome}`,
-        mesReferencia: mesAtual,
         status: 'rascunho',
         palcosEj: [],
         palcosNucleo: [],
@@ -6854,24 +7670,8 @@
     // CONSTRUTOR VISUAL DE CONDIÇÕES REUTILIZÁVEL
     // ----------------------------------------------------------------------------
 
-    function obterGruposMetricas(opts = {}) {
+    function obterGruposMetricas() {
       const grupos = {};
-      if (opts && opts.apenasPalcos) {
-        METRICAS_PALCOS_IDS.forEach(id => {
-          const m = METRICAS[id];
-          if (!m) return;
-          const ind = m.indicador || 'Geral';
-          if (!grupos[ind]) grupos[ind] = [];
-          grupos[ind].push(m);
-        });
-        if (opts.incluirExtraId && !METRICAS_PALCOS_IDS.includes(opts.incluirExtraId) && METRICAS[opts.incluirExtraId]) {
-          const extra = METRICAS[opts.incluirExtraId];
-          const ind = extra.indicador || 'Geral';
-          if (!grupos[ind]) grupos[ind] = [];
-          grupos[ind].push(extra);
-        }
-        return grupos;
-      }
       Object.values(METRICAS).forEach(m => {
         const ind = m.indicador || 'Geral';
         if (!grupos[ind]) grupos[ind] = [];
@@ -6916,32 +7716,26 @@
      * Gera o HTML de um Construtor de Condições reutilizável.
      * @param {string} builderId Identificador único do construtor no DOM.
      * @param {object} requisito Objeto { logica: 'E'|'OU', condicoes: [{ metrica, operador, valor }] }
-     * @param {object} opts Opções extras { titulo, textoVazio, mostrarPreview, apenasPalcos, mesReferencia, bloqueado }
+     * @param {object} opts Opções extras { titulo, textoVazio, mostrarPreview }
      */
     function gerarHtmlConstrutorCondicoes(builderId, requisito, opts = {}) {
       const req = garantirRequisitoValido(requisito);
+      const grupos = obterGruposMetricas();
       const titulo = opts.titulo || 'Requisitos / Condições';
       const textoVazio = opts.textoVazio || 'Nenhuma condição configurada (qualquer EJ cumpre por padrão).';
       const mostrarPreview = opts.mostrarPreview !== false;
-      const bloqueado = Boolean(opts.bloqueado);
-      const ctx = { mesSelecionado: obterMesContexto({ mesSelecionado: opts.mesReferencia }) };
 
       const linhasHtml = req.condicoes.length === 0
         ? `<div style="font-size:12.5px;color:var(--text-muted);padding:8px 4px;">${esc(textoVazio)}</div>`
         : req.condicoes.map((cond, idx) => {
             const def = METRICAS[cond.metrica] || METRICAS.fa_pct_meta;
-            const grupos = obterGruposMetricas({
-              apenasPalcos: Boolean(opts.apenasPalcos),
-              incluirExtraId: def.id
-            });
             const ops = obterOperadoresParaTipo(def.tipo);
             const opValido = ops.some(o => o.op === cond.operador) ? cond.operador : ops[0].op;
 
             const selectMetricaHtml = Object.keys(grupos).map(nomeGrupo => {
-              const options = grupos[nomeGrupo].map(m => {
-                const sufixoLegado = (opts.apenasPalcos && !METRICAS_PALCOS_IDS.includes(m.id)) ? ' (Legado)' : '';
-                return `<option value="${esc(m.id)}" ${m.id === def.id ? 'selected' : ''}>${esc(m.rotulo + sufixoLegado)}</option>`;
-              }).join('');
+              const options = grupos[nomeGrupo].map(m =>
+                `<option value="${esc(m.id)}" ${m.id === def.id ? 'selected' : ''}>${esc(m.rotulo)}</option>`
+              ).join('');
               return `<optgroup label="${esc(nomeGrupo)}">${options}</optgroup>`;
             }).join('');
 
@@ -6953,7 +7747,7 @@
             if (def.tipo === 'booleano') {
               const valBool = normalizarBooleano(cond.valor);
               campoValorHtml = `
-                <select class="select" data-cb-field="valor" data-cb-idx="${idx}" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
+                <select class="select" data-cb-field="valor" data-cb-idx="${idx}" style="width:100%;">
                   <option value="true" ${valBool ? 'selected' : ''}>Sim (Verdadeiro)</option>
                   <option value="false" ${!valBool ? 'selected' : ''}>Não (Falso)</option>
                 </select>
@@ -6961,7 +7755,7 @@
             } else if (def.tipo === 'status' && Array.isArray(def.opcoes)) {
               const valStr = String(cond.valor ?? def.opcoes[0]);
               campoValorHtml = `
-                <select class="select" data-cb-field="valor" data-cb-idx="${idx}" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
+                <select class="select" data-cb-field="valor" data-cb-idx="${idx}" style="width:100%;">
                   ${def.opcoes.map(op => `<option value="${esc(op)}" ${op === valStr ? 'selected' : ''}>${esc(op)}</option>`).join('')}
                 </select>
               `;
@@ -6969,20 +7763,20 @@
               const numVal = (cond.valor !== undefined && cond.valor !== null && cond.valor !== '') ? Number(cond.valor) : 0;
               const placeholder = def.tipo === 'percentual' ? 'Ex.: 80 (%)' : 'Valor numérico';
               campoValorHtml = `
-                <input type="number" step="any" class="input" data-cb-field="valor" data-cb-idx="${idx}" value="${esc(isNaN(numVal) ? 0 : numVal)}" placeholder="${esc(placeholder)}" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
+                <input type="number" step="any" class="input" data-cb-field="valor" data-cb-idx="${idx}" value="${esc(isNaN(numVal) ? 0 : numVal)}" placeholder="${esc(placeholder)}" style="width:100%;">
               `;
             }
 
             return `
               <div class="cond-row" data-cb-row="${idx}">
-                <select class="select" data-cb-field="metrica" data-cb-idx="${idx}" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
+                <select class="select" data-cb-field="metrica" data-cb-idx="${idx}" style="width:100%;">
                   ${selectMetricaHtml}
                 </select>
-                <select class="select" data-cb-field="operador" data-cb-idx="${idx}" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
+                <select class="select" data-cb-field="operador" data-cb-idx="${idx}" style="width:100%;">
                   ${selectOperadorHtml}
                 </select>
                 <div>${campoValorHtml}</div>
-                ${!bloqueado ? `<button type="button" class="btn btn-sm" data-cb-remove="${idx}" title="Remover condição" style="color:var(--danger);padding:5px 9px;">✕</button>` : ''}
+                <button type="button" class="btn btn-sm" data-cb-remove="${idx}" title="Remover condição" style="color:var(--danger);padding:5px 9px;">✕</button>
               </div>
             `;
           }).join('');
@@ -6990,11 +7784,11 @@
       let previewHtml = '';
       if (mostrarPreview) {
         const total = (STORE.ejs || []).length;
-        const qtdCumprem = (STORE.ejs || []).filter(ej => avaliarRequisito(req, ej, ctx).bateu).length;
+        const qtdCumprem = (STORE.ejs || []).filter(ej => avaliarRequisito(req, ej).bateu).length;
         previewHtml = `
           <div class="cond-preview-bar">
             <span>Conector atual: <strong>${req.logica === 'OU' ? 'OU (basta 1 condição bater)' : 'E (todas as condições devem bater)'}</strong></span>
-            <span>Prévia com dados atuais (${esc(MN[ctx.mesSelecionado - 1])}): <strong>${qtdCumprem} de ${total} EJs</strong> cumprem este requisito</span>
+            <span>Prévia com dados atuais: <strong>${qtdCumprem} de ${total} EJs</strong> cumprem este requisito</span>
           </div>
         `;
       }
@@ -7005,10 +7799,10 @@
             <span style="font-size:12.5px;font-weight:600;color:var(--text);">${esc(titulo)}</span>
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
               <div class="cond-logic-toggle" title="Alternar entre E (todas) e OU (qualquer uma)">
-                <button type="button" class="cond-logic-btn ${req.logica === 'E' ? 'active' : ''}" data-cb-logic="E" ${bloqueado ? 'disabled' : ''}>E (Todas)</button>
-                <button type="button" class="cond-logic-btn ${req.logica === 'OU' ? 'active' : ''}" data-cb-logic="OU" ${bloqueado ? 'disabled' : ''}>OU (Qualquer)</button>
+                <button type="button" class="cond-logic-btn ${req.logica === 'E' ? 'active' : ''}" data-cb-logic="E">E (Todas)</button>
+                <button type="button" class="cond-logic-btn ${req.logica === 'OU' ? 'active' : ''}" data-cb-logic="OU">OU (Qualquer)</button>
               </div>
-              ${!bloqueado ? `<button type="button" class="btn btn-sm" data-cb-add="1">+ Adicionar condição</button>` : ''}
+              <button type="button" class="btn btn-sm" data-cb-add="1">+ Adicionar condição</button>
             </div>
           </div>
           <div class="cond-list">
@@ -7024,11 +7818,10 @@
      * Sempre que o usuário adiciona/remove condição, troca métrica/operador/valor ou alterna E/OU,
      * atualiza o objeto `requisito` e invoca `onChange(requisito)`.
      */
-    function vincularConstrutorCondicoes(builderId, requisitoRef, onChange, opts = {}) {
+    function vincularConstrutorCondicoes(builderId, requisitoRef, onChange) {
       const container = document.getElementById('cb_' + builderId);
       if (!container) return;
 
-      const ctx = { mesSelecionado: obterMesContexto({ mesSelecionado: opts.mesReferencia }) };
       const req = garantirRequisitoValido(requisitoRef);
       requisitoRef.logica = req.logica;
       requisitoRef.condicoes = req.condicoes;
@@ -7080,14 +7873,11 @@
 
         const handler = () => {
           if (field === 'metrica') {
-            const tipoAnterior = (METRICAS[cond.metrica] || {}).tipo;
             const novaMetrica = input.value;
             const def = METRICAS[novaMetrica] || METRICAS.fa_pct_meta;
             cond.metrica = novaMetrica;
             const ops = obterOperadoresParaTipo(def.tipo);
-            if ((tipoAnterior === 'booleano' || tipoAnterior === 'status') && (def.tipo === 'percentual' || def.tipo === 'numero')) {
-              cond.operador = '>=';
-            } else if (!ops.some(o => o.op === cond.operador)) {
+            if (!ops.some(o => o.op === cond.operador)) {
               cond.operador = ops[0].op;
             }
             if (def.tipo === 'booleano') {
@@ -7115,10 +7905,10 @@
             const previewBar = container.querySelector('.cond-preview-bar');
             if (previewBar) {
               const total = (STORE.ejs || []).length;
-              const qtdCumprem = (STORE.ejs || []).filter(ej => avaliarRequisito(requisitoRef, ej, ctx).bateu).length;
+              const qtdCumprem = (STORE.ejs || []).filter(ej => avaliarRequisito(requisitoRef, ej).bateu).length;
               previewBar.innerHTML = `
                 <span>Conector atual: <strong>${requisitoRef.logica === 'OU' ? 'OU (basta 1 condição bater)' : 'E (todas as condições devem bater)'}</strong></span>
-                <span>Prévia com dados atuais (${esc(MN[ctx.mesSelecionado - 1])}): <strong>${qtdCumprem} de ${total} EJs</strong> cumprem este requisito</span>
+                <span>Prévia com dados atuais: <strong>${qtdCumprem} de ${total} EJs</strong> cumprem este requisito</span>
               `;
             }
           }
@@ -7232,34 +8022,31 @@
 
     function renderEventoTabDados(ev, container) {
       const bloqueado = ev.status === 'encerrado';
-      const mesRefAtual = obterMesContexto({ mesSelecionado: ev.mesReferencia });
-      const opcoesMesHtml = MN.map((nomeMes, i) =>
-        `<option value="${i + 1}" ${(i + 1) === mesRefAtual ? 'selected' : ''}>${esc(nomeMes)}</option>`
-      ).join('');
 
       container.innerHTML = `
-        <div class="clean-card" style="max-width:760px;margin-bottom:24px;">
+        <div class="clean-card" style="max-width:820px;margin-bottom:24px;">
           <h3 class="section-title" style="margin-bottom:14px;">Configurações básicas do evento</h3>
           <div class="kv-grid">
             <div class="form-group" style="grid-column:1 / -1;">
               <label class="form-label" for="evtInputNome">Nome do evento</label>
-              <input type="text" class="input" id="evtInputNome" value="${esc(ev.nome)}" placeholder="Ex.: Reunião Regional Vertentes 2026" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
+              <input type="text" class="input" id="evtInputNome" value="${esc(ev.nome)}" placeholder="Ex.: PERTENCER (RR Vertentes)" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
             </div>
             <div class="form-group">
-              <label class="form-label" for="evtInputData">Data do evento</label>
+              <label class="form-label" for="evtInputData">Data do evento (editável)</label>
               <input type="date" class="input" id="evtInputData" value="${esc(ev.data || '')}" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
             </div>
             <div class="form-group">
-              <label class="form-label" for="evtInputPeriodo">Período de referência</label>
-              <input type="text" class="input" id="evtInputPeriodo" value="${esc(ev.periodoReferencia || '')}" placeholder="Ex.: Jan a Out / 2026" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
+              <label class="form-label" for="evtInputPeriodo">Prazo de fechamento / Período de referência</label>
+              <input type="text" class="input" id="evtInputPeriodo" value="${esc(ev.periodoReferencia || '')}" placeholder="Ex.: Prazo de fechamento dos resultados: 03/12, 23:59" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
             </div>
-            <div class="form-group">
-              <label class="form-label" for="evtInputMesRef">Mês selecionado (Palcos / Subida de Cluster)</label>
-              <select class="select" id="evtInputMesRef" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
-                ${opcoesMesHtml}
-              </select>
+            <div class="form-group" style="grid-column:1 / -1;">
+              <label class="form-label" for="evtInputDescricao">Descrição informativa (pilares do evento e premissas do edital)</label>
+              <textarea class="input" id="evtInputDescricao" rows="4" style="width:100%;resize:vertical;line-height:1.5;padding:10px 12px;" placeholder="Descrição, pilares e informações gerais do edital…" ${bloqueado ? 'disabled' : ''}>${esc(ev.descricao || '')}</textarea>
+              <span style="font-size:11.5px;color:var(--text-muted);display:block;margin-top:4px;">
+                Nota: As premissas do edital (membros validados no Portal BJ, selo EJ, presença na RR, semestralidade e prazo de resultados) são conferidas manualmente. Todas as EJs da base entram nos cálculos automaticamente.
+              </span>
             </div>
-            <div class="form-group">
+            <div class="form-group" style="grid-column:1 / -1;">
               <label class="form-label" for="evtInputStatus">Status do evento</label>
               <select class="select" id="evtInputStatus" style="width:100%;">
                 <option value="rascunho" ${ev.status === 'rascunho' ? 'selected' : ''}>Rascunho (em configuração)</option>
@@ -7274,10 +8061,10 @@
           </div>
         </div>
 
-        <div class="clean-card" style="max-width:760px;">
+        <div class="clean-card" style="max-width:820px;">
           <div style="margin-bottom:12px;">
-            <h3 class="section-title" style="margin-bottom:4px;">Simulador de Condições dos Palcos</h3>
-            <p style="font-size:12.5px;color:var(--text-muted);">Simule regras com as 6 métricas oficiais de Palcos (<strong>ECM</strong>, <strong>Faturamento</strong>, <strong>CSAT</strong>, <strong>Colaborativo</strong> e <strong>Cluster no mês selecionado</strong>), alterne entre <strong>E / OU</strong> e veja quantas EJs cumprem o requisito em tempo real.</p>
+            <h3 class="section-title" style="margin-bottom:4px;">Simulador do Construtor de Condições</h3>
+            <p style="font-size:12.5px;color:var(--text-muted);">Este componente visual é reutilizado nos Palcos das EJs, Palcos do Núcleo e Premiações. Adicione condições, alterne entre <strong>E / OU</strong> e veja quantas EJs da planilha atual cumprem o requisito em tempo real.</p>
           </div>
           <div id="sandboxCondBuilderWrap"></div>
           <div id="sandboxPreviewEjsList" style="margin-top:12px;font-size:12.5px;color:var(--text-secondary);"></div>
@@ -7289,7 +8076,7 @@
         ev.nome = $('evtInputNome').value.trim() || 'Evento sem nome';
         ev.data = $('evtInputData').value;
         ev.periodoReferencia = $('evtInputPeriodo').value.trim();
-        ev.mesReferencia = Math.min(12, Math.max(1, Math.round(Number($('evtInputMesRef').value) || 12)));
+        ev.descricao = $('evtInputDescricao') ? $('evtInputDescricao').value.trim() : '';
 
         if (novoStatus === 'encerrado' && ev.status !== 'encerrado') {
           ev.status = 'encerrado';
@@ -7301,26 +8088,17 @@
         await salvarEventoNoBanco(ev, true);
       });
 
-      const obterMesSimulador = () => {
-        const sel = $('evtInputMesRef');
-        return Math.min(12, Math.max(1, Math.round(Number(sel ? sel.value : ev.mesReferencia) || 12)));
-      };
-
       const renderSandbox = () => {
         const wrap = $('sandboxCondBuilderWrap');
         const listEl = $('sandboxPreviewEjsList');
         if (!wrap) return;
-        const mesSim = obterMesSimulador();
-        const ctxSim = { mesSelecionado: mesSim };
         wrap.innerHTML = gerarHtmlConstrutorCondicoes('sandbox_fase2', STORE.ui.sandboxRequisito, {
-          titulo: 'Requisito de teste (Palcos)',
-          mostrarPreview: true,
-          apenasPalcos: true,
-          mesReferencia: mesSim
+          titulo: 'Requisito de teste',
+          mostrarPreview: true
         });
         const atualizarListaPreview = () => {
           if (!listEl) return;
-          const aprovadas = (STORE.ejs || []).filter(ej => avaliarRequisito(STORE.ui.sandboxRequisito, ej, ctxSim).bateu);
+          const aprovadas = (STORE.ejs || []).filter(ej => avaliarRequisito(STORE.ui.sandboxRequisito, ej).bateu);
           if (aprovadas.length === 0) {
             listEl.innerHTML = `<span style="color:var(--text-muted);">Nenhuma EJ cumpre este requisito no momento.</span>`;
           } else {
@@ -7333,17 +8111,8 @@
         vincularConstrutorCondicoes('sandbox_fase2', STORE.ui.sandboxRequisito, (req, reRenderDom) => {
           if (reRenderDom) renderSandbox();
           else atualizarListaPreview();
-        }, { apenasPalcos: true, mesReferencia: mesSim });
-      };
-
-      const selMesRef = $('evtInputMesRef');
-      if (selMesRef && !bloqueado) {
-        selMesRef.addEventListener('change', () => {
-          ev.mesReferencia = obterMesSimulador();
-          persistirEdicaoEvento(ev, false);
-          renderSandbox();
         });
-      }
+      };
 
       renderSandbox();
     }
@@ -7365,90 +8134,347 @@
       }
     }
 
-    function gerarHtmlPainelMetricasPalcos(ev, bloqueado = false) {
-      const mesRef = obterMesContexto({ mesSelecionado: ev.mesReferencia });
-      const mesNome = MN[mesRef - 1] || `Mês ${mesRef}`;
-      const ctx = { mesSelecionado: mesRef };
-      const ejs = STORE.ejs || [];
-      const totalEjs = ejs.length;
+    function obterValorParamNivelPalco(nivel, metrica, valorPadrao) {
+      const conds = (nivel && nivel.requisito && Array.isArray(nivel.requisito.condicoes))
+        ? nivel.requisito.condicoes
+        : [];
+      const encontrada = conds.find(c => c && c.metrica === metrica);
+      if (!encontrada) return valorPadrao;
+      return encontrada.valor;
+    }
 
-      const ecmGeralVal = METRICAS.ecm_pct.extrairNucleo(ejs, ctx);
-      const ecmMetaVal = METRICAS.ecm_pct_meta.extrairNucleo(ejs, ctx);
-      const fatMetaVal = METRICAS.fa_pct_meta.extrairNucleo(ejs, ctx);
-      const csatColetaVal = METRICAS.cs_coleta.extrairNucleo(ejs, ctx);
-      const colabMetaVal = METRICAS.co_pct_meta.extrairNucleo(ejs, ctx);
-      const clusterSubindoVal = METRICAS.cu_subindo_mes.extrairNucleo(ejs, ctx);
+    function definirValorParamNivelPalco(nivel, metrica, operador, novoValor) {
+      if (!nivel.requisito || typeof nivel.requisito !== 'object') {
+        nivel.requisito = { logica: 'E', condicoes: [] };
+      }
+      if (!Array.isArray(nivel.requisito.condicoes)) {
+        nivel.requisito.condicoes = [];
+      }
+      const encontrada = nivel.requisito.condicoes.find(c => c && c.metrica === metrica);
+      if (encontrada) {
+        encontrada.operador = operador;
+        encontrada.valor = novoValor;
+      } else {
+        nivel.requisito.condicoes.push({ metrica, operador, valor: novoValor });
+      }
+    }
 
-      const opcoesMes = MN.map((nm, i) =>
-        `<option value="${i + 1}" ${(i + 1) === mesRef ? 'selected' : ''}>${esc(nm)}</option>`
-      ).join('');
+    function formatarPosicaoMedalha(pos) {
+      const p = Number(pos) || 1;
+      if (p === 1) return '🥇 1º';
+      if (p === 2) return '🥈 2º';
+      if (p === 3) return '🥉 3º';
+      return `${p}º`;
+    }
+
+    function renderBadgePalcoMaisAlto(nomePalco) {
+      const s = String(nomePalco || 'Sem palco');
+      const sl = s.toLowerCase();
+      if (sl.includes('ouro')) return renderTag([`🥇 ${s}`, 'g']);
+      if (sl.includes('prata')) return renderTag([`🥈 ${s}`, 'g']);
+      if (sl.includes('bronze')) return renderTag([`🥉 ${s}`, 'g']);
+      if (sl === 'sem palco') return renderTag(['Sem palco', 'n']);
+      return renderTag([s, 'g']);
+    }
+
+    function gerarHtmlRankingNiveisPalcoEj(palcoAvaliado, totalEjs) {
+      if (!palcoAvaliado || !Array.isArray(palcoAvaliado.niveis) || palcoAvaliado.niveis.length === 0) {
+        return `<div style="font-size:12.5px;color:var(--text-muted);padding:12px 0;">Nenhum nível configurado neste palco.</div>`;
+      }
+
+      // Exibe na ordem dos palcos (Bronze, Prata, Ouro)
+      const niveisOrd = [...palcoAvaliado.niveis].sort((a, b) => (Number(a.ordem) || 0) - (Number(b.ordem) || 0));
+
+      return niveisOrd.map(nv => {
+        const ranking = Array.isArray(nv.rankingBateram) ? nv.rankingBateram : [];
+        const quaseLa = Array.isArray(nv.quaseLa) ? nv.quaseLa : [];
+        const sl = String(nv.nome || '').toLowerCase();
+        const icone = sl.includes('ouro') ? '🥇' : (sl.includes('prata') ? '🥈' : (sl.includes('bronze') ? '🥉' : '🏅'));
+
+        // Resumo curto dos parâmetros ativos deste palco
+        const conds = (nv.requisito && Array.isArray(nv.requisito.condicoes)) ? nv.requisito.condicoes : [];
+        const resumoParams = conds.map(c => {
+          if (c.metrica === 'fa_pct_meta') return Number(c.valor) > 0 ? `Faturamento ≥ ${fmtNumCurto(c.valor)}%` : `Faturamento: não exige (0%)`;
+          if (c.metrica === 'ecm_meta_batida') return (c.valor === true || String(c.valor) === 'true') ? `ECM: meta batida` : `ECM: não exige`;
+          if (c.metrica === 'cs_coleta') return Number(c.valor) > 0 ? `CSAT Coleta ≥ ${fmtNumCurto(c.valor)}%` : `CSAT Coleta: não exige (0%)`;
+          if (c.metrica === 'co_pct_meta') return Number(c.valor) > 0 ? `Colab ≥ ${fmtNumCurto(c.valor)}%` : `Colab: não exige (0%)`;
+          const def = METRICAS[c.metrica];
+          return `${def ? def.rotuloCurto || def.rotulo : c.metrica} ${c.operador} ${c.valor}`;
+        }).join(' · ');
+
+        const rowsRankingHtml = ranking.length === 0
+          ? `<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:18px;">Nenhuma EJ bateu o palco <strong>${esc(nv.nome)}</strong> com os parâmetros atuais.</td></tr>`
+          : ranking.map(r => {
+              const ecmTxt = r.semMembrosEcm
+                ? 'Sem membros (Não bate)'
+                : `${r.ecmBatida ? 'Sim' : 'Não'} (${fmtNumCurto(r.pctEcm)}%)`;
+              const colabTxt = r.semMetaColab
+                ? `${fmtNumCurto(r.pctColab)}% (sem meta · atendido)`
+                : `${fmtNumCurto(r.pctColab)}%`;
+
+              return `
+                <tr>
+                  <td data-label="Posição" style="font-weight:700;white-space:nowrap;">${formatarPosicaoMedalha(r.posicao)}</td>
+                  <td class="sticky-col" data-label="EJ">
+                    <a href="javascript:void(0)" class="ej-link" data-open-ej="${esc(r.cod)}" style="color:var(--text);font-weight:600;text-decoration:none;">
+                      ${esc(r.nome)}
+                    </a>
+                  </td>
+                  <td data-label="Cluster">Cluster ${esc(r.cl || '-')}</td>
+                  <td data-label="% Faturamento" style="font-weight:600;">${fmtNumCurto(r.pctFat)}%</td>
+                  <td data-label="ECM">${renderTag([ecmTxt, r.ecmBatida ? 'g' : 'r'])}</td>
+                  <td data-label="% Coleta CSAT">${fmtNumCurto(r.coletaCsat)}%</td>
+                  <td data-label="% Colab">${esc(colabTxt)}</td>
+                  <td data-label="Palco mais alto">${renderBadgePalcoMaisAlto(r.palcoMaisAlto)}</td>
+                </tr>
+              `;
+            }).join('');
+
+        const rowsQuaseLaHtml = quaseLa.length === 0
+          ? `<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:14px;">Todas as EJs bateram este palco!</td></tr>`
+          : quaseLa.map(q => `
+              <tr>
+                <td class="sticky-col" data-label="EJ">
+                  <a href="javascript:void(0)" class="ej-link" data-open-ej="${esc(q.cod)}" style="color:var(--text);font-weight:600;text-decoration:none;">
+                    ${esc(q.nome)}
+                  </a>
+                </td>
+                <td data-label="Cluster">Cluster ${esc(q.cl || '-')}</td>
+                <td data-label="Critérios faltando">
+                  ${renderTag([`${q.qtdFaltando} ${q.qtdFaltando === 1 ? 'critério' : 'critérios'}`, q.qtdFaltando === 1 ? 'n' : 'r'])}
+                </td>
+                <td data-label="O que falta" style="font-size:12.5px;color:var(--danger);font-weight:500;">
+                  ${esc(q.oQueFaltaCurto || 'Não atingiu')}
+                </td>
+              </tr>
+            `).join('');
+
+        return `
+          <div style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;margin-bottom:16px;background:var(--surface);">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px;">
+              <div>
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                  <h4 style="font-size:15.5px;font-weight:700;margin:0;">${icone} Palco ${esc(nv.nome)}</h4>
+                  ${renderTag([`${ranking.length} de ${totalEjs} EJs bateram`, ranking.length > 0 ? 'g' : 'n'])}
+                </div>
+                <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">
+                  ${esc(resumoParams)} · <em>Ordenado por % Faturamento (desempate: % Colab, depois % Coleta CSAT)</em>
+                </div>
+              </div>
+            </div>
+
+            <div class="table-wrap" style="max-height:380px;">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th style="width:76px;">Posição</th>
+                    <th class="sticky-col">EJ</th>
+                    <th>Cluster</th>
+                    <th>% Faturamento</th>
+                    <th>ECM</th>
+                    <th>% Coleta CSAT</th>
+                    <th>% Colab</th>
+                    <th>Palco mais alto</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${rowsRankingHtml}
+                </tbody>
+              </table>
+            </div>
+
+            <details style="margin-top:12px;border-top:1px solid var(--border-subtle);padding-top:10px;">
+              <summary style="cursor:pointer;font-size:13px;font-weight:600;color:var(--primary);user-select:none;">
+                Quase lá — ${quaseLa.length} ${quaseLa.length === 1 ? 'EJ que não bateu' : 'EJs que não bateram'} ${esc(nv.nome)} (ordenadas por menos critérios faltando)
+              </summary>
+              <div class="table-wrap" style="max-height:320px;margin-top:10px;">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th class="sticky-col">EJ</th>
+                      <th style="width:110px;">Cluster</th>
+                      <th style="width:140px;">Faltam</th>
+                      <th>O que falta exatamente para bater ${esc(nv.nome)}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${rowsQuaseLaHtml}
+                  </tbody>
+                </table>
+              </div>
+            </details>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function gerarHtmlMatrizParametrosPalcoEj(palco, pIdx, palcoAvaliado, totalEjs, bloqueado) {
+      const niveis = Array.isArray(palco.niveis) ? palco.niveis : [];
+      if (niveis.length === 0) return '';
+
+      const thsNiveis = niveis.map((nv, nIdx) => {
+        const sl = String(nv.nome || '').toLowerCase();
+        const icone = sl.includes('ouro') ? '🥇' : (sl.includes('prata') ? '🥈' : (sl.includes('bronze') ? '🥉' : '🏅'));
+        return `<th style="min-width:140px;">${icone} ${esc(nv.nome || ('Nível ' + (nIdx + 1)))}</th>`;
+      }).join('');
+
+      const tdsFat = niveis.map((nv, nIdx) => {
+        const val = obterValorParamNivelPalco(nv, 'fa_pct_meta', 70);
+        return `
+          <td>
+            <div style="display:flex;align-items:center;gap:4px;">
+              <input type="number" step="any" min="0" class="input" data-pej-qparam="${pIdx}:${nIdx}:fa_pct_meta" value="${esc(val)}" style="width:90px;font-weight:600;" ${bloqueado ? 'disabled' : ''}>
+              <span style="font-size:12px;color:var(--text-muted);">%</span>
+            </div>
+          </td>
+        `;
+      }).join('');
+
+      const tdsEcm = niveis.map((nv, nIdx) => {
+        const val = obterValorParamNivelPalco(nv, 'ecm_meta_batida', true);
+        const sim = val === true || String(val) === 'true';
+        return `
+          <td>
+            <select class="select" data-pej-qparam="${pIdx}:${nIdx}:ecm_meta_batida" style="width:110px;font-weight:600;" ${bloqueado ? 'disabled' : ''}>
+              <option value="true" ${sim ? 'selected' : ''}>Sim (Exige)</option>
+              <option value="false" ${!sim ? 'selected' : ''}>Não exige</option>
+            </select>
+          </td>
+        `;
+      }).join('');
+
+      const tdsCsat = niveis.map((nv, nIdx) => {
+        const val = obterValorParamNivelPalco(nv, 'cs_coleta', 60);
+        return `
+          <td>
+            <div style="display:flex;align-items:center;gap:4px;">
+              <input type="number" step="any" min="0" class="input" data-pej-qparam="${pIdx}:${nIdx}:cs_coleta" value="${esc(val)}" style="width:90px;font-weight:600;" ${bloqueado ? 'disabled' : ''}>
+              <span style="font-size:12px;color:var(--text-muted);">%</span>
+            </div>
+          </td>
+        `;
+      }).join('');
+
+      const tdsColab = niveis.map((nv, nIdx) => {
+        const val = obterValorParamNivelPalco(nv, 'co_pct_meta', 0);
+        return `
+          <td>
+            <div style="display:flex;align-items:center;gap:4px;">
+              <input type="number" step="any" min="0" class="input" data-pej-qparam="${pIdx}:${nIdx}:co_pct_meta" value="${esc(val)}" style="width:90px;font-weight:600;" ${bloqueado ? 'disabled' : ''}>
+              <span style="font-size:12px;color:var(--text-muted);">%</span>
+            </div>
+          </td>
+        `;
+      }).join('');
+
+      const tdsContagem = niveis.map((nv, nIdx) => {
+        const nvAv = (palcoAvaliado && Array.isArray(palcoAvaliado.niveis))
+          ? palcoAvaliado.niveis.find(x => Number(x.ordem) === Number(nv.ordem) && x.nome === nv.nome) || palcoAvaliado.niveis[nIdx]
+          : null;
+        const qtd = nvAv && Array.isArray(nvAv.rankingBateram) ? nvAv.rankingBateram.length : 0;
+        return `
+          <td data-pej-matrix-count="${pIdx}:${nIdx}">
+            ${renderTag([`${qtd} de ${totalEjs} EJs bateram`, qtd > 0 ? 'g' : 'n'])}
+          </td>
+        `;
+      }).join('');
 
       return `
-        <div class="clean-card" style="margin-bottom:18px;padding:14px 16px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px;">
+        <div style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:16px;background:var(--surface-subtle);">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
             <div>
-              <div style="font-size:13px;font-weight:600;color:var(--text);">Métricas dos Indicadores de Palcos (Consolidado Atual · ${totalEjs} EJs)</div>
-              <div style="font-size:12px;color:var(--text-muted);">ECM (% Batida Geral e % Batido da Meta), Faturamento (% da Meta Batida), CSAT (% Coletada), Colaborativo (% da Meta) e Cluster (Subindo no mês)</div>
-            </div>
-            <div style="display:flex;align-items:center;gap:8px;">
-              <label class="form-label" style="margin:0;font-size:12px;white-space:nowrap;">Mês selecionado (Cluster):</label>
-              <select class="select" data-palco-mes-ref="1" style="min-width:145px;" ${bloqueado ? 'disabled' : ''}>
-                ${opcoesMes}
-              </select>
+              <div style="font-size:13.5px;font-weight:700;color:var(--text);">Parâmetros dos Palcos (Edição Rápida Ao Vivo)</div>
+              <div style="font-size:12px;color:var(--text-muted);">Altere qualquer valor abaixo para recalcular os rankings e o "Quase lá" na hora e salvar automaticamente. Valor <strong>0</strong> (ou "Não exige" no ECM) desativa o critério naquele palco. Tolerância de arredondamento: 0,05 p.p.</div>
             </div>
           </div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(185px, 1fr));gap:10px;">
-            <div style="padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-subtle);">
-              <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.03em;margin-bottom:4px;">ECM</div>
-              <div style="font-size:12.5px;color:var(--text-secondary);display:flex;justify-content:space-between;gap:6px;">
-                <span>% Batida Geral:</span>
-                <strong style="color:var(--text);">${esc(METRICAS.ecm_pct.formatar(ecmGeralVal))}</strong>
-              </div>
-              <div style="font-size:12.5px;color:var(--text-secondary);display:flex;justify-content:space-between;gap:6px;margin-top:2px;">
-                <span>% Batido da Meta:</span>
-                <strong style="color:var(--text);">${esc(METRICAS.ecm_pct_meta.formatar(ecmMetaVal))}</strong>
-              </div>
-            </div>
-            <div style="padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-subtle);">
-              <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.03em;margin-bottom:4px;">Faturamento</div>
-              <div style="font-size:12.5px;color:var(--text-secondary);display:flex;justify-content:space-between;gap:6px;">
-                <span>% da Meta Batida:</span>
-                <strong style="color:var(--text);">${esc(METRICAS.fa_pct_meta.formatar(fatMetaVal))}</strong>
-              </div>
-            </div>
-            <div style="padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-subtle);">
-              <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.03em;margin-bottom:4px;">CSAT</div>
-              <div style="font-size:12.5px;color:var(--text-secondary);display:flex;justify-content:space-between;gap:6px;">
-                <span>% Coletada:</span>
-                <strong style="color:var(--text);">${esc(METRICAS.cs_coleta.formatar(csatColetaVal))}</strong>
-              </div>
-            </div>
-            <div style="padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-subtle);">
-              <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.03em;margin-bottom:4px;">Colaborativo</div>
-              <div style="font-size:12.5px;color:var(--text-secondary);display:flex;justify-content:space-between;gap:6px;">
-                <span>% da Meta:</span>
-                <strong style="color:var(--text);">${esc(METRICAS.co_pct_meta.formatar(colabMetaVal))}</strong>
-              </div>
-            </div>
-            <div style="padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-subtle);">
-              <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.03em;margin-bottom:4px;">Cluster (${esc(mesNome)})</div>
-              <div style="font-size:12.5px;color:var(--text-secondary);display:flex;justify-content:space-between;gap:6px;">
-                <span>Subindo no mês:</span>
-                <strong style="color:var(--text);">${clusterSubindoVal} de ${totalEjs} EJs</strong>
-              </div>
-            </div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="min-width:260px;">Critério do Edital</th>
+                  ${thsNiveis}
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Faturamento:</strong> % mínimo da meta anual</td>
+                  ${tdsFat}
+                </tr>
+                <tr>
+                  <td><strong>ECM:</strong> meta de engajamento com o MEJ batida</td>
+                  ${tdsEcm}
+                </tr>
+                <tr>
+                  <td><strong>CSAT:</strong> % mínimo de COLETA (pesquisas respondidas ÷ contratos)</td>
+                  ${tdsCsat}
+                </tr>
+                <tr>
+                  <td><strong>Colaborativo:</strong> % mínimo da meta anual (0 = não exige)</td>
+                  ${tdsColab}
+                </tr>
+                <tr style="background:var(--surface);">
+                  <td><strong>Resultado ao vivo (EJs que cumprem todos os critérios ativos):</strong></td>
+                  ${tdsContagem}
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       `;
     }
 
-    function vincularPainelMetricasPalcos(ev, container, bloqueado = false) {
-      if (bloqueado) return;
-      container.querySelectorAll('[data-palco-mes-ref]').forEach(sel => {
-        sel.addEventListener('change', () => {
-          ev.mesReferencia = Math.min(12, Math.max(1, Math.round(Number(sel.value) || 12)));
-          persistirEdicaoEvento(ev, true);
-        });
+    function vincularEventosMatrizParametrosPalcoEj(ev, container, onAfterLiveUpdate) {
+      const totalEjs = (STORE.ejs || []).length;
+      container.querySelectorAll('[data-pej-qparam]').forEach(el => {
+        const handler = () => {
+          const [pIdxStr, nIdxStr, metrica] = el.dataset.pejQparam.split(':');
+          const pIdx = Number(pIdxStr);
+          const nIdx = Number(nIdxStr);
+          const palco = ev.palcosEj && ev.palcosEj[pIdx];
+          if (!palco || !Array.isArray(palco.niveis) || !palco.niveis[nIdx]) return;
+          const nivel = palco.niveis[nIdx];
+
+          if (metrica === 'ecm_meta_batida') {
+            definirValorParamNivelPalco(nivel, 'ecm_meta_batida', '=', el.value === 'true');
+          } else {
+            const num = Math.max(0, Number(el.value) || 0);
+            definirValorParamNivelPalco(nivel, metrica, '>=', num);
+          }
+
+          persistirEdicaoEvento(ev, false);
+
+          // Recalcula o palco e redesenha os rankings e contadores na hora sem perder o foco do input
+          const palcoAv = avaliarPalcoEj(palco, STORE.ejs || []);
+          palco.niveis.forEach((nv, idx) => {
+            const cell = container.querySelector(`[data-pej-matrix-count="${pIdx}:${idx}"]`);
+            const nvAv = (palcoAv.niveis || [])[idx];
+            if (cell && nvAv) {
+              const qtd = Array.isArray(nvAv.rankingBateram) ? nvAv.rankingBateram.length : 0;
+              cell.innerHTML = renderTag([`${qtd} de ${totalEjs} EJs bateram`, qtd > 0 ? 'g' : 'n']);
+            }
+          });
+
+          const liveRankWrap = container.querySelector(`#pejLiveRankings_${pIdx}`);
+          if (liveRankWrap) {
+            liveRankWrap.innerHTML = gerarHtmlRankingNiveisPalcoEj(palcoAv, totalEjs);
+            liveRankWrap.querySelectorAll('[data-open-ej]').forEach(link => {
+              link.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openEjProfile(link.dataset.openEj);
+              });
+            });
+          }
+
+          if (typeof onAfterLiveUpdate === 'function') {
+            onAfterLiveUpdate(palcoAv, pIdx);
+          }
+        };
+
+        if (el.tagName === 'SELECT') {
+          el.addEventListener('change', handler);
+        } else {
+          el.addEventListener('input', handler);
+        }
       });
     }
 
@@ -7458,7 +8484,7 @@
     function renderEventoTabPalcosEj(ev, container) {
       const bloqueado = ev.status === 'encerrado';
       if (!Array.isArray(ev.palcosEj)) ev.palcosEj = [];
-      const mesRef = obterMesContexto({ mesSelecionado: ev.mesReferencia });
+      const totalEjs = (STORE.ejs || []).length;
 
       const palcosHtml = ev.palcosEj.length === 0
         ? `
@@ -7471,6 +8497,10 @@
         : ev.palcosEj.map((palco, pIdx) => {
             if (!Array.isArray(palco.niveis)) palco.niveis = [];
             palco.niveis.sort((a, b) => (Number(a.ordem) || 0) - (Number(b.ordem) || 0));
+            const palcoAvaliado = avaliarPalcoEj(palco, STORE.ejs || []);
+
+            const matrizRapidaHtml = gerarHtmlMatrizParametrosPalcoEj(palco, pIdx, palcoAvaliado, totalEjs, bloqueado);
+            const rankingsAoVivoHtml = gerarHtmlRankingNiveisPalcoEj(palcoAvaliado, totalEjs);
 
             const niveisHtml = palco.niveis.length === 0
               ? `<div style="font-size:12.5px;color:var(--text-muted);padding:12px 0;">Nenhum nível cadastrado neste palco. Clique em "+ Adicionar nível" abaixo.</div>`
@@ -7486,7 +8516,7 @@
                           </div>
                           <div style="flex:1;">
                             <label class="form-label" style="font-size:11px;margin-bottom:2px;">Nome do nível</label>
-                            <input type="text" class="input" data-pej-nivel-nome="${pIdx}:${nIdx}" value="${esc(nivel.nome || `Nível ${nIdx + 1}`)}" placeholder="Ex.: Nível 1 — Bronze" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
+                            <input type="text" class="input" data-pej-nivel-nome="${pIdx}:${nIdx}" value="${esc(nivel.nome || `Nível ${nIdx + 1}`)}" placeholder="Ex.: Bronze" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
                           </div>
                         </div>
                         ${!bloqueado ? `<button type="button" class="btn btn-sm" data-pej-del-nivel="${pIdx}:${nIdx}" style="color:var(--danger);">Remover nível</button>` : ''}
@@ -7494,10 +8524,7 @@
                       <div id="wrap_${cbId}">
                         ${gerarHtmlConstrutorCondicoes(cbId, nivel.requisito, {
                           titulo: `Requisito para atingir "${nivel.nome || ('Nível ' + (nivel.ordem || (nIdx + 1)))}"`,
-                          mostrarPreview: true,
-                          apenasPalcos: true,
-                          mesReferencia: mesRef,
-                          bloqueado
+                          mostrarPreview: true
                         })}
                       </div>
                     </div>
@@ -7509,7 +8536,7 @@
                 <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-bottom:14px;border-bottom:1px solid var(--border-subtle);margin-bottom:14px;">
                   <div style="flex:1;min-width:240px;">
                     <label class="form-label">Nome do Palco das EJs</label>
-                    <input type="text" class="input" data-pej-nome="${pIdx}" value="${esc(palco.nome || '')}" placeholder="Ex.: Palco Reconhecimento Anual" style="width:100%;font-weight:600;" ${bloqueado ? 'disabled' : ''}>
+                    <input type="text" class="input" data-pej-nome="${pIdx}" value="${esc(palco.nome || '')}" placeholder="Ex.: Palcos das EJs — PERTENCER" style="width:100%;font-weight:600;" ${bloqueado ? 'disabled' : ''}>
                   </div>
                   <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding-top:22px;">
                     <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--text-secondary);cursor:pointer;">
@@ -7520,16 +8547,29 @@
                   </div>
                 </div>
 
-                <div>
-                  ${niveisHtml}
+                <!-- Matriz rápida de parâmetros (Bronze | Prata | Ouro) -->
+                ${matrizRapidaHtml}
+
+                <!-- Rankings ao vivo de cada palco + Quase lá -->
+                <div id="pejLiveRankings_${pIdx}">
+                  ${rankingsAoVivoHtml}
                 </div>
 
-                ${!bloqueado ? `
-                  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--border-subtle);">
-                    <button type="button" class="btn btn-sm" data-pej-add-nivel="${pIdx}">+ Adicionar nível</button>
-                    <span style="font-size:12px;color:var(--text-muted);">${palco.exigirNiveisAnteriores ? 'Modo escada: a EJ só sobe ao nível seguinte se cumprir os anteriores.' : 'Modo livre: a EJ fica no maior nível cujo requisito ela cumprir.'}</span>
+                <!-- Construtor avançado recolhível por nível -->
+                <details style="margin-top:12px;border-top:1px solid var(--border-subtle);padding-top:12px;">
+                  <summary style="cursor:pointer;font-size:12.5px;font-weight:600;color:var(--text-secondary);">
+                    Configuração avançada de condições por nível (${palco.niveis.length} ${palco.niveis.length === 1 ? 'nível' : 'níveis'})
+                  </summary>
+                  <div style="margin-top:12px;">
+                    ${niveisHtml}
+                    ${!bloqueado ? `
+                      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--border-subtle);">
+                        <button type="button" class="btn btn-sm" data-pej-add-nivel="${pIdx}">+ Adicionar nível</button>
+                        <span style="font-size:12px;color:var(--text-muted);">${palco.exigirNiveisAnteriores ? 'Modo escada: a EJ só sobe ao nível seguinte se cumprir os anteriores.' : 'Modo livre: a EJ recebe o seu palco mais alto atingido.'}</span>
+                      </div>
+                    ` : ''}
                   </div>
-                ` : ''}
+                </details>
               </div>
             `;
           }).join('');
@@ -7537,19 +8577,29 @@
       container.innerHTML = `
         <div class="section-header" style="margin-bottom:16px;">
           <div>
-            <h3 class="section-title" style="margin-bottom:2px;">Configuração dos Palcos das EJs</h3>
-            <span style="font-size:12.5px;color:var(--text-muted);">Cada EJ é posicionada automaticamente no maior nível em que cumpre o requisito configurado.</span>
+            <h3 class="section-title" style="margin-bottom:2px;">Palcos das EJs (Parâmetros e Ranking Ao Vivo)</h3>
+            <span style="font-size:12.5px;color:var(--text-muted);">Edite os parâmetros de Bronze, Prata e Ouro abaixo; o ranking e a seção "Quase lá" são recalculados na hora e salvos automaticamente.</span>
           </div>
           <div style="display:flex;gap:8px;">
             ${!bloqueado ? `<button type="button" class="btn" data-add-palco-ej="1">+ Novo palco das EJs</button>` : ''}
             ${!bloqueado ? `<button type="button" class="btn btn-primary" id="btnSavePalcosEjNow">Salvar alterações</button>` : ''}
           </div>
         </div>
-        ${gerarHtmlPainelMetricasPalcos(ev, bloqueado)}
         ${palcosHtml}
       `;
 
-      vincularPainelMetricasPalcos(ev, container, bloqueado);
+      // Conecta a matriz rápida de parâmetros ao vivo
+      if (!bloqueado) {
+        vincularEventosMatrizParametrosPalcoEj(ev, container);
+      }
+
+      // Bind de clique no nome da EJ para abrir o perfil
+      container.querySelectorAll('[data-open-ej]').forEach(link => {
+        link.addEventListener('click', (e) => {
+          e.stopPropagation();
+          openEjProfile(link.dataset.openEj);
+        });
+      });
 
       // Bind de adicionar palco
       container.querySelectorAll('[data-add-palco-ej]').forEach(btn => {
@@ -7561,10 +8611,15 @@
             niveis: [
               {
                 ordem: 1,
-                nome: 'Nível 1',
+                nome: 'Bronze',
                 requisito: {
                   logica: 'E',
-                  condicoes: [{ metrica: 'fa_pct_meta', operador: '>=', valor: 100 }]
+                  condicoes: [
+                    { metrica: 'fa_pct_meta', operador: '>=', valor: 70 },
+                    { metrica: 'ecm_meta_batida', operador: '=', valor: true },
+                    { metrica: 'cs_coleta', operador: '>=', valor: 60 },
+                    { metrica: 'co_pct_meta', operador: '>=', valor: 0 }
+                  ]
                 }
               }
             ]
@@ -7667,8 +8722,8 @@
           const cbId = `pej_${pIdx}_${nIdx}`;
           if (!bloqueado) {
             vincularConstrutorCondicoes(cbId, nivel.requisito, (req, reRenderDom) => {
-              persistirEdicaoEvento(ev, reRenderDom);
-            }, { apenasPalcos: true, mesReferencia: mesRef });
+              persistirEdicaoEvento(ev, true);
+            });
           }
         });
       });
@@ -7677,55 +8732,20 @@
     // ----------------------------------------------------------------------------
     // ABA: PALCOS DO NÚCLEO
     // ----------------------------------------------------------------------------
-    function obterOptionsMetricasPalcosHtml(metricaSelecionada) {
-      const grupos = obterGruposMetricas({ apenasPalcos: true, incluirExtraId: metricaSelecionada });
-      return Object.keys(grupos).map(nomeGrupo => {
-        const opts = grupos[nomeGrupo].map(m => {
-          const sufixoLegado = !METRICAS_PALCOS_IDS.includes(m.id) ? ' (Legado)' : '';
-          return `<option value="${esc(m.id)}" ${m.id === metricaSelecionada ? 'selected' : ''}>${esc(m.rotulo + sufixoLegado)}</option>`;
-        }).join('');
-        return `<optgroup label="${esc(nomeGrupo)}">${opts}</optgroup>`;
-      }).join('');
-    }
-
-    function garantirAgregadosNivelNucleo(nivel) {
-      const criarPadrao = () => ({
-        tipo: 'consolidado',
-        metrica: 'fa_pct_meta',
-        condicaoEj: { logica: 'E', condicoes: [] },
-        operador: '>=',
-        valor: 80
-      });
-      if (!Array.isArray(nivel.agregados) || nivel.agregados.length === 0) {
-        if (nivel.agregado && typeof nivel.agregado === 'object') {
-          nivel.agregados = [nivel.agregado];
-        } else {
-          nivel.agregados = [criarPadrao()];
-        }
-      }
-      nivel.agregados.forEach(ag => {
-        if (!ag.tipo) ag.tipo = 'consolidado';
-        if (!ag.metrica) ag.metrica = 'fa_pct_meta';
-        if (!ag.operador) ag.operador = '>=';
-        if (ag.valor === undefined || ag.valor === null) ag.valor = 80;
-        if (!ag.condicaoEj) ag.condicaoEj = { logica: 'E', condicoes: [] };
-      });
-      nivel.logica = String(nivel.logica || 'E').toUpperCase() === 'OU' ? 'OU' : 'E';
-      nivel.agregado = nivel.agregados[0];
-      return nivel.agregados;
+    function obterMetricasNumericasCatalogo() {
+      return Object.values(METRICAS).filter(m => m.tipo === 'numero' || m.tipo === 'percentual');
     }
 
     function renderEventoTabPalcosNucleo(ev, container) {
       const bloqueado = ev.status === 'encerrado';
       if (!Array.isArray(ev.palcosNucleo)) ev.palcosNucleo = [];
-      const mesRef = obterMesContexto({ mesSelecionado: ev.mesReferencia });
-      const ctx = { mesSelecionado: mesRef };
+      const metricasNum = obterMetricasNumericasCatalogo();
 
       const palcosHtml = ev.palcosNucleo.length === 0
         ? `
           <div class="clean-card" style="text-align:center;padding:36px 24px;">
             <p style="font-size:15px;font-weight:600;margin-bottom:6px;">Nenhum Palco do Núcleo configurado</p>
-            <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">Configure metas coletivas do Núcleo Vertentes com as métricas oficiais de ECM, Faturamento, CSAT, Colaborativo e Cluster no mês selecionado.</p>
+            <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">Configure metas coletivas do Núcleo Vertentes (ex.: "15 ou mais EJs com meta batida", "Faturamento total >= R$ 2 mi", "% de EJs com CSAT >= 85%").</p>
             ${!bloqueado ? `<button class="btn btn-primary" data-add-palco-nuc="1">+ Adicionar primeiro Palco do Núcleo</button>` : ''}
           </div>
         `
@@ -7736,90 +8756,20 @@
             const niveisHtml = palco.niveis.length === 0
               ? `<div style="font-size:12.5px;color:var(--text-muted);padding:12px 0;">Nenhum nível cadastrado neste palco do Núcleo.</div>`
               : palco.niveis.map((nivel, nIdx) => {
-                  const agregados = garantirAgregadosNivelNucleo(nivel);
-                  const avPreview = avaliarNivelPalcoNucleo(nivel, STORE.ejs || [], ctx);
-
-                  const criteriosHtml = agregados.map((ag, aIdx) => {
-                    const precisaMetrica = ag.tipo === 'consolidado' || ag.tipo === 'media' || ag.tipo === 'soma';
-                    const cbId = `pnuc_${pIdx}_${nIdx}_${aIdx}`;
-                    const temFiltroCond = Array.isArray(ag.condicaoEj?.condicoes) && ag.condicaoEj.condicoes.length > 0;
-                    const unidadeHint = (ag.tipo === 'contagem' || (ag.tipo === 'consolidado' && ag.metrica === 'cu_subindo_mes'))
-                      ? 'Qtd. EJs'
-                      : ((ag.tipo === 'percentual' || ag.tipo === 'consolidado' || ag.tipo === 'media') ? '%' : 'Valor');
-
-                    const rotuloCampoMetrica = ag.tipo === 'consolidado'
-                      ? 'Métrica consolidada do Núcleo'
-                      : (ag.tipo === 'soma' ? 'Métrica a somar' : 'Métrica (média nas EJs)');
-
-                    const construtorHtml = gerarHtmlConstrutorCondicoes(cbId, ag.condicaoEj, {
-                      titulo: precisaMetrica
-                        ? 'Filtro opcional de EJs para entrar na conta (vazio = todas as EJs)'
-                        : 'Condição que a EJ precisa cumprir para entrar nesta contagem / percentual',
-                      mostrarPreview: false,
-                      apenasPalcos: true,
-                      mesReferencia: mesRef,
-                      bloqueado
-                    });
-
-                    return `
-                      <div style="border:1px solid var(--border-subtle);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:8px;background:var(--surface-subtle);">
-                        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;">
-                          <span style="font-size:11.5px;font-weight:600;color:var(--text-secondary);">Critério ${aIdx + 1} do nível</span>
-                          ${!bloqueado && agregados.length > 1
-                            ? `<button type="button" class="btn btn-sm" data-pnuc-del-ag="${pIdx}:${nIdx}:${aIdx}" style="color:var(--danger);padding:2px 8px;font-size:11.5px;">Remover critério</button>`
-                            : ''}
-                        </div>
-                        <div class="kv-grid" style="grid-template-columns:repeat(auto-fit, minmax(170px, 1fr));gap:10px;margin-bottom:${precisaMetrica ? '6px' : '10px'};">
-                          <div class="form-group" style="margin-bottom:0;">
-                            <label class="form-label" style="font-size:11.5px;">Tipo de cálculo no Núcleo</label>
-                            <select class="select" data-pnuc-ag-tipo="${pIdx}:${nIdx}:${aIdx}" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
-                              <option value="consolidado" ${ag.tipo === 'consolidado' ? 'selected' : ''}>Indicador consolidado do Núcleo</option>
-                              <option value="contagem" ${ag.tipo === 'contagem' ? 'selected' : ''}>Contagem de EJs (Nº)</option>
-                              <option value="percentual" ${ag.tipo === 'percentual' ? 'selected' : ''}>% de EJs do Núcleo</option>
-                              <option value="media" ${ag.tipo === 'media' ? 'selected' : ''}>Média da métrica nas EJs</option>
-                              ${ag.tipo === 'soma' ? `<option value="soma" selected>Soma de métrica nas EJs (Legado)</option>` : ''}
-                            </select>
-                          </div>
-
-                          ${precisaMetrica ? `
-                            <div class="form-group" style="margin-bottom:0;">
-                              <label class="form-label" style="font-size:11.5px;">${esc(rotuloCampoMetrica)}</label>
-                              <select class="select" data-pnuc-ag-metrica="${pIdx}:${nIdx}:${aIdx}" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
-                                ${obterOptionsMetricasPalcosHtml(ag.metrica || 'fa_pct_meta')}
-                              </select>
-                            </div>
-                          ` : ''}
-
-                          <div class="form-group" style="margin-bottom:0;">
-                            <label class="form-label" style="font-size:11.5px;">Operador da meta</label>
-                            <select class="select" data-pnuc-ag-op="${pIdx}:${nIdx}:${aIdx}" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
-                              ${['>=', '>', '<=', '<', '=', '!='].map(op => `<option value="${op}" ${(ag.operador || '>=') === op ? 'selected' : ''}>${op}</option>`).join('')}
-                            </select>
-                          </div>
-
-                          <div class="form-group" style="margin-bottom:0;">
-                            <label class="form-label" style="font-size:11.5px;">Valor exigido (${esc(unidadeHint)})</label>
-                            <input type="number" step="any" class="input" data-pnuc-ag-val="${pIdx}:${nIdx}:${aIdx}" value="${esc(Number(ag.valor) || 0)}" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
-                          </div>
-                        </div>
-
-                        ${precisaMetrica ? `
-                          <details ${temFiltroCond ? 'open' : ''} style="margin-top:4px;">
-                            <summary style="cursor:pointer;font-size:11.5px;color:var(--text-muted);">
-                              Filtro opcional de EJs para este cálculo ${temFiltroCond ? `(${ag.condicaoEj.condicoes.length} condição/ões ativa/s)` : '(padrão: todas as EJs do Núcleo)'}
-                            </summary>
-                            <div id="wrap_${cbId}" style="margin-top:8px;">
-                              ${construtorHtml}
-                            </div>
-                          </details>
-                        ` : `
-                          <div id="wrap_${cbId}">
-                            ${construtorHtml}
-                          </div>
-                        `}
-                      </div>
-                    `;
-                  }).join('');
+                  if (!nivel.agregado) {
+                    nivel.agregado = {
+                      tipo: 'contagem',
+                      metrica: 'fa_realizado',
+                      condicaoEj: { logica: 'E', condicoes: [{ metrica: 'fa_meta_batida', operador: '=', valor: true }] },
+                      operador: '>=',
+                      valor: 6
+                    };
+                  }
+                  const ag = nivel.agregado;
+                  if (!ag.condicaoEj) ag.condicaoEj = { logica: 'E', condicoes: [] };
+                  const precisaMetrica = ag.tipo === 'soma' || ag.tipo === 'media';
+                  const cbId = `pnuc_${pIdx}_${nIdx}`;
+                  const avPreview = avaliarAgregadoNucleo(ag, STORE.ejs || []);
 
                   return `
                     <div style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:12px;background:var(--surface);">
@@ -7831,27 +8781,62 @@
                           </div>
                           <div style="flex:1;">
                             <label class="form-label" style="font-size:11px;margin-bottom:2px;">Nome do nível do Núcleo</label>
-                            <input type="text" class="input" data-pnuc-nivel-nome="${pIdx}:${nIdx}" value="${esc(nivel.nome || `Nível ${nIdx + 1}`)}" placeholder="Ex.: Nível 1 — Reconhecimento Regional" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
+                            <input type="text" class="input" data-pnuc-nivel-nome="${pIdx}:${nIdx}" value="${esc(nivel.nome || `Nível ${nIdx + 1}`)}" placeholder="Ex.: Nível 1 — 6 EJs com Meta Batida" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
                           </div>
                         </div>
-                        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                          ${agregados.length > 1 ? `
-                            <div class="cond-logic-toggle" title="Conector entre critérios deste nível">
-                              <button type="button" class="cond-logic-btn ${nivel.logica === 'E' ? 'active' : ''}" data-pnuc-nivel-logica="${pIdx}:${nIdx}:E" ${bloqueado ? 'disabled' : ''}>E (Todos)</button>
-                              <button type="button" class="cond-logic-btn ${nivel.logica === 'OU' ? 'active' : ''}" data-pnuc-nivel-logica="${pIdx}:${nIdx}:OU" ${bloqueado ? 'disabled' : ''}>OU (Qualquer)</button>
-                            </div>
-                          ` : ''}
-                          ${!bloqueado ? `<button type="button" class="btn btn-sm" data-pnuc-add-ag="${pIdx}:${nIdx}">+ Critério</button>` : ''}
+                        <div style="display:flex;align-items:center;gap:8px;">
                           ${renderTag([avPreview.bateu ? 'Atingido agora' : 'Pendente', avPreview.bateu ? 'g' : 'n'])}
                           ${!bloqueado ? `<button type="button" class="btn btn-sm" data-pnuc-del-nivel="${pIdx}:${nIdx}" style="color:var(--danger);">Remover nível</button>` : ''}
                         </div>
                       </div>
 
-                      ${criteriosHtml}
+                      <!-- Configuração do Agregado -->
+                      <div class="kv-grid" style="grid-template-columns:repeat(auto-fit, minmax(170px, 1fr));gap:10px;margin-bottom:12px;">
+                        <div class="form-group" style="margin-bottom:0;">
+                          <label class="form-label" style="font-size:11.5px;">Tipo de cálculo no Núcleo</label>
+                          <select class="select" data-pnuc-ag-tipo="${pIdx}:${nIdx}" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
+                            <option value="contagem" ${ag.tipo === 'contagem' ? 'selected' : ''}>Contagem de EJs (Nº)</option>
+                            <option value="percentual" ${ag.tipo === 'percentual' ? 'selected' : ''}>% de EJs do Núcleo</option>
+                            <option value="soma" ${ag.tipo === 'soma' ? 'selected' : ''}>Soma de métrica nas EJs</option>
+                            <option value="media" ${ag.tipo === 'media' ? 'selected' : ''}>Média de métrica nas EJs</option>
+                          </select>
+                        </div>
+
+                        ${precisaMetrica ? `
+                          <div class="form-group" style="margin-bottom:0;">
+                            <label class="form-label" style="font-size:11.5px;">Métrica a ${ag.tipo === 'soma' ? 'somar' : 'calcular média'}</label>
+                            <select class="select" data-pnuc-ag-metrica="${pIdx}:${nIdx}" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
+                              ${metricasNum.map(m => `<option value="${esc(m.id)}" ${m.id === ag.metrica ? 'selected' : ''}>${esc(m.rotulo)}</option>`).join('')}
+                            </select>
+                          </div>
+                        ` : ''}
+
+                        <div class="form-group" style="margin-bottom:0;">
+                          <label class="form-label" style="font-size:11.5px;">Operador da meta</label>
+                          <select class="select" data-pnuc-ag-op="${pIdx}:${nIdx}" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
+                            ${['>=', '>', '<=', '<', '=', '!='].map(op => `<option value="${op}" ${(ag.operador || '>=') === op ? 'selected' : ''}>${op}</option>`).join('')}
+                          </select>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom:0;">
+                          <label class="form-label" style="font-size:11.5px;">Valor exigido (${ag.tipo === 'contagem' ? 'Qtd. EJs' : ag.tipo === 'percentual' ? '%' : 'Valor'})</label>
+                          <input type="number" step="any" class="input" data-pnuc-ag-val="${pIdx}:${nIdx}" value="${esc(Number(ag.valor) || 0)}" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
+                        </div>
+                      </div>
+
+                      <!-- Condição por EJ -->
+                      <div id="wrap_${cbId}">
+                        ${gerarHtmlConstrutorCondicoes(cbId, ag.condicaoEj, {
+                          titulo: precisaMetrica
+                            ? 'Filtro opcional de EJs para entrar na conta (vazio = todas as EJs)'
+                            : 'Condição que a EJ precisa cumprir para entrar nesta contagem / percentual',
+                          mostrarPreview: false
+                        })}
+                      </div>
 
                       <div class="cond-preview-bar" data-pnuc-preview="${pIdx}:${nIdx}" style="margin-top:8px;">
-                        <span>Resultado atual do Núcleo (${esc(MN[mesRef - 1])}): <strong>${esc(avPreview.explicacao)}</strong></span>
-                        <span>EJs alinhadas ao critério: <strong>${avPreview.ejsQueCumprem.length} de ${(STORE.ejs || []).length}</strong></span>
+                        <span>Resultado atual do Núcleo neste nível: <strong>${esc(avPreview.explicacao)}</strong></span>
+                        <span>EJs que cumprem a condição: <strong>${avPreview.ejsQueCumprem.length} de ${(STORE.ejs || []).length}</strong></span>
                       </div>
                     </div>
                   `;
@@ -7876,7 +8861,7 @@
                 ${!bloqueado ? `
                   <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--border-subtle);">
                     <button type="button" class="btn btn-sm" data-pnuc-add-nivel="${pIdx}">+ Adicionar nível do Núcleo</button>
-                    <span style="font-size:12px;color:var(--text-muted);">O nível atingido pelo Núcleo será o maior cujos critérios forem satisfeitos.</span>
+                    <span style="font-size:12px;color:var(--text-muted);">O nível atingido pelo Núcleo será o maior cujo agregado for satisfeito.</span>
                   </div>
                 ` : ''}
               </div>
@@ -7887,39 +8872,36 @@
         <div class="section-header" style="margin-bottom:16px;">
           <div>
             <h3 class="section-title" style="margin-bottom:2px;">Configuração dos Palcos do Núcleo</h3>
-            <span style="font-size:12.5px;color:var(--text-muted);">Avalia metas coletivas do Núcleo (indicador consolidado do Núcleo, contagem de EJs, % de EJs ou média).</span>
+            <span style="font-size:12.5px;color:var(--text-muted);">Avalia metas coletivas agregadas sobre todas as EJs (contagem, percentual, soma ou média).</span>
           </div>
           <div style="display:flex;gap:8px;">
             ${!bloqueado ? `<button type="button" class="btn" data-add-palco-nuc="1">+ Novo palco do Núcleo</button>` : ''}
             ${!bloqueado ? `<button type="button" class="btn btn-primary" id="btnSavePalcosNucNow">Salvar alterações</button>` : ''}
           </div>
         </div>
-        ${gerarHtmlPainelMetricasPalcos(ev, bloqueado)}
         ${palcosHtml}
       `;
-
-      vincularPainelMetricasPalcos(ev, container, bloqueado);
 
       // Bind de adicionar palco do núcleo
       container.querySelectorAll('[data-add-palco-nuc]').forEach(btn => {
         btn.addEventListener('click', () => {
-          const agInicial = {
-            tipo: 'consolidado',
-            metrica: 'fa_pct_meta',
-            condicaoEj: { logica: 'E', condicoes: [] },
-            operador: '>=',
-            valor: 80
-          };
           ev.palcosNucleo.push({
             id: 'pnuc_' + Date.now() + '_' + Math.random().toString(36).slice(2, 5),
             nome: `Palco do Núcleo ${ev.palcosNucleo.length + 1}`,
             niveis: [
               {
                 ordem: 1,
-                nome: 'Nível 1',
-                logica: 'E',
-                agregado: agInicial,
-                agregados: [agInicial]
+                nome: 'Nível 1 — 6 EJs com Meta de Faturamento Batida',
+                agregado: {
+                  tipo: 'contagem',
+                  metrica: 'fa_realizado',
+                  condicaoEj: {
+                    logica: 'E',
+                    condicoes: [{ metrica: 'fa_meta_batida', operador: '=', valor: true }]
+                  },
+                  operador: '>=',
+                  valor: 6
+                }
               }
             ]
           });
@@ -7961,19 +8943,19 @@
           if (!palco) return;
           const maxOrdem = (palco.niveis || []).reduce((m, n) => Math.max(m, Number(n.ordem) || 0), 0);
           const novaOrdem = maxOrdem + 1;
-          const agNovo = {
-            tipo: 'consolidado',
-            metrica: 'fa_pct_meta',
-            condicaoEj: { logica: 'E', condicoes: [] },
-            operador: '>=',
-            valor: 100
-          };
           palco.niveis.push({
             ordem: novaOrdem,
             nome: `Nível ${novaOrdem}`,
-            logica: 'E',
-            agregado: agNovo,
-            agregados: [agNovo]
+            agregado: {
+              tipo: 'contagem',
+              metrica: 'fa_realizado',
+              condicaoEj: {
+                logica: 'E',
+                condicoes: [{ metrica: 'fa_meta_batida', operador: '=', valor: true }]
+              },
+              operador: '>=',
+              valor: 10
+            }
           });
           persistirEdicaoEvento(ev, true);
         });
@@ -8009,120 +8991,52 @@
         });
       });
 
-      container.querySelectorAll('[data-pnuc-nivel-logica]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const [pIdxStr, nIdxStr, logStr] = btn.dataset.pnucNivelLogica.split(':');
-          const nivel = ev.palcosNucleo[Number(pIdxStr)]?.niveis[Number(nIdxStr)];
-          if (!nivel) return;
-          nivel.logica = logStr === 'OU' ? 'OU' : 'E';
-          persistirEdicaoEvento(ev, true);
-        });
-      });
-
-      container.querySelectorAll('[data-pnuc-add-ag]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const [pIdx, nIdx] = btn.dataset.pnucAddAg.split(':').map(Number);
-          const nivel = ev.palcosNucleo[pIdx]?.niveis[nIdx];
-          if (!nivel) return;
-          const ags = garantirAgregadosNivelNucleo(nivel);
-          ags.push({
-            tipo: 'consolidado',
-            metrica: 'ecm_pct_meta',
-            condicaoEj: { logica: 'E', condicoes: [] },
-            operador: '>=',
-            valor: 80
-          });
-          nivel.agregado = ags[0];
-          persistirEdicaoEvento(ev, true);
-        });
-      });
-
-      container.querySelectorAll('[data-pnuc-del-ag]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const [pIdx, nIdx, aIdx] = btn.dataset.pnucDelAg.split(':').map(Number);
-          const nivel = ev.palcosNucleo[pIdx]?.niveis[nIdx];
-          if (!nivel || !Array.isArray(nivel.agregados) || nivel.agregados.length <= 1) return;
-          nivel.agregados.splice(aIdx, 1);
-          nivel.agregado = nivel.agregados[0];
-          persistirEdicaoEvento(ev, true);
-        });
-      });
-
       container.querySelectorAll('[data-pnuc-ag-tipo]').forEach(sel => {
         sel.addEventListener('change', () => {
-          const [pIdx, nIdx, aIdx] = sel.dataset.pnucAgTipo.split(':').map(Number);
-          const nivel = ev.palcosNucleo[pIdx]?.niveis[nIdx];
-          const ag = nivel?.agregados?.[aIdx];
+          const [pIdx, nIdx] = sel.dataset.pnucAgTipo.split(':').map(Number);
+          const ag = ev.palcosNucleo[pIdx]?.niveis[nIdx]?.agregado;
           if (!ag) return;
-          const tipoAnt = ag.tipo;
           ag.tipo = sel.value;
-          if (!ag.metrica || !METRICAS[ag.metrica]) {
-            ag.metrica = 'fa_pct_meta';
+          if ((ag.tipo === 'soma' || ag.tipo === 'media') && !ag.metrica) {
+            ag.metrica = 'fa_realizado';
           }
-          if ((ag.tipo === 'consolidado' || ag.tipo === 'media') && (tipoAnt === 'contagem' || tipoAnt === 'percentual')) {
-            ag.condicaoEj = { logica: 'E', condicoes: [] };
-          } else if ((ag.tipo === 'contagem' || ag.tipo === 'percentual') && (!ag.condicaoEj || !Array.isArray(ag.condicaoEj.condicoes) || ag.condicaoEj.condicoes.length === 0)) {
-            const mBase = METRICAS_PALCOS_IDS.includes(ag.metrica) ? ag.metrica : 'fa_pct_meta';
-            ag.condicaoEj = {
-              logica: 'E',
-              condicoes: [
-                mBase === 'cu_subindo_mes'
-                  ? { metrica: 'cu_subindo_mes', operador: '=', valor: true }
-                  : { metrica: mBase, operador: '>=', valor: 100 }
-              ]
-            };
-            if (ag.tipo === 'contagem') ag.valor = 6;
-          }
-          nivel.agregado = nivel.agregados[0];
           persistirEdicaoEvento(ev, true);
         });
       });
 
       container.querySelectorAll('[data-pnuc-ag-metrica]').forEach(sel => {
         sel.addEventListener('change', () => {
-          const [pIdx, nIdx, aIdx] = sel.dataset.pnucAgMetrica.split(':').map(Number);
-          const nivel = ev.palcosNucleo[pIdx]?.niveis[nIdx];
-          const ag = nivel?.agregados?.[aIdx];
+          const [pIdx, nIdx] = sel.dataset.pnucAgMetrica.split(':').map(Number);
+          const ag = ev.palcosNucleo[pIdx]?.niveis[nIdx]?.agregado;
           if (!ag) return;
-          const metricaAnt = ag.metrica;
           ag.metrica = sel.value;
-          if (ag.tipo === 'consolidado' && ag.metrica === 'cu_subindo_mes' && metricaAnt !== 'cu_subindo_mes') {
-            ag.valor = 6;
-          } else if (ag.tipo === 'consolidado' && metricaAnt === 'cu_subindo_mes' && ag.metrica !== 'cu_subindo_mes') {
-            ag.valor = 80;
-          }
-          nivel.agregado = nivel.agregados[0];
           persistirEdicaoEvento(ev, true);
         });
       });
 
       container.querySelectorAll('[data-pnuc-ag-op]').forEach(sel => {
         sel.addEventListener('change', () => {
-          const [pIdx, nIdx, aIdx] = sel.dataset.pnucAgOp.split(':').map(Number);
-          const nivel = ev.palcosNucleo[pIdx]?.niveis[nIdx];
-          const ag = nivel?.agregados?.[aIdx];
+          const [pIdx, nIdx] = sel.dataset.pnucAgOp.split(':').map(Number);
+          const ag = ev.palcosNucleo[pIdx]?.niveis[nIdx]?.agregado;
           if (!ag) return;
           ag.operador = sel.value;
-          nivel.agregado = nivel.agregados[0];
           persistirEdicaoEvento(ev, true);
         });
       });
 
       container.querySelectorAll('[data-pnuc-ag-val]').forEach(inp => {
         inp.addEventListener('input', () => {
-          const [pIdx, nIdx, aIdx] = inp.dataset.pnucAgVal.split(':').map(Number);
-          const nivel = ev.palcosNucleo[pIdx]?.niveis[nIdx];
-          const ag = nivel?.agregados?.[aIdx];
+          const [pIdx, nIdx] = inp.dataset.pnucAgVal.split(':').map(Number);
+          const ag = ev.palcosNucleo[pIdx]?.niveis[nIdx]?.agregado;
           if (!ag) return;
           ag.valor = Number(inp.value) || 0;
-          nivel.agregado = nivel.agregados[0];
           persistirEdicaoEvento(ev, false);
           const prevEl = container.querySelector(`[data-pnuc-preview="${pIdx}:${nIdx}"]`);
           if (prevEl) {
-            const avPreview = avaliarNivelPalcoNucleo(nivel, STORE.ejs || [], ctx);
+            const avPreview = avaliarAgregadoNucleo(ag, STORE.ejs || []);
             prevEl.innerHTML = `
-              <span>Resultado atual do Núcleo (${esc(MN[mesRef - 1])}): <strong>${esc(avPreview.explicacao)}</strong></span>
-              <span>EJs alinhadas ao critério: <strong>${avPreview.ejsQueCumprem.length} de ${(STORE.ejs || []).length}</strong></span>
+              <span>Resultado atual do Núcleo neste nível: <strong>${esc(avPreview.explicacao)}</strong></span>
+              <span>EJs que cumprem a condição: <strong>${avPreview.ejsQueCumprem.length} de ${(STORE.ejs || []).length}</strong></span>
             `;
           }
         });
@@ -8130,17 +9044,14 @@
 
       ev.palcosNucleo.forEach((palco, pIdx) => {
         (palco.niveis || []).forEach((nivel, nIdx) => {
-          const ags = garantirAgregadosNivelNucleo(nivel);
-          ags.forEach((ag, aIdx) => {
-            if (!ag.condicaoEj) ag.condicaoEj = { logica: 'E', condicoes: [] };
-            const cbId = `pnuc_${pIdx}_${nIdx}_${aIdx}`;
-            if (!bloqueado) {
-              vincularConstrutorCondicoes(cbId, ag.condicaoEj, (req, reRenderDom) => {
-                nivel.agregado = nivel.agregados[0];
-                persistirEdicaoEvento(ev, true);
-              }, { apenasPalcos: true, mesReferencia: mesRef });
-            }
-          });
+          if (!nivel.agregado) return;
+          if (!nivel.agregado.condicaoEj) nivel.agregado.condicaoEj = { logica: 'E', condicoes: [] };
+          const cbId = `pnuc_${pIdx}_${nIdx}`;
+          if (!bloqueado) {
+            vincularConstrutorCondicoes(cbId, nivel.agregado.condicaoEj, (req, reRenderDom) => {
+              persistirEdicaoEvento(ev, true);
+            });
+          }
         });
       });
     }
@@ -8152,112 +9063,95 @@
       STORE.ui.evtResFiltros = {}; // palcoId -> { nivel: 'todos', busca: '' }
     }
 
+    function gerarHtmlPodioTop3Premiacao(prem) {
+      if (!prem || prem.modo !== 'topN' || !Array.isArray(prem.top3Ranking) || prem.top3Ranking.length === 0) {
+        return '';
+      }
+      const rows = prem.top3Ranking.map(item => {
+        let posBadge = '';
+        let statusBadge = '';
+        if (item.impedida) {
+          posBadge = `<span style="color:var(--text-muted);font-weight:600;">${item.posicaoBruta}º na métrica</span>`;
+          statusBadge = renderTag([`🔄 Levou ${item.premiosConflitantes.join(', ')} (transfere para próxima)`, 'n']);
+        } else {
+          posBadge = `<span style="font-weight:700;">${formatarPosicaoMedalha(item.posicaoEfetiva)}</span>` +
+            (item.posicaoBruta !== item.posicaoEfetiva ? ` <span style="font-size:11px;color:var(--text-muted);">(${item.posicaoBruta}º geral)</span>` : '');
+          if (item.vencedora) {
+            statusBadge = item.recebeuTransferencia
+              ? renderTag(['🏆 Vencedora (por transferência)', 'g'])
+              : renderTag(['🏆 Vencedora', 'g']);
+          } else {
+            statusBadge = renderTag([`${item.posicaoEfetiva}º lugar`, 'n']);
+          }
+        }
+        const metricasTxt = (item.valoresRanking || []).map(vr => `${esc(vr.rotulo)}: <strong>${esc(vr.valorFmt)}</strong>`).join(' · ');
+        return `
+          <tr style="${item.vencedora ? 'background:rgba(16,185,129,0.06);' : (item.impedida ? 'opacity:0.82;' : '')}">
+            <td data-label="Colocação" style="white-space:nowrap;">${posBadge}</td>
+            <td class="sticky-col" data-label="EJ">
+              <a href="javascript:void(0)" data-open-ej="${esc(item.cod)}" style="color:var(--text);font-weight:600;text-decoration:none;">
+                ${esc(item.nome)}
+              </a>
+            </td>
+            <td data-label="Cluster">Cluster ${esc(item.cl || '-')}</td>
+            <td data-label="Métrica / Desempates" style="font-size:12px;">${metricasTxt}</td>
+            <td data-label="Situação">${statusBadge}</td>
+          </tr>
+        `;
+      }).join('');
+
+      return `
+        <div style="margin-top:10px;margin-bottom:10px;">
+          <div style="font-size:12px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">
+            Top 3 da Premiação ${prem.houveTransferencia ? '· (Com transferência por regra de acúmulo)' : ''}
+          </div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="width:130px;">Colocação</th>
+                  <th class="sticky-col">EJ</th>
+                  <th style="width:100px;">Cluster</th>
+                  <th>Métrica Principal e Desempates</th>
+                  <th style="width:240px;">Situação</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${rows}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
     function renderEventoTabResultado(ev, container) {
+      const bloqueado = ev.status === 'encerrado';
       const resultado = avaliarEvento(ev, STORE.ejs || []);
 
-      // (a) HTML dos Palcos das EJs
+      // (a) HTML dos Palcos das EJs (Com matriz de parâmetros editável ao vivo + Ranking de cada palco + Quase lá)
       const palcosEjHtml = resultado.palcosEj.length === 0
         ? `<div class="clean-card" style="margin-bottom:20px;color:var(--text-muted);font-size:13px;">Nenhum Palco das EJs configurado neste evento.</div>`
-        : resultado.palcosEj.map(palco => {
-            if (!STORE.ui.evtResFiltros[palco.id]) {
-              STORE.ui.evtResFiltros[palco.id] = { nivel: 'todos', busca: '' };
-            }
-            const filtro = STORE.ui.evtResFiltros[palco.id];
-
-            const pillsNiveisHtml = [
-              `<button type="button" class="btn btn-sm ${filtro.nivel === 'todos' ? 'btn-primary' : ''}" data-res-pej-filter="${esc(palco.id)}::todos">Todas (${resultado.totalEjs})</button>`,
-              ...palco.niveis.map(n =>
-                `<button type="button" class="btn btn-sm ${filtro.nivel === String(n.ordem) ? 'btn-primary' : ''}" data-res-pej-filter="${esc(palco.id)}::${n.ordem}">${esc(n.nome)}: ${n.quantidade}</button>`
-              ),
-              `<button type="button" class="btn btn-sm ${filtro.nivel === 'sem_palco' ? 'btn-primary' : ''}" data-res-pej-filter="${esc(palco.id)}::sem_palco">Sem palco: ${palco.semPalco.quantidade}</button>`
-            ].join('');
-
-            const ejsFiltradas = palco.resultadosPorEj.filter(r => {
-              if (filtro.nivel === 'sem_palco' && r.nivelAtingido !== null) return false;
-              if (filtro.nivel !== 'todos' && filtro.nivel !== 'sem_palco') {
-                if (!r.nivelAtingido || String(r.nivelAtingido.ordem) !== String(filtro.nivel)) return false;
-              }
-              if (filtro.busca) {
-                const q = filtro.busca.toLowerCase().trim();
-                if (!String(r.nome || '').toLowerCase().includes(q) && !String(r.cod || '').toLowerCase().includes(q)) {
-                  return false;
-                }
-              }
-              return true;
-            });
-
-            // Ordena: maior nível atingido primeiro, depois nome alfabético
-            ejsFiltradas.sort((a, b) => {
-              const ordA = a.nivelAtingido ? a.nivelAtingido.ordem : -1;
-              const ordB = b.nivelAtingido ? b.nivelAtingido.ordem : -1;
-              if (ordB !== ordA) return ordB - ordA;
-              return String(a.nome || '').localeCompare(String(b.nome || ''), 'pt-BR');
-            });
-
-            const linhasTabela = ejsFiltradas.length === 0
-              ? `<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:20px;">Nenhuma EJ encontrada para este filtro.</td></tr>`
-              : ejsFiltradas.map(r => {
-                  const tagNivel = r.nivelAtingido
-                    ? renderTag([`${r.nivelAtingido.nome}`, 'g'])
-                    : renderTag(['Sem palco', 'n']);
-
-                  let detalheExplicacaoHtml = '';
-                  if (!r.proximoNivel) {
-                    detalheExplicacaoHtml = `<span style="color:var(--good);font-weight:500;">✓ Nível máximo deste palco atingido</span>`;
-                  } else {
-                    const falhas = (r.proximoNivel.condicoesFalhas || []).map(f => `<div style="color:var(--danger);font-size:12px;">• Falta: ${esc(f.explicacao)}</div>`).join('');
-                    const batidas = (r.proximoNivel.condicoesBatidas || []).map(b => `<div style="color:var(--text-muted);font-size:11.5px;">✓ Cumprido: ${esc(b.explicacao)}</div>`).join('');
-                    detalheExplicacaoHtml = `
-                      <div style="font-size:12px;font-weight:600;margin-bottom:2px;">Próximo: ${esc(r.proximoNivel.nome)}</div>
-                      ${falhas}
-                      ${batidas}
-                    `;
-                  }
-
-                  return `
-                    <tr>
-                      <td class="sticky-col" data-label="EJ">
-                        <a href="javascript:void(0)" class="ej-link" data-open-ej="${esc(r.cod)}" style="color:var(--text);font-weight:600;text-decoration:none;">
-                          ${esc(r.nome)}
-                        </a>
-                      </td>
-                      <td data-label="Cluster">Cluster ${esc(r.cl || '-')}</td>
-                      <td data-label="Nível Atingido">${tagNivel}</td>
-                      <td data-label="Diagnóstico / O que falta para subir">${detalheExplicacaoHtml}</td>
-                    </tr>
-                  `;
-                }).join('');
+        : resultado.palcosEj.map((palco, pIdx) => {
+            const palcoConfig = (ev.palcosEj || [])[pIdx] || palco;
+            const matrizRapidaHtml = ! resultado.congelado
+              ? gerarHtmlMatrizParametrosPalcoEj(palcoConfig, pIdx, palco, resultado.totalEjs, bloqueado)
+              : '';
+            const rankingsPorPalcoHtml = gerarHtmlRankingNiveisPalcoEj(palco, resultado.totalEjs);
 
             return `
               <div class="clean-card" style="margin-bottom:20px;">
                 <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
                   <div>
-                    <h4 style="font-size:15px;font-weight:600;margin:0 0 2px 0;">${esc(palco.nome)}</h4>
-                    <span style="font-size:12px;color:var(--text-muted);">${palco.exigirNiveisAnteriores ? 'Exige níveis anteriores em ordem (escada)' : 'Posiciona no maior nível cumprido'}</span>
+                    <h4 style="font-size:15.5px;font-weight:600;margin:0 0 2px 0;">${esc(palco.nome)}</h4>
+                    <span style="font-size:12px;color:var(--text-muted);">Ranking por palco batido (ordenado por % da meta de faturamento, desempate por % de colab e % coleta de CSAT) e seção recolhível "Quase lá".</span>
                   </div>
                 </div>
 
-                <div class="table-toolbar" style="margin-bottom:12px;">
-                  <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                    ${pillsNiveisHtml}
-                  </div>
-                  <input type="search" class="input" data-res-pej-search="${esc(palco.id)}" value="${esc(filtro.busca)}" placeholder="Buscar EJ neste palco…" style="min-width:200px;">
-                </div>
+                ${matrizRapidaHtml}
 
-                <div class="table-wrap" style="max-height:420px;">
-                  <table class="data-table">
-                    <thead>
-                      <tr>
-                        <th class="sticky-col">EJ</th>
-                        <th>Cluster</th>
-                        <th>Nível Atingido</th>
-                        <th>Diagnóstico / O que falta para o próximo nível</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      ${linhasTabela}
-                    </tbody>
-                  </table>
+                <div id="pejLiveRankings_${pIdx}">
+                  ${rankingsPorPalcoHtml}
                 </div>
               </div>
             `;
@@ -8316,7 +9210,7 @@
                     <div style="font-size:13px;color:var(--text-secondary);">
                       ${pn.proximoNivel
                         ? `Próximo nível: <strong>${esc(pn.proximoNivel.nome)}</strong> — ${esc(pn.oQueFaltaProximoNivel)}`
-                        : `<span style="color:var(--good);font-weight:600;">✓ O Núcleo atingiu o nível máximo deste palco!</span>`}
+                        : `<span style="color:var(--success);font-weight:600;">✓ O Núcleo atingiu o nível máximo deste palco!</span>`}
                     </div>
                   </div>
                   ${tagAtingido}
@@ -8328,19 +9222,21 @@
             `;
           }).join('');
 
-      // (c) HTML das Premiações (Fase 4)
+      // (c) HTML das Premiações
       const premiacoesHtml = resultado.premiacoes.length === 0
         ? `<div class="clean-card" style="margin-bottom:20px;color:var(--text-muted);font-size:13px;">Nenhuma Premiação configurada neste evento.</div>`
         : resultado.premiacoes.map(prem => {
             const defRank = prem.metricaRanking ? METRICAS[prem.metricaRanking] : null;
-            const descModo = prem.modo === 'todos'
-              ? 'Modo: Todas as EJs elegíveis vencem'
-              : `Modo: Top ${prem.n || 1} · Ranking por "${defRank ? defRank.rotulo : (prem.metricaRanking || '-')}" (${prem.ordem === 'menor' ? 'menor valor vence' : 'maior valor vence'})`;
+            const descModo = prem.modo === 'manual'
+              ? 'Modo: Apuração / Marcação manual por EJ'
+              : (prem.modo === 'todos'
+                ? 'Modo: Todas as EJs elegíveis vencem automaticamente'
+                : `Modo: Top ${prem.n || 1} · Ranking por "${defRank ? defRank.rotulo : (prem.metricaRanking || '-')}" (${prem.ordem === 'menor' ? 'menor valor vence' : 'maior valor vence'})`);
 
             const descDesempate = (prem.modo === 'topN' && Array.isArray(prem.desempate) && prem.desempate.length > 0)
               ? ' · Desempate: ' + prem.desempate.map((d, idx) => {
                   const m = METRICAS[d.metrica];
-                  return `${idx + 1}º ${m ? m.rotulo : d.metrica} (${d.ordem === 'menor' ? 'menor' : 'maior'})`;
+                  return `${idx + 1}º ${m ? m.rotuloCurto || m.rotulo : d.metrica}`;
                 }).join(', ')
               : '';
 
@@ -8348,6 +9244,14 @@
               const pEncontrada = (ev.premiacoes || []).find(x => String(x.id) === String(idConf));
               return pEncontrada ? pEncontrada.nome : idConf;
             });
+
+            const alertaTransferenciaHtml = prem.houveTransferencia
+              ? `
+                <div style="margin-bottom:12px;padding:10px 12px;border:1px solid var(--primary);background:rgba(37,99,235,0.06);border-radius:var(--radius-sm);font-size:12.5px;color:var(--text);font-weight:500;">
+                  🔄 <strong>Transferência por regra de não-acúmulo:</strong> ${esc(prem.detalheTransferencia)}
+                </div>
+              `
+              : '';
 
             const alertaEmpateHtml = prem.houveEmpate
               ? `
@@ -8358,22 +9262,22 @@
               : '';
 
             const vencedoresHtml = prem.vencedores.length === 0
-              ? `<div style="padding:14px;border:1px dashed var(--border);border-radius:var(--radius-sm);color:var(--text-muted);font-size:13px;margin-bottom:12px;">Nenhuma EJ elegível/disponível venceu esta premiação.</div>`
+              ? `<div style="padding:14px;border:1px dashed var(--border);border-radius:var(--radius-sm);color:var(--text-muted);font-size:13px;margin-bottom:12px;">${prem.modo === 'manual' ? 'Nenhuma EJ marcada manualmente ainda (marque na aba "Premiações").' : 'Nenhuma EJ elegível/disponível venceu esta premiação no momento.'}</div>`
               : `
                 <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:10px;margin-bottom:12px;">
                   ${prem.vencedores.map(v => {
                     const metricasTxt = (v.valoresRanking || []).map(vr => `<span>${esc(vr.rotulo)}: <strong>${esc(vr.valorFmt)}</strong></span>`).join(' · ');
                     return `
-                      <div style="border:1px solid var(--border);border-left:4px solid var(--good);border-radius:var(--radius-sm);padding:12px 14px;background:var(--surface);">
+                      <div style="border:1px solid var(--border);border-left:4px solid var(--success);border-radius:var(--radius-sm);padding:12px 14px;background:var(--surface);">
                         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px;">
                           <div style="display:flex;align-items:center;gap:6px;">
-                            <span style="font-size:12px;font-weight:700;color:var(--good);">#${v.posicao}º</span>
+                            <span style="font-size:12px;font-weight:700;color:var(--success);">🏆 #${v.posicao}º</span>
                             <a href="javascript:void(0)" data-open-ej="${esc(v.cod)}" style="font-size:14.5px;font-weight:600;color:var(--text);text-decoration:underline;">
                               ${esc(v.nome)}
                             </a>
                           </div>
                           <div style="display:flex;align-items:center;gap:6px;">
-                            ${v.empatado ? renderTag(['Empatada', 'r']) : renderTag(['Vencedora', 'g'])}
+                            ${v.empatado ? renderTag(['Empatada', 'r']) : (v.recebeuTransferencia ? renderTag(['Vencedora (Transferência)', 'g']) : renderTag(['Vencedora', 'g']))}
                           </div>
                         </div>
                         <div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">Cluster ${esc(v.cl || '-')}</div>
@@ -8384,9 +9288,11 @@
                 </div>
               `;
 
+            const podioTop3Html = gerarHtmlPodioTop3Premiacao(prem);
+
             const qtdImpedidas = prem.naoVencedoras.filter(nv => nv.impedida).length;
             const qtdRanking = prem.naoVencedoras.filter(nv => nv.motivoTipo === 'ranking').length;
-            const qtdInelegiveis = prem.naoVencedoras.filter(nv => nv.motivoTipo === 'inelegivel').length;
+            const qtdInelegiveis = prem.naoVencedoras.filter(nv => nv.motivoTipo === 'inelegivel' || nv.motivoTipo === 'sem_dados_2025').length;
 
             const linhasNaoVencedoras = prem.naoVencedoras.length === 0
               ? `<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:14px;">Todas as EJs venceram esta premiação.</td></tr>`
@@ -8394,6 +9300,8 @@
                   let tagMotivo = renderTag(['Inelegível', 'n']);
                   if (nv.impedida) tagMotivo = renderTag(['Não acumula', 'r']);
                   else if (nv.motivoTipo === 'ranking') tagMotivo = renderTag([`${nv.posicao}º no ranking`, 'n']);
+                  else if (nv.motivoTipo === 'manual') tagMotivo = renderTag(['Não marcada', 'n']);
+                  else if (nv.motivoTipo === 'sem_dados_2025') tagMotivo = renderTag(['Sem dados 2025', 'n']);
 
                   return `
                     <tr>
@@ -8415,9 +9323,11 @@
                   <div>
                     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
                       <span class="tag tag-n">Prioridade ${esc(prem.prioridade)}</span>
+                      ${prem.categoria ? `<span class="tag tag-g">${esc(prem.categoria)}</span>` : ''}
                       <h4 style="font-size:15.5px;font-weight:600;margin:0;">${esc(prem.nome)}</h4>
                     </div>
-                    <div style="font-size:12.5px;color:var(--text-muted);">
+                    ${prem.subtitulo ? `<div style="font-size:13px;color:var(--text-secondary);margin-bottom:3px;">${esc(prem.subtitulo)}</div>` : ''}
+                    <div style="font-size:12px;color:var(--text-muted);">
                       ${esc(descModo)}${esc(descDesempate)}
                       ${nomesNaoAcumula.length > 0 ? ` · <strong>Não acumula com:</strong> ${esc(nomesNaoAcumula.join(', '))}` : ''}
                     </div>
@@ -8425,12 +9335,14 @@
                   ${renderTag([`${prem.vencedores.length} ${prem.vencedores.length === 1 ? 'vencedora' : 'vencedoras'}`, prem.vencedores.length > 0 ? 'g' : 'n'])}
                 </div>
 
+                ${alertaTransferenciaHtml}
                 ${alertaEmpateHtml}
                 ${vencedoresHtml}
+                ${podioTop3Html}
 
                 <details style="margin-top:8px;">
                   <summary style="cursor:pointer;font-size:12.5px;font-weight:500;color:var(--primary);">
-                    Ver motivo das EJs não vencedoras (${prem.naoVencedoras.length}: ${qtdRanking} fora do Top N · ${qtdImpedidas} impedidas por acúmulo · ${qtdInelegiveis} inelegíveis)
+                    Ver demais EJs na apuração (${prem.naoVencedoras.length}${prem.modo === 'topN' ? `: ${qtdRanking} fora do Top N · ${qtdImpedidas} impedidas por acúmulo · ${qtdInelegiveis} inelegíveis` : ''})
                   </summary>
                   <div class="table-wrap" style="max-height:340px;margin-top:10px;">
                     <table class="data-table">
@@ -8458,12 +9370,11 @@
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
               <span style="font-size:14.5px;font-weight:600;">${resultado.congelado ? '🔒 Resultado Congelado (Evento Encerrado)' : '⚡ Resultado Ao Vivo'}</span>
               ${renderStatusEventoTag(ev.status)}
-              <span class="tag tag-n">Mês selecionado (Cluster): ${esc(resultado.mesReferenciaNome || MN[(ev.mesReferencia || 12) - 1])}</span>
             </div>
             <div style="font-size:12.5px;color:var(--text-muted);">
               ${resultado.congelado
                 ? `Snapshot gravado em <strong>${fmtDate(resultado.calculadoEm)}</strong> com <strong>${resultado.totalEjs} EJs</strong>. Atualizações posteriores da planilha não alteram este resultado.`
-                : `Calculado em tempo real sobre <strong>${resultado.totalEjs} EJs</strong> carregadas na plataforma · Clique no nome de qualquer EJ para abrir o perfil lateral.`}
+                : `Calculado em tempo real sobre todas as <strong>${resultado.totalEjs} EJs</strong> da base · Clique no nome de qualquer EJ para abrir o perfil lateral.`}
             </div>
           </div>
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
@@ -8475,7 +9386,7 @@
         </div>
 
         <div class="section-header" style="margin-top:8px;">
-          <h3 class="section-title">1. Palcos das EJs</h3>
+          <h3 class="section-title">1. Ranking dos Palcos das EJs (Bronze, Prata e Ouro)</h3>
         </div>
         ${palcosEjHtml}
 
@@ -8485,10 +9396,14 @@
         ${palcosNucleoHtml}
 
         <div class="section-header" style="margin-top:24px;">
-          <h3 class="section-title">3. Premiações (Apuradas por Ordem de Prioridade)</h3>
+          <h3 class="section-title">3. Premiações (Essenciais, Complementares e Destaques)</h3>
         </div>
         ${premiacoesHtml}
       `;
+
+      if (!bloqueado && !resultado.congelado) {
+        vincularEventosMatrizParametrosPalcoEj(ev, container);
+      }
 
       const btnExportCsv = $('btnExportarResultadoCsv');
       if (btnExportCsv) {
@@ -8511,26 +9426,6 @@
         });
       }
 
-      // Bind de filtros de nível dos Palcos das EJs
-      container.querySelectorAll('[data-res-pej-filter]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const [palcoId, nv] = btn.dataset.resPejFilter.split('::');
-          if (!STORE.ui.evtResFiltros[palcoId]) STORE.ui.evtResFiltros[palcoId] = { nivel: 'todos', busca: '' };
-          STORE.ui.evtResFiltros[palcoId].nivel = nv;
-          renderEventoTabResultado(ev, container);
-        });
-      });
-
-      // Bind de busca por EJ dentro do palco
-      container.querySelectorAll('[data-res-pej-search]').forEach(inp => {
-        inp.addEventListener('input', debounce(() => {
-          const palcoId = inp.dataset.resPejSearch;
-          if (!STORE.ui.evtResFiltros[palcoId]) STORE.ui.evtResFiltros[palcoId] = { nivel: 'todos', busca: '' };
-          STORE.ui.evtResFiltros[palcoId].busca = inp.value;
-          renderEventoTabResultado(ev, container);
-        }, 250));
-      });
-
       // Clique no nome da EJ abre openEjProfile(cod)
       container.querySelectorAll('[data-open-ej]').forEach(link => {
         link.addEventListener('click', (e) => {
@@ -8547,6 +9442,7 @@
     function renderEventoTabPremiacoes(ev, container) {
       const bloqueado = ev.status === 'encerrado';
       if (!Array.isArray(ev.premiacoes)) ev.premiacoes = [];
+      if (!ev.dados2025 || typeof ev.dados2025 !== 'object') ev.dados2025 = {};
 
       // Ordena visualmente por prioridade crescente
       ev.premiacoes.sort((a, b) => (Number(a.prioridade) || 999) - (Number(b.prioridade) || 999));
@@ -8564,6 +9460,7 @@
       };
 
       const resultadoPreview = avaliarEvento(ev, STORE.ejs || []);
+      const listaEjsOrd = [...(STORE.ejs || [])].sort((a, b) => String(a.nome || '').localeCompare(String(b.nome || ''), 'pt-BR'));
 
       const premiacoesCardsHtml = ev.premiacoes.length === 0
         ? `
@@ -8577,9 +9474,11 @@
             if (!prem.elegibilidade) prem.elegibilidade = { logica: 'E', condicoes: [] };
             if (!Array.isArray(prem.desempate)) prem.desempate = [];
             if (!Array.isArray(prem.naoAcumulaCom)) prem.naoAcumulaCom = [];
+            if (!Array.isArray(prem.vencedorasManuais)) prem.vencedorasManuais = [];
 
-            const modo = prem.modo === 'todos' ? 'todos' : 'topN';
+            const modo = prem.modo === 'manual' ? 'manual' : (prem.modo === 'todos' ? 'todos' : 'topN');
             const cbId = `prem_eleg_${pIdx}`;
+            const resPrem = (resultadoPreview.premiacoes || []).find(r => String(r.id) === String(prem.id));
 
             // Outras premiações disponíveis para marcar em naoAcumulaCom
             const outrasPremiacoes = ev.premiacoes.filter((_, idx) => idx !== pIdx);
@@ -8614,24 +9513,161 @@
                   </div>
                 `).join('');
 
-            // Resultado prévio desta premiação
-            const resPrem = (resultadoPreview.premiacoes || []).find(r => String(r.id) === String(prem.id));
+            // Seção de Marcação Manual por EJ (para Raiz que Pertence, Pertencer que Transforma, EJ Mais Engajada ou qualquer premiação manual)
+            const vencedorasManuaisSet = new Set(prem.vencedorasManuais.map(String));
+            const selecaoManualHtml = (modo === 'manual' || (prem.metricaRanking === 'faisca_crescimento_2025' && prem.usarVencedoraManual))
+              ? `
+                <div style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;background:var(--surface-subtle);margin-bottom:14px;">
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+                    <div>
+                      <span style="font-size:13px;font-weight:700;">Marcação Manual de EJs (${vencedorasManuaisSet.size} selecionada${vencedorasManuaisSet.size === 1 ? '' : 's'})</span>
+                      <div style="font-size:12px;color:var(--text-muted);">Marque abaixo as EJs que cumpriram/venceram esta premiação:</div>
+                    </div>
+                  </div>
+                  <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(195px, 1fr));gap:8px;max-height:240px;overflow-y:auto;padding:4px;">
+                    ${listaEjsOrd.map(ej => {
+                      const checked = vencedorasManuaisSet.has(String(ej.cod));
+                      return `
+                        <label style="display:flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid ${checked ? 'var(--success)' : 'var(--border)'};border-radius:var(--radius-sm);background:${checked ? 'rgba(16,185,129,0.08)' : 'var(--surface)'};cursor:pointer;font-size:12.5px;">
+                          <input type="checkbox" data-prem-manual-ej="${pIdx}::${esc(ej.cod)}" ${checked ? 'checked' : ''} ${bloqueado ? 'disabled' : ''}>
+                          <span style="font-weight:${checked ? '700' : '500'};">${esc(ej.nome)}</span>
+                        </label>
+                      `;
+                    }).join('')}
+                  </div>
+                </div>
+              `
+              : '';
+
+            // Painel específico para EJ Pertencer (configuração da média simples das 4 metas)
+            const cfgPertencer = prem.configMediaPertencer || { fat: true, colab: true, ecm: true, csat: true, csatUsarColeta: false, teto100: false };
+            const painelEjPertencerHtml = (modo === 'topN' && prem.metricaRanking === 'atingimento_medio_metas')
+              ? `
+                <div style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;background:var(--surface-subtle);margin-bottom:14px;">
+                  <div style="font-size:13px;font-weight:700;margin-bottom:4px;">Parâmetros da Média de Atingimento das Metas (EJ Pertencer)</div>
+                  <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">Média simples dos % de atingimento das metas selecionadas abaixo (recalcula na hora ao alterar):</div>
+                  <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;">
+                    <label style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer;">
+                      <input type="checkbox" data-prem-cfg-pertencer="${pIdx}:fat" ${cfgPertencer.fat !== false ? 'checked' : ''} ${bloqueado ? 'disabled' : ''}>
+                      <span>Faturamento (% da meta)</span>
+                    </label>
+                    <label style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer;">
+                      <input type="checkbox" data-prem-cfg-pertencer="${pIdx}:colab" ${cfgPertencer.colab !== false ? 'checked' : ''} ${bloqueado ? 'disabled' : ''}>
+                      <span>Colaborativo (% da meta)</span>
+                    </label>
+                    <label style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer;">
+                      <input type="checkbox" data-prem-cfg-pertencer="${pIdx}:ecm" ${cfgPertencer.ecm !== false ? 'checked' : ''} ${bloqueado ? 'disabled' : ''}>
+                      <span>ECM (% da meta de engajamento)</span>
+                    </label>
+                    <label style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer;">
+                      <input type="checkbox" data-prem-cfg-pertencer="${pIdx}:csat" ${cfgPertencer.csat !== false ? 'checked' : ''} ${bloqueado ? 'disabled' : ''}>
+                      <span>CSAT</span>
+                    </label>
+                    <label style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer;margin-left:8px;">
+                      <input type="checkbox" data-prem-cfg-pertencer="${pIdx}:csatUsarColeta" ${cfgPertencer.csatUsarColeta ? 'checked' : ''} ${bloqueado ? 'disabled' : ''}>
+                      <span>Usar % Coleta no CSAT (em vez de % da nota alvo)</span>
+                    </label>
+                    <label style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer;">
+                      <input type="checkbox" data-prem-cfg-pertencer="${pIdx}:teto100" ${cfgPertencer.teto100 ? 'checked' : ''} ${bloqueado ? 'disabled' : ''}>
+                      <span>Travar cada indicador em no máx. 100%</span>
+                    </label>
+                  </div>
+                </div>
+              `
+              : '';
+
+            // Painel específico para EJ Faísca (entrada manual de dados de 2025 por EJ)
+            const painelEjFaiscaHtml = (prem.metricaRanking === 'faisca_crescimento_2025')
+              ? `
+                <div style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;background:var(--surface-subtle);margin-bottom:14px;">
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:8px;">
+                    <div>
+                      <div style="font-size:13px;font-weight:700;">Dados de 2025 por EJ — Apuração da EJ Faísca</div>
+                      <div style="font-size:12px;color:var(--text-muted);">
+                        A plataforma não possui base histórica de 2025. Preencha os % de crescimento sobre 2025 (Faturamento, Colab, ECM e CSAT) ou a média final para cada EJ concorrente, ou marque a vencedora manualmente. Desempate automático: 1º Subiu de cluster, 2º Maior faturamento, 3º Maior CSAT.
+                      </div>
+                    </div>
+                    <label style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;cursor:pointer;padding:6px 10px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);">
+                      <input type="checkbox" data-prem-faisca-manual-toggle="${pIdx}" ${prem.usarVencedoraManual ? 'checked' : ''} ${bloqueado ? 'disabled' : ''}>
+                      <span>Definir vencedora manualmente por checkbox</span>
+                    </label>
+                  </div>
+                  <details open style="margin-top:6px;">
+                    <summary style="cursor:pointer;font-size:12.5px;font-weight:600;color:var(--primary);">
+                      Abrir tabela de entrada manual de crescimento sobre 2025 (${listaEjsOrd.filter(e => ejTemDados2025Preenchidos(e, ev.dados2025)).length} de ${listaEjsOrd.length} EJs preenchidas)
+                    </summary>
+                    <div class="table-wrap" style="max-height:340px;margin-top:8px;">
+                      <table class="data-table">
+                        <thead>
+                          <tr>
+                            <th class="sticky-col">EJ</th>
+                            <th>% Cresc. Fat</th>
+                            <th>% Cresc. Colab</th>
+                            <th>% Cresc. ECM</th>
+                            <th>% Cresc. CSAT</th>
+                            <th>Média Calculada / Manual (%)</th>
+                            <th>1º Desemp.: Cluster</th>
+                            <th>2º Desemp.: Fat (R$)</th>
+                            <th>3º Desemp.: CSAT</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          ${listaEjsOrd.map(ej => {
+                            const d = ev.dados2025[String(ej.cod)] || {};
+                            const mediaCalc = calcularCrescimentoFaisca2025Ej(ej, ev.dados2025);
+                            const temDados = ejTemDados2025Preenchidos(ej, ev.dados2025);
+                            const sobe = (Array.isArray(ej.cu) ? ej.cu[0] : ej.cu) === 'Sobe';
+                            return `
+                              <tr>
+                                <td class="sticky-col" style="font-weight:600;">${esc(ej.nome)}</td>
+                                <td><input type="number" step="any" class="input" data-faisca-inp="${esc(ej.cod)}:crescFat" value="${esc(d.crescFat ?? '')}" placeholder="%" style="width:78px;" ${bloqueado ? 'disabled' : ''}></td>
+                                <td><input type="number" step="any" class="input" data-faisca-inp="${esc(ej.cod)}:crescColab" value="${esc(d.crescColab ?? '')}" placeholder="%" style="width:78px;" ${bloqueado ? 'disabled' : ''}></td>
+                                <td><input type="number" step="any" class="input" data-faisca-inp="${esc(ej.cod)}:crescEcm" value="${esc(d.crescEcm ?? '')}" placeholder="%" style="width:78px;" ${bloqueado ? 'disabled' : ''}></td>
+                                <td><input type="number" step="any" class="input" data-faisca-inp="${esc(ej.cod)}:crescCsat" value="${esc(d.crescCsat ?? '')}" placeholder="%" style="width:78px;" ${bloqueado ? 'disabled' : ''}></td>
+                                <td>
+                                  <div style="display:flex;align-items:center;gap:6px;">
+                                    <input type="number" step="any" class="input" data-faisca-inp="${esc(ej.cod)}:mediaManual" value="${esc(d.mediaManual ?? '')}" placeholder="${temDados ? fmtNumCurto(mediaCalc) + '%' : 'Auto'}" style="width:86px;font-weight:600;" ${bloqueado ? 'disabled' : ''}>
+                                    <span data-faisca-media-lbl="${esc(ej.cod)}" style="font-size:12px;font-weight:700;color:${temDados ? 'var(--primary)' : 'var(--text-muted)'};">
+                                      ${temDados ? `${fmtNumCurto(mediaCalc)}%` : '—'}
+                                    </span>
+                                  </div>
+                                </td>
+                                <td>${renderTag([sobe ? 'Sobe' : (Array.isArray(ej.cu) ? ej.cu[0] : 'Mantém'), sobe ? 'g' : 'n'])}</td>
+                                <td style="font-size:12px;">${fmtBRL(ej.fat)}</td>
+                                <td style="font-size:12px;">${(Number(ej.nota) || 0).toFixed(2)}</td>
+                              </tr>
+                            `;
+                          }).join('')}
+                        </tbody>
+                      </table>
+                    </div>
+                  </details>
+                </div>
+              `
+              : '';
+
             const nomesVencedoresPreview = resPrem && resPrem.vencedores.length > 0
-              ? resPrem.vencedores.map(v => `${v.nome}${v.empatado ? ' (Empate)' : ''}`).join(', ')
-              : 'Nenhuma EJ vencedora com os dados atuais';
+              ? resPrem.vencedores.map(v => `${v.nome}${v.recebeuTransferencia ? ' (por transferência)' : ''}${v.empatado ? ' (Empate)' : ''}`).join(', ')
+              : (modo === 'manual' ? 'Nenhuma EJ selecionada manualmente ainda' : 'Nenhuma EJ vencedora com os dados atuais');
+
+            const podioTop3PreviewHtml = resPrem ? gerarHtmlPodioTop3Premiacao(resPrem) : '';
 
             return `
               <div class="clean-card" style="margin-bottom:20px;">
                 <!-- Cabeçalho da Premiação -->
                 <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-bottom:14px;border-bottom:1px solid var(--border-subtle);margin-bottom:14px;">
                   <div style="display:flex;gap:10px;flex:1;min-width:260px;flex-wrap:wrap;">
-                    <div style="width:110px;">
+                    <div style="width:95px;">
                       <label class="form-label">Prioridade</label>
                       <input type="number" min="1" class="input" data-prem-prio="${pIdx}" value="${esc(prem.prioridade ?? (pIdx + 1))}" style="width:100%;font-weight:600;" title="Menor número é apurado primeiro" ${bloqueado ? 'disabled' : ''}>
                     </div>
+                    <div style="width:150px;">
+                      <label class="form-label">Categoria</label>
+                      <input type="text" class="input" data-prem-cat="${pIdx}" value="${esc(prem.categoria || '')}" placeholder="Ex.: Essenciais" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
+                    </div>
                     <div style="flex:1;min-width:200px;">
                       <label class="form-label">Nome da Premiação</label>
-                      <input type="text" class="input" data-prem-nome="${pIdx}" value="${esc(prem.nome || '')}" placeholder="Ex.: EJ Destaque em Faturamento" style="width:100%;font-weight:600;" ${bloqueado ? 'disabled' : ''}>
+                      <input type="text" class="input" data-prem-nome="${pIdx}" value="${esc(prem.nome || '')}" placeholder="Ex.: Identidade" style="width:100%;font-weight:600;" ${bloqueado ? 'disabled' : ''}>
                     </div>
                   </div>
                   <div style="padding-top:22px;">
@@ -8639,19 +9675,22 @@
                   </div>
                 </div>
 
+                ${prem.subtitulo ? `<div style="font-size:12.5px;color:var(--text-secondary);margin-bottom:12px;"><strong>Regra do Edital:</strong> ${esc(prem.subtitulo)}</div>` : ''}
+
                 <!-- Modo de Apuração e Ranking -->
                 <div class="kv-grid" style="grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:12px;margin-bottom:14px;">
                   <div class="form-group" style="margin-bottom:0;">
                     <label class="form-label">Modo de premiação</label>
                     <select class="select" data-prem-modo="${pIdx}" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
-                      <option value="topN" ${modo === 'topN' ? 'selected' : ''}>Top N (Ranking por métrica)</option>
+                      <option value="topN" ${modo === 'topN' ? 'selected' : ''}>Top N (Ranking automático)</option>
                       <option value="todos" ${modo === 'todos' ? 'selected' : ''}>Todas as EJs elegíveis ganham</option>
+                      <option value="manual" ${modo === 'manual' ? 'selected' : ''}>Marcação manual por EJ</option>
                     </select>
                   </div>
 
                   ${modo === 'topN' ? `
                     <div class="form-group" style="margin-bottom:0;">
-                      <label class="form-label">Quantidade no topo (N)</label>
+                      <label class="form-label">Quantidade de vencedoras (N)</label>
                       <input type="number" min="1" max="46" class="input" data-prem-n="${pIdx}" value="${esc(prem.n || 1)}" style="width:100%;" ${bloqueado ? 'disabled' : ''}>
                     </div>
                     <div class="form-group" style="margin-bottom:0;">
@@ -8670,6 +9709,10 @@
                   ` : ''}
                 </div>
 
+                ${selecaoManualHtml}
+                ${painelEjPertencerHtml}
+                ${painelEjFaiscaHtml}
+
                 <!-- Critérios de Desempate (apenas para Top N) -->
                 ${modo === 'topN' ? `
                   <div style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;background:var(--surface-subtle);margin-bottom:14px;">
@@ -8683,24 +9726,34 @@
 
                 <!-- Exclusão entre Premiações (Não acumula com) -->
                 <div style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;background:var(--surface-subtle);margin-bottom:14px;">
-                  <div style="font-size:12.5px;font-weight:600;margin-bottom:4px;">Não acumula com (Exclusão seletiva de vencedoras anteriores)</div>
-                  <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">Se uma EJ vencer qualquer uma das premiações marcadas abaixo (de maior prioridade), ela será ignorada como candidata nesta premiação:</div>
+                  <div style="font-size:12.5px;font-weight:600;margin-bottom:4px;">Não acumula com (Prioridade Identidade &gt; Impacto &gt; Paixão que Inflama)</div>
+                  <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">Se uma EJ vencer qualquer uma das premiações marcadas abaixo (de maior prioridade), ela fica com a de maior nível e esta passa para a próxima colocada:</div>
                   ${naoAcumulaHtml}
                 </div>
 
-                <!-- Requisitos de Elegibilidade -->
-                <div id="wrap_${cbId}">
-                  ${gerarHtmlConstrutorCondicoes(cbId, prem.elegibilidade, {
-                    titulo: 'Requisito de Elegibilidade para concorrer a esta premiação',
-                    mostrarPreview: true,
-                    apenasPalcos: false,
-                    mesReferencia: ev.mesReferencia,
-                    bloqueado
-                  })}
-                </div>
+                <!-- Requisitos de Elegibilidade (recolhível se vazio no modo TopN/Manual, aberto no modo Todos) -->
+                <details ${modo === 'todos' || (prem.elegibilidade.condicoes && prem.elegibilidade.condicoes.length > 0) ? 'open' : ''} style="margin-bottom:12px;">
+                  <summary style="cursor:pointer;font-size:12.5px;font-weight:600;color:var(--text-secondary);">
+                    Filtro / Requisito de Elegibilidade (${(prem.elegibilidade.condicoes || []).length} ${(prem.elegibilidade.condicoes || []).length === 1 ? 'condição ativa' : 'condições ativas — vazio = todas as EJs da base concorrem'})
+                  </summary>
+                  <div id="wrap_${cbId}" style="margin-top:8px;">
+                    ${gerarHtmlConstrutorCondicoes(cbId, prem.elegibilidade, {
+                      titulo: 'Requisito de Elegibilidade para concorrer a esta premiação',
+                      mostrarPreview: true
+                    })}
+                  </div>
+                </details>
+
+                ${resPrem && resPrem.houveTransferencia ? `
+                  <div style="margin-bottom:10px;padding:10px 12px;border:1px solid var(--primary);background:rgba(37,99,235,0.06);border-radius:var(--radius-sm);font-size:12.5px;color:var(--text);">
+                    🔄 <strong>Transferência automática aplicada:</strong> ${esc(resPrem.detalheTransferencia)}
+                  </div>
+                ` : ''}
+
+                ${podioTop3PreviewHtml}
 
                 <div class="cond-preview-bar" style="margin-top:10px;">
-                  <span>Vencedoras na apuração ao vivo: <strong>${esc(nomesVencedoresPreview)}</strong></span>
+                  <span>Vencedora(s) na apuração ao vivo: <strong>${esc(nomesVencedoresPreview)}</strong></span>
                   ${resPrem && resPrem.houveEmpate ? `<span style="color:var(--danger);font-weight:600;">! Há empate técnico sinalizado</span>` : ''}
                 </div>
               </div>
@@ -8710,8 +9763,8 @@
       container.innerHTML = `
         <div class="section-header" style="margin-bottom:16px;">
           <div>
-            <h3 class="section-title" style="margin-bottom:2px;">Configuração das Premiações</h3>
-            <span style="font-size:12.5px;color:var(--text-muted);">As premiações são apuradas em ordem crescente de <strong>Prioridade</strong> (1, 2, 3...).</span>
+            <h3 class="section-title" style="margin-bottom:2px;">Premiações do Evento (Essenciais, Complementares e Destaques)</h3>
+            <span style="font-size:12.5px;color:var(--text-muted);">Apuradas em ordem de <strong>Prioridade</strong> (1 = Identidade &gt; 2 = Impacto &gt; 3 = Paixão que Inflama), com Top 3 ao vivo e marcação manual quando aplicável.</span>
           </div>
           <div style="display:flex;gap:8px;">
             ${!bloqueado ? `<button type="button" class="btn" data-add-premiacao="1">+ Nova premiação</button>` : ''}
@@ -8721,6 +9774,14 @@
         ${premiacoesCardsHtml}
       `;
 
+      // Bind de clique no nome da EJ
+      container.querySelectorAll('[data-open-ej]').forEach(link => {
+        link.addEventListener('click', (e) => {
+          e.stopPropagation();
+          openEjProfile(link.dataset.openEj);
+        });
+      });
+
       // Adicionar nova premiação
       container.querySelectorAll('[data-add-premiacao]').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -8728,16 +9789,15 @@
           ev.premiacoes.push({
             id: 'prem_' + Date.now() + '_' + Math.random().toString(36).slice(2, 5),
             nome: `Premiação ${ev.premiacoes.length + 1}`,
+            categoria: 'Destaque',
             prioridade: maxPrio + 1,
-            elegibilidade: {
-              logica: 'E',
-              condicoes: [{ metrica: 'fa_pct_meta', operador: '>=', valor: 100 }]
-            },
+            elegibilidade: { logica: 'E', condicoes: [] },
             modo: 'topN',
             n: 1,
             metricaRanking: 'fa_pct_meta',
             ordem: 'maior',
             desempate: [{ metrica: 'fa_realizado', ordem: 'maior' }],
+            vencedorasManuais: [],
             naoAcumulaCom: []
           });
           persistirEdicaoEvento(ev, true);
@@ -8762,6 +9822,16 @@
         });
       });
 
+      container.querySelectorAll('[data-prem-cat]').forEach(inp => {
+        inp.addEventListener('input', () => {
+          const pIdx = Number(inp.dataset.premCat);
+          if (ev.premiacoes[pIdx]) {
+            ev.premiacoes[pIdx].categoria = inp.value;
+            persistirEdicaoEvento(ev, false);
+          }
+        });
+      });
+
       container.querySelectorAll('[data-prem-nome]').forEach(inp => {
         inp.addEventListener('input', () => {
           const pIdx = Number(inp.dataset.premNome);
@@ -8780,7 +9850,6 @@
           if (!confirm(`Remover a premiação "${alvo.nome}"?`)) return;
           const idRemovido = String(alvo.id);
           ev.premiacoes.splice(pIdx, 1);
-          // Limpa referências ao id removido em naoAcumulaCom das demais premiações
           ev.premiacoes.forEach(p => {
             if (Array.isArray(p.naoAcumulaCom)) {
               p.naoAcumulaCom = p.naoAcumulaCom.filter(id => String(id) !== idRemovido);
@@ -8794,9 +9863,62 @@
         sel.addEventListener('change', () => {
           const pIdx = Number(sel.dataset.premModo);
           if (ev.premiacoes[pIdx]) {
-            ev.premiacoes[pIdx].modo = sel.value === 'todos' ? 'todos' : 'topN';
+            ev.premiacoes[pIdx].modo = sel.value === 'manual' ? 'manual' : (sel.value === 'todos' ? 'todos' : 'topN');
             persistirEdicaoEvento(ev, true);
           }
+        });
+      });
+
+      // Checkboxes de marcação manual por EJ
+      container.querySelectorAll('[data-prem-manual-ej]').forEach(chk => {
+        chk.addEventListener('change', () => {
+          const [pIdxStr, codEj] = chk.dataset.premManualEj.split('::');
+          const pIdx = Number(pIdxStr);
+          const prem = ev.premiacoes[pIdx];
+          if (!prem) return;
+          const setManuais = new Set((prem.vencedorasManuais || []).map(String));
+          if (chk.checked) setManuais.add(String(codEj));
+          else setManuais.delete(String(codEj));
+          prem.vencedorasManuais = Array.from(setManuais);
+          persistirEdicaoEvento(ev, true);
+        });
+      });
+
+      // Configuração da média simples da EJ Pertencer
+      container.querySelectorAll('[data-prem-cfg-pertencer]').forEach(chk => {
+        chk.addEventListener('change', () => {
+          const [pIdxStr, campo] = chk.dataset.premCfgPertencer.split(':');
+          const pIdx = Number(pIdxStr);
+          const prem = ev.premiacoes[pIdx];
+          if (!prem) return;
+          if (!prem.configMediaPertencer || typeof prem.configMediaPertencer !== 'object') {
+            prem.configMediaPertencer = { fat: true, colab: true, ecm: true, csat: true, csatUsarColeta: false, teto100: false };
+          }
+          prem.configMediaPertencer[campo] = chk.checked;
+          persistirEdicaoEvento(ev, true);
+        });
+      });
+
+      // Toggle de vencedora manual na EJ Faísca
+      container.querySelectorAll('[data-prem-faisca-manual-toggle]').forEach(chk => {
+        chk.addEventListener('change', () => {
+          const pIdx = Number(chk.dataset.premFaiscaManualToggle);
+          if (ev.premiacoes[pIdx]) {
+            ev.premiacoes[pIdx].usarVencedoraManual = chk.checked;
+            persistirEdicaoEvento(ev, true);
+          }
+        });
+      });
+
+      // Inputs de dados de 2025 por EJ para a EJ Faísca
+      container.querySelectorAll('[data-faisca-inp]').forEach(inp => {
+        inp.addEventListener('change', () => {
+          const [codEj, campo] = inp.dataset.faiscaInp.split(':');
+          if (!ev.dados2025) ev.dados2025 = {};
+          if (!ev.dados2025[codEj]) ev.dados2025[codEj] = {};
+          const raw = inp.value.trim();
+          ev.dados2025[codEj][campo] = raw === '' ? '' : Number(raw);
+          persistirEdicaoEvento(ev, true);
         });
       });
 
@@ -8894,7 +10016,7 @@
         if (!bloqueado) {
           vincularConstrutorCondicoes(cbId, prem.elegibilidade, (req, reRenderDom) => {
             persistirEdicaoEvento(ev, true);
-          }, { apenasPalcos: false, mesReferencia: ev.mesReferencia });
+          });
         }
       });
     }
@@ -8960,7 +10082,6 @@
       addRow(['Evento', ev.nome || '']);
       addRow(['Data do Evento', ev.data || '']);
       addRow(['Período de Referência', ev.periodoReferencia || '']);
-      addRow(['Mês Selecionado (Palcos / Cluster)', res.mesReferenciaNome || '']);
       addRow(['Status do Resultado', res.congelado ? 'ENCERRADO (RESULTADO CONGELADO)' : 'AO VIVO']);
       addRow(['Calculado em', fmtDate(res.calculadoEm)]);
       addRow(['Total de EJs Avaliadas', res.totalEjs]);
@@ -9168,6 +10289,7 @@
     // Inicialização: restaura planilha salva imediatamente antes mesmo da rede responder
     initParamsSelects();
     loadLocalCache();
+    garantirEventoPertencerPadrao();
     bindEvents();
     bindEventosModuleEvents();
     recomputeStore();
