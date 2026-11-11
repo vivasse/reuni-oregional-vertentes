@@ -1,0 +1,1935 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Palcos das EJs · PERTENCER (RR Vertentes)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <style>
+    :root {
+      --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --bg: #f8fafc;
+      --bg-subtle: #f1f5f9;
+      --surface: #ffffff;
+      --surface-card: #ffffff;
+      --surface-subtle: #f8fafc;
+      --surface-hover: #f1f5f9;
+      --border: #e2e8f0;
+      --border-subtle: #edf2f7;
+      --border-hover: #cbd5e1;
+      --text: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #64748b;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --primary-soft: #eff6ff;
+      --primary-border: #bfdbfe;
+      --good: #059669;
+      --good-soft: #ecfdf5;
+      --good-border: #a7f3d0;
+      --warn: #d97706;
+      --warn-soft: #fffbeb;
+      --warn-border: #fde68a;
+      --danger: #e11d48;
+      --danger-soft: #fff1f2;
+      --danger-border: #fecdd3;
+      --neutral: #64748b;
+      --neutral-soft: #f1f5f9;
+      --neutral-border: #e2e8f0;
+
+      /* Cores temáticas dos Palcos */
+      --gold-bg: linear-gradient(135deg, rgba(245, 158, 11, 0.14) 0%, rgba(217, 119, 6, 0.05) 100%);
+      --gold-border: rgba(245, 158, 11, 0.45);
+      --gold-text: #b45309;
+      --silver-bg: linear-gradient(135deg, rgba(100, 116, 139, 0.14) 0%, rgba(71, 85, 105, 0.05) 100%);
+      --silver-border: rgba(100, 116, 139, 0.42);
+      --silver-text: #334155;
+      --bronze-bg: linear-gradient(135deg, rgba(180, 83, 9, 0.13) 0%, rgba(146, 64, 14, 0.05) 100%);
+      --bronze-border: rgba(180, 83, 9, 0.4);
+      --bronze-text: #92400e;
+
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-pill: 9999px;
+      --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+      --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.06);
+      --shadow-card: 0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 6px 16px -4px rgba(15, 23, 42, 0.05);
+      --shadow-card-hover: 0 8px 24px -4px rgba(15, 23, 42, 0.1);
+    }
+
+    html[data-theme="dark"] {
+      --bg: #090d16;
+      --bg-subtle: #0f172a;
+      --surface: #0f172a;
+      --surface-card: #131c2e;
+      --surface-subtle: #1e293b;
+      --surface-hover: #1e293b;
+      --border: #1f2a3f;
+      --border-subtle: #182234;
+      --border-hover: #334155;
+      --text: #f8fafc;
+      --text-secondary: #cbd5e1;
+      --text-muted: #94a3b8;
+      --primary: #3b82f6;
+      --primary-hover: #60a5fa;
+      --primary-soft: rgba(59, 130, 246, 0.15);
+      --primary-border: rgba(59, 130, 246, 0.35);
+      --good: #34d399;
+      --good-soft: rgba(16, 185, 129, 0.15);
+      --good-border: rgba(16, 185, 129, 0.35);
+      --warn: #fbbf24;
+      --warn-soft: rgba(245, 158, 11, 0.15);
+      --warn-border: rgba(245, 158, 11, 0.35);
+      --danger: #fb7185;
+      --danger-soft: rgba(244, 63, 94, 0.15);
+      --danger-border: rgba(244, 63, 94, 0.35);
+      --neutral: #94a3b8;
+      --neutral-soft: rgba(148, 163, 184, 0.12);
+      --neutral-border: rgba(148, 163, 184, 0.25);
+
+      --gold-bg: linear-gradient(135deg, rgba(245, 158, 11, 0.18) 0%, rgba(217, 119, 6, 0.06) 100%);
+      --gold-border: rgba(251, 191, 36, 0.45);
+      --gold-text: #fbbf24;
+      --silver-bg: linear-gradient(135deg, rgba(148, 163, 184, 0.18) 0%, rgba(100, 116, 139, 0.06) 100%);
+      --silver-border: rgba(203, 213, 225, 0.4);
+      --silver-text: #e2e8f0;
+      --bronze-bg: linear-gradient(135deg, rgba(217, 119, 6, 0.18) 0%, rgba(180, 83, 9, 0.06) 100%);
+      --bronze-border: rgba(217, 119, 6, 0.45);
+      --bronze-text: #fdba74;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font);
+      background-color: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.5;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button, input, select {
+      font-family: inherit;
+      font-size: inherit;
+      color: inherit;
+    }
+
+    /* TOPBAR */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 90;
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    html[data-theme="dark"] .topbar {
+      background: rgba(15, 23, 42, 0.88);
+    }
+
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      color: #fff;
+      font-weight: 800;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+      flex-shrink: 0;
+    }
+
+    .brand-title {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.015em;
+      color: var(--text);
+    }
+
+    .brand-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .cloud-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 5px 12px;
+      border-radius: var(--radius-pill);
+      background: var(--surface-subtle);
+      border: 1px solid var(--border);
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .cloud-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #f59e0b;
+    }
+
+    .cloud-dot.online {
+      background: #10b981;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      background: var(--surface-card);
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .btn:hover {
+      background: var(--surface-hover);
+      border-color: var(--border-hover);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #ffffff;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+      border-color: var(--primary-hover);
+    }
+
+    .btn-sm {
+      padding: 6px 11px;
+      font-size: 12px;
+    }
+
+    .input, .select {
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--surface-card);
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+
+    .input:focus, .select:focus {
+      border-color: var(--primary);
+    }
+
+    /* CONTAINER */
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 28px 24px 80px;
+    }
+
+    /* HERO BANNER */
+    .hero-banner {
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px 28px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-card);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .hero-title {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .hero-meta {
+      font-size: 13px;
+      color: var(--text-secondary);
+      max-width: 780px;
+      line-height: 1.55;
+    }
+
+    /* STAGE SUMMARY CARDS */
+    .stage-kpis {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stage-kpi-card {
+      border-radius: var(--radius-lg);
+      padding: 20px 22px;
+      border: 1px solid var(--border);
+      background: var(--surface-card);
+      box-shadow: var(--shadow-card);
+      cursor: pointer;
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stage-kpi-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-card-hover);
+    }
+
+    .stage-kpi-card.active-filter {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+
+    .stage-kpi-card.gold {
+      background: var(--gold-bg);
+      border-color: var(--gold-border);
+    }
+
+    .stage-kpi-card.silver {
+      background: var(--silver-bg);
+      border-color: var(--silver-border);
+    }
+
+    .stage-kpi-card.bronze {
+      background: var(--bronze-bg);
+      border-color: var(--bronze-border);
+    }
+
+    .stage-kpi-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .stage-kpi-name {
+      font-size: 14px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .stage-kpi-val {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin-bottom: 6px;
+    }
+
+    .stage-kpi-rules {
+      font-size: 11.5px;
+      color: var(--text-secondary);
+      line-height: 1.45;
+    }
+
+    /* TOOLBAR */
+    .toolbar-card {
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 14px 18px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-xs);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .segmented-tabs {
+      display: inline-flex;
+      background: var(--surface-subtle);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-pill);
+      padding: 4px;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .seg-btn {
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 12.5px;
+      font-weight: 600;
+      padding: 7px 14px;
+      border-radius: var(--radius-pill);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .seg-btn.active {
+      background: var(--surface-card);
+      color: var(--primary);
+      box-shadow: var(--shadow-xs);
+    }
+
+    .filters-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      flex: 1;
+      justify-content: flex-end;
+    }
+
+    /* TAGS */
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: var(--radius-pill);
+      font-size: 11.5px;
+      font-weight: 600;
+      white-space: nowrap;
+      border: 1px solid transparent;
+    }
+
+    .tag-g {
+      background: var(--good-soft);
+      color: var(--good);
+      border-color: var(--good-border);
+    }
+
+    .tag-r {
+      background: var(--danger-soft);
+      color: var(--danger);
+      border-color: var(--danger-border);
+    }
+
+    .tag-y {
+      background: var(--warn-soft);
+      color: var(--warn);
+      border-color: var(--warn-border);
+    }
+
+    .tag-n {
+      background: var(--neutral-soft);
+      color: var(--neutral);
+      border-color: var(--neutral-border);
+    }
+
+    .tag-gold {
+      background: var(--gold-bg);
+      color: var(--gold-text);
+      border-color: var(--gold-border);
+    }
+
+    .tag-silver {
+      background: var(--silver-bg);
+      color: var(--silver-text);
+      border-color: var(--silver-border);
+    }
+
+    .tag-bronze {
+      background: var(--bronze-bg);
+      color: var(--bronze-text);
+      border-color: var(--bronze-border);
+    }
+
+    /* STAGE SECTION */
+    .stage-section {
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 22px 24px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-card);
+    }
+
+    .stage-section.gold-sec {
+      border-top: 4px solid #f59e0b;
+    }
+
+    .stage-section.silver-sec {
+      border-top: 4px solid #64748b;
+    }
+
+    .stage-section.bronze-sec {
+      border-top: 4px solid #b45309;
+    }
+
+    .stage-section-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-subtle);
+      margin-bottom: 18px;
+    }
+
+    .stage-section-title {
+      font-size: 18px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    /* EJ CARDS GRID INSIDE STAGE */
+    .ej-stage-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(295px, 1fr));
+      gap: 14px;
+    }
+
+    .ej-stage-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      box-shadow: var(--shadow-xs);
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .ej-stage-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-card-hover);
+      border-color: var(--primary-border);
+    }
+
+    .ej-card-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .ej-rank-badge {
+      font-size: 12.5px;
+      font-weight: 800;
+      padding: 3px 9px;
+      border-radius: var(--radius-pill);
+      background: var(--surface-subtle);
+      border: 1px solid var(--border);
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    .ej-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.3;
+    }
+
+    .ej-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .ej-metrics-mini {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .metric-box {
+      background: var(--surface-subtle);
+      border-radius: 6px;
+      padding: 6px 9px;
+      font-size: 11.5px;
+    }
+
+    .metric-box-lbl {
+      color: var(--text-muted);
+      display: block;
+      font-size: 10.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .metric-box-val {
+      font-weight: 700;
+      color: var(--text);
+      font-size: 13px;
+    }
+
+    /* TABLE */
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--surface-card);
+    }
+
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .data-table th {
+      text-align: left;
+      padding: 11px 14px;
+      background: var(--surface-subtle);
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 11.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    .data-table td {
+      padding: 11px 14px;
+      border-bottom: 1px solid var(--border-subtle);
+      color: var(--text);
+      vertical-align: middle;
+    }
+
+    .data-table tbody tr:hover {
+      background: var(--surface-hover);
+    }
+
+    .data-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* MODAL */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.55);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-card {
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      max-width: 680px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 24px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+    }
+
+    @media (max-width: 768px) {
+      .topbar {
+        padding: 12px 16px;
+      }
+      .container {
+        padding: 18px 14px 60px;
+      }
+      .hero-banner {
+        padding: 18px;
+      }
+      .stage-section {
+        padding: 16px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="brand-wrap">
+      <div class="brand-logo">RR</div>
+      <div>
+        <div class="brand-title">Plataforma de Palcos · Núcleo Vertentes</div>
+        <div class="brand-sub" id="topUpdatedText">Sincronizando dados em tempo real…</div>
+      </div>
+    </div>
+
+    <div class="topbar-actions">
+      <div class="cloud-pill" title="Sincronização em tempo real com Firebase">
+        <span class="cloud-dot" id="cloudDot"></span>
+        <span id="cloudStatusText">Conectando…</span>
+      </div>
+      <select class="select" id="selectEvento" style="display:none;min-width:210px;"></select>
+      <button type="button" class="btn btn-sm" id="btnCopyShareLink" title="Copiar link direto desta página">
+        📋 Copiar Link dos Palcos
+      </button>
+      <button type="button" class="btn btn-sm" id="btnToggleTheme" title="Alternar tema claro/escuro">
+        🌓 Tema
+      </button>
+      <a href="./index.html" class="btn btn-sm" title="Abrir Monitor Completo">
+        ← Monitor Completo
+      </a>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- HERO -->
+    <section class="hero-banner">
+      <div>
+        <div class="hero-title">
+          <span id="heroEventoNome">PERTENCER (RR Vertentes)</span>
+          <span class="tag tag-g" id="heroStatusBadge">⚡ Apuração Ao Vivo</span>
+        </div>
+        <p class="hero-meta" id="heroEventoDesc">
+          Reunião regional do núcleo Vertentes · Pilares: <strong>Identidade, Paixão que Inflama e Impacto</strong> · Prazo de fechamento dos resultados: <strong>03/12, 23:59</strong>. Clique em qualquer card de palco para filtrar ou clique em uma EJ para abrir o raio-x detalhado dos critérios.
+        </p>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+        <span style="font-size:12px;color:var(--text-muted);" id="heroDataEvento">Data do evento: 06/12/2026</span>
+        <span style="font-size:12px;font-weight:600;color:var(--primary);" id="heroTotalEjsBadge">46 EJs avaliadas</span>
+      </div>
+    </section>
+
+    <!-- 4 KPI CARDS DOS PALCOS -->
+    <section class="stage-kpis" id="stageKpisGrid"></section>
+
+    <!-- BARRA DE MODOS, BUSCA E FILTROS -->
+    <section class="toolbar-card">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <div class="segmented-tabs" id="viewModeTabs">
+          <button type="button" class="seg-btn active" data-mode="palco_batido">
+            🏅 EJs que Bateram cada Palco
+          </button>
+          <button type="button" class="seg-btn" data-mode="palco_mais_alto">
+            👑 Por Palco Mais Alto (Sem repetição)
+          </button>
+          <button type="button" class="seg-btn" data-mode="matriz_geral">
+            📋 Lista Geral (Todas as EJs)
+          </button>
+        </div>
+
+        <div class="segmented-tabs" id="displayStyleTabs" title="Alternar entre Cards e Tabela">
+          <button type="button" class="seg-btn active" data-style="cards">Cards</button>
+          <button type="button" class="seg-btn" data-style="table">Tabela</button>
+        </div>
+      </div>
+
+      <div class="filters-group">
+        <input type="search" class="input" id="searchEjInput" placeholder="Buscar EJ ou código…" style="min-width:210px;">
+        <select class="select" id="filterStageSelect">
+          <option value="todos">Todos os palcos</option>
+          <option value="Ouro">🥇 Palco Ouro</option>
+          <option value="Prata">🥈 Palco Prata</option>
+          <option value="Bronze">🥉 Palco Bronze</option>
+          <option value="sem_palco">🚀 Quase lá (Sem palco)</option>
+        </select>
+        <select class="select" id="filterClusterSelect">
+          <option value="">Todos os clusters</option>
+          <option value="1">Cluster 1</option>
+          <option value="2">Cluster 2</option>
+          <option value="3">Cluster 3</option>
+          <option value="4">Cluster 4</option>
+          <option value="5">Cluster 5</option>
+        </select>
+      </div>
+    </section>
+
+    <!-- CONTEÚDO PRINCIPAL DOS PALCOS -->
+    <div id="stagesMainContent"></div>
+  </main>
+
+  <!-- MODAL DE RAIO-X DA EJ NOS PALCOS -->
+  <div class="modal-backdrop" id="ejModalBackdrop">
+    <div class="modal-card" id="ejModalContent"></div>
+  </div>
+
+  <script>
+    // ============================================================================
+    // CONFIGURAÇÃO E SINCRONIZAÇÃO COM O BANCO DO MONITOR VERTENTES
+    // ============================================================================
+    const firebaseConfig = {
+      apiKey: "AIzaSyAUGdZc3VA0XFZlDaG4uTfA5MXH0hTntT4",
+      authDomain: "roadmap-76391.firebaseapp.com",
+      databaseURL: "https://roadmap-76391-default-rtdb.firebaseio.com",
+      projectId: "roadmap-76391",
+      storageBucket: "roadmap-76391.firebasestorage.app",
+      messagingSenderId: "390570515113",
+      appId: "1:390570515113:web:6b80d5f207c5fd575167b8"
+    };
+
+    const STORAGE_KEY_MONITOR = 'vert_raw_v1';
+    const STORAGE_KEY_EVENTOS = 'vert_eventos_cache';
+    const ID_EVENTO_PERTENCER_PADRAO = 'evt_pertencer_rr_vertentes';
+    const COLS = [1, 2, 10, 13, 20, 22, 25, 29, 55, 74, 75, 76, 90, 94, 95, 96, 97];
+    const LOW = [1, 12000000.01, 24000000.01, 61000000.01, 130000000.01];
+    const TOLERANCIA_PP = 0.05;
+
+    const $ = id => document.getElementById(id);
+    const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+    function num(v) {
+      if (typeof v === 'number') return isNaN(v) ? 0 : v;
+      if (v == null) return 0;
+      let s = String(v).replace(/[R$\s%]/g, '').trim();
+      if (!s) return 0;
+      if (/^-?\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, '');
+      else if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.');
+      const n = parseFloat(s);
+      return isNaN(n) ? 0 : n;
+    }
+
+    const fmtBRL = n => 'R$ ' + Math.round(Number(n) || 0).toLocaleString('pt-BR');
+    const fmtNumCurto = n => (Number(n) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 1 });
+    const fmtDate = ts => {
+      if (!ts) return '--/--/----, --:--';
+      const d = new Date(ts);
+      if (isNaN(d.getTime())) return '--/--/----, --:--';
+      const pad = x => String(x).padStart(2, '0');
+      return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}, ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    };
+
+    function unpack(p) {
+      if (!Array.isArray(p)) return [['ID']];
+      return [['ID']].concat(p.map(o => {
+        const r = [];
+        COLS.forEach(c => { r[c - 1] = o[c]; });
+        return r;
+      }));
+    }
+
+    function criarEventoPertencerPadrao() {
+      return {
+        id: ID_EVENTO_PERTENCER_PADRAO,
+        nome: 'PERTENCER (RR Vertentes)',
+        data: '2026-12-06',
+        periodoReferencia: 'Prazo de fechamento dos resultados: 03/12, 23:59',
+        prazoFechamento: '03/12, 23:59',
+        descricao: 'Reunião regional do núcleo Vertentes, com três pilares: Identidade, Paixão que Inflama e Impacto. Prazo de fechamento dos resultados: 03/12, 23:59.',
+        status: 'em_andamento',
+        palcosEj: [
+          {
+            id: 'palco_ej_pertencer',
+            nome: 'Palcos das EJs — PERTENCER (Bronze, Prata e Ouro)',
+            exigirNiveisAnteriores: false,
+            niveis: [
+              {
+                ordem: 1,
+                id: 'bronze',
+                nome: 'Bronze',
+                requisito: {
+                  logica: 'E',
+                  condicoes: [
+                    { metrica: 'fa_pct_meta', operador: '>=', valor: 70 },
+                    { metrica: 'ecm_meta_batida', operador: '=', valor: true },
+                    { metrica: 'cs_coleta', operador: '>=', valor: 60 },
+                    { metrica: 'co_pct_meta', operador: '>=', valor: 0 }
+                  ]
+                }
+              },
+              {
+                ordem: 2,
+                id: 'prata',
+                nome: 'Prata',
+                requisito: {
+                  logica: 'E',
+                  condicoes: [
+                    { metrica: 'fa_pct_meta', operador: '>=', valor: 92 },
+                    { metrica: 'ecm_meta_batida', operador: '=', valor: true },
+                    { metrica: 'cs_coleta', operador: '>=', valor: 92 },
+                    { metrica: 'co_pct_meta', operador: '>=', valor: 66 }
+                  ]
+                }
+              },
+              {
+                ordem: 3,
+                id: 'ouro',
+                nome: 'Ouro',
+                requisito: {
+                  logica: 'E',
+                  condicoes: [
+                    { metrica: 'fa_pct_meta', operador: '>=', valor: 100 },
+                    { metrica: 'ecm_meta_batida', operador: '=', valor: true },
+                    { metrica: 'cs_coleta', operador: '>=', valor: 100 },
+                    { metrica: 'co_pct_meta', operador: '>=', valor: 100 }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      };
+    }
+
+    const STATE = {
+      rawRows: null,
+      updatedAt: null,
+      params: { mes: new Date().getMonth() + 1, corte: new Date().getMonth() + 1, trk: 6, cmin: 3.5, espC: {} },
+      ejs: [],
+      eventos: {},
+      activeEventoId: ID_EVENTO_PERTENCER_PADRAO,
+      viewMode: 'palco_batido',   // 'palco_batido' | 'palco_mais_alto' | 'matriz_geral'
+      displayStyle: 'cards',      // 'cards' | 'table'
+      filterStage: 'todos',       // 'todos' | 'Ouro' | 'Prata' | 'Bronze' | 'sem_palco'
+      filterCluster: '',
+      search: ''
+    };
+    window.STATE = STATE;
+
+    // ============================================================================
+    // CÁLCULO DOS INDICADORES DAS EJs E MOTOR DE PALCOS
+    // ============================================================================
+    function recomputeEjs() {
+      const rows = STATE.rawRows;
+      const P = STATE.params;
+      if (!rows || !rows.length) {
+        STATE.ejs = [];
+        return;
+      }
+      const hi = rows.findIndex(r => String(r[0]).trim().toUpperCase() === 'ID');
+      if (hi < 0) return;
+
+      const out = [];
+      for (const r of rows.slice(hi + 1)) {
+        if (!(num(r[0]) > 0)) continue;
+        const g = i => num(r[i - 1]);
+        const cod = String(r[0] != null ? r[0] : '').trim();
+        const nome = String(r[1] || '').trim();
+        const cl = Math.min(5, Math.max(0, Math.round(g(10))));
+        const fat = g(29);
+        const meta = g(20);
+        const mem = g(90);
+        const eng = g(74);
+        const ecmP = g(22);
+        const ealvo = Math.round((ecmP / 100) * mem);
+        const nota = g(13);
+        const ctr = g(55);
+        const coleta = g(96);
+        const calvo = g(25) || P.cmin || 3.5;
+        const colab = g(94);
+        const cm = g(95);
+
+        const pctFat = meta > 0 ? (fat / meta) * 100 : 0;
+        const ecmBatida = mem > 0 ? (ealvo <= 0 ? true : eng >= ealvo) : false;
+        const pctEcm = mem > 0 ? (ealvo > 0 ? (eng / ealvo) * 100 : (ecmP > 0 ? (((eng / mem) * 100) / ecmP) * 100 : 100)) : 0;
+        const csatColeta = ctr > 0 ? coleta : 0;
+        const pctColab = cm > 0 ? (colab / cm) * 100 : 100;
+
+        out.push({
+          cod,
+          id: num(r[0]),
+          nome,
+          cl,
+          fat,
+          meta,
+          pctFat,
+          temMetaFat: meta > 0,
+          eng,
+          ealvo,
+          mem,
+          ecmP,
+          ecmBatida,
+          pctEcm,
+          semMembrosEcm: mem <= 0,
+          nota,
+          calvo,
+          ctr,
+          coleta,
+          csatColeta,
+          colab,
+          cm,
+          pctColab,
+          temMetaColab: cm > 0,
+          semMetaColab: cm <= 0
+        });
+      }
+
+      out.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' }));
+      STATE.ejs = out;
+    }
+
+    function avaliarCondicaoPalco(cond, ej) {
+      if (!cond || !cond.metrica) return { bateu: true, inativo: true, explicacaoCurta: '', diferenca: 0 };
+      const m = cond.metrica;
+      const op = cond.operador || '>=';
+      const valExig = cond.valor;
+
+      if (m === 'fa_pct_meta') {
+        const exig = Number(valExig) || 0;
+        if (exig <= 0) return { bateu: true, inativo: true, explicacaoCurta: '', diferenca: 0 };
+        if (!ej.temMetaFat) {
+          return { bateu: false, inativo: false, diferenca: exig, explicacaoCurta: 'Faturamento 0% (sem meta anual)' };
+        }
+        const atual = ej.pctFat;
+        const bateu = atual + TOLERANCIA_PP + 1e-9 >= exig;
+        const falta = Math.max(0, exig - atual);
+        return {
+          bateu,
+          inativo: false,
+          diferenca: falta,
+          explicacaoCurta: bateu ? '' : `Faturamento ${fmtNumCurto(atual)}% (falta ${fmtNumCurto(falta)} p.p.)`
+        };
+      }
+
+      if (m === 'ecm_meta_batida') {
+        const exigeEcm = valExig === true || String(valExig) === 'true' || String(valExig).toLowerCase() === 'sim';
+        if (!exigeEcm) return { bateu: true, inativo: true, explicacaoCurta: '', diferenca: 0 };
+        const bateu = Boolean(ej.ecmBatida);
+        const faltaMembros = Math.max(1, (ej.ealvo || 0) - (ej.eng || 0));
+        return {
+          bateu,
+          inativo: false,
+          diferenca: bateu ? 0 : 20,
+          explicacaoCurta: bateu
+            ? ''
+            : (ej.semMembrosEcm ? 'ECM sem membros (0 membros)' : `ECM ${ej.eng}/${ej.ealvo} engajados (falta ${faltaMembros})`)
+        };
+      }
+
+      if (m === 'cs_coleta') {
+        const exig = Number(valExig) || 0;
+        if (exig <= 0) return { bateu: true, inativo: true, explicacaoCurta: '', diferenca: 0 };
+        const atual = ej.csatColeta;
+        const bateu = atual + TOLERANCIA_PP + 1e-9 >= exig;
+        const falta = Math.max(0, exig - atual);
+        return {
+          bateu,
+          inativo: false,
+          diferenca: falta,
+          explicacaoCurta: bateu ? '' : `CSAT ${fmtNumCurto(atual)}% (falta ${fmtNumCurto(falta)} p.p.)`
+        };
+      }
+
+      if (m === 'co_pct_meta') {
+        const exig = Number(valExig) || 0;
+        if (exig <= 0) return { bateu: true, inativo: true, explicacaoCurta: '', diferenca: 0 };
+        const atual = ej.pctColab;
+        const bateu = ej.semMetaColab ? true : (atual + TOLERANCIA_PP + 1e-9 >= exig);
+        const falta = Math.max(0, exig - atual);
+        return {
+          bateu,
+          inativo: false,
+          diferenca: falta,
+          explicacaoCurta: bateu ? '' : `Colaborativo ${fmtNumCurto(atual)}% (falta ${fmtNumCurto(falta)} p.p.)`
+        };
+      }
+
+      return { bateu: true, inativo: true, explicacaoCurta: '', diferenca: 0 };
+    }
+
+    function compararRankingPalco(a, b) {
+      const eps = 1e-6;
+      if (Math.abs(b.pctFat - a.pctFat) > eps) return b.pctFat - a.pctFat;
+      if (Math.abs(b.pctColab - a.pctColab) > eps) return b.pctColab - a.pctColab;
+      if (Math.abs(b.csatColeta - a.csatColeta) > eps) return b.csatColeta - a.csatColeta;
+      return String(a.nome || '').localeCompare(String(b.nome || ''), 'pt-BR');
+    }
+
+    function apurarPalcosEvento(evento, listaEjs) {
+      const palco = (evento && Array.isArray(evento.palcosEj) && evento.palcosEj[0])
+        ? evento.palcosEj[0]
+        : criarEventoPertencerPadrao().palcosEj[0];
+
+      const niveisOrd = [...(palco.niveis || [])].sort((a, b) => (Number(a.ordem) || 0) - (Number(b.ordem) || 0));
+      const exigirEscada = Boolean(palco.exigirNiveisAnteriores);
+
+      const resultadosPorEj = listaEjs.map(ej => {
+        const avsNiveis = niveisOrd.map(nv => {
+          const conds = (nv.requisito && Array.isArray(nv.requisito.condicoes)) ? nv.requisito.condicoes : [];
+          const avConds = conds.map(c => avaliarCondicaoPalco(c, ej));
+          const ativas = avConds.filter(a => !a.inativo);
+          const falhas = ativas.filter(a => !a.bateu);
+          const bateu = falhas.length === 0;
+          return {
+            ordem: Number(nv.ordem) || 0,
+            nome: nv.nome || `Nível ${nv.ordem}`,
+            bateu,
+            falhas,
+            qtdFaltando: falhas.length,
+            somaFaltaPp: falhas.reduce((s, f) => s + (Number(f.diferenca) || 20), 0),
+            oQueFaltaCurto: falhas.map(f => f.explicacaoCurta).filter(Boolean).join(' · ')
+          };
+        });
+
+        let idxMaisAlto = -1;
+        if (exigirEscada) {
+          for (let i = 0; i < avsNiveis.length; i++) {
+            if (avsNiveis[i].bateu) idxMaisAlto = i;
+            else break;
+          }
+        } else {
+          for (let i = 0; i < avsNiveis.length; i++) {
+            if (avsNiveis[i].bateu) idxMaisAlto = i;
+          }
+        }
+
+        const palcoMaisAlto = idxMaisAlto >= 0 ? avsNiveis[idxMaisAlto].nome : 'Sem palco';
+        const proxIdx = idxMaisAlto + 1;
+        const proximoPalco = proxIdx < avsNiveis.length ? avsNiveis[proxIdx] : null;
+
+        return {
+          ...ej,
+          palcoMaisAlto,
+          ordemMaisAlto: idxMaisAlto >= 0 ? avsNiveis[idxMaisAlto].ordem : 0,
+          proximoPalcoNome: proximoPalco ? proximoPalco.nome : null,
+          oQueFaltaProximo: proximoPalco ? proximoPalco.oQueFaltaCurto : 'Palco máximo (Ouro) atingido!',
+          niveisMap: Object.fromEntries(avsNiveis.map(a => [a.nome, a])),
+          avsNiveis
+        };
+      });
+
+      const niveisApurados = niveisOrd.map((nv, idxNivel) => {
+        const nomeNivel = nv.nome || `Nível ${nv.ordem}`;
+        const conds = (nv.requisito && Array.isArray(nv.requisito.condicoes)) ? nv.requisito.condicoes : [];
+
+        // Todas que bateram este palco
+        const bateram = resultadosPorEj.filter(r => {
+          const av = r.avsNiveis[idxNivel];
+          if (!av || !av.bateu) return false;
+          if (exigirEscada) {
+            for (let k = 0; k < idxNivel; k++) {
+              if (!r.avsNiveis[k].bateu) return false;
+            }
+          }
+          return true;
+        });
+
+        const rankingBateram = assignCompetitionPositions([...bateram].sort(compararRankingPalco));
+
+        // EJs cujo palco mais alto é exatamente este
+        const exclusivasMaisAlto = assignCompetitionPositions(
+          resultadosPorEj.filter(r => r.palcoMaisAlto === nomeNivel).sort(compararRankingPalco)
+        );
+
+        // Quase lá deste palco
+        const setBateram = new Set(bateram.map(r => String(r.cod)));
+        const quaseLa = resultadosPorEj
+          .filter(r => !setBateram.has(String(r.cod)))
+          .map(r => {
+            const av = r.avsNiveis[idxNivel];
+            return {
+              ...r,
+              qtdFaltando: av ? Math.max(1, av.qtdFaltando) : 1,
+              somaFaltaPp: av ? av.somaFaltaPp : 100,
+              oQueFaltaCurto: av ? av.oQueFaltaCurto : ''
+            };
+          })
+          .sort((a, b) => {
+            if (a.qtdFaltando !== b.qtdFaltando) return a.qtdFaltando - b.qtdFaltando;
+            if (Math.abs(a.somaFaltaPp - b.somaFaltaPp) > 1e-6) return a.somaFaltaPp - b.somaFaltaPp;
+            return compararRankingPalco(a, b);
+          });
+
+        return {
+          ordem: Number(nv.ordem) || (idxNivel + 1),
+          nome: nomeNivel,
+          condicoes: conds,
+          resumoRegras: formatarResumoRegras(conds),
+          rankingBateram,
+          exclusivasMaisAlto,
+          quaseLa
+        };
+      });
+
+      const semPalcoList = resultadosPorEj
+        .filter(r => r.palcoMaisAlto === 'Sem palco')
+        .map(r => {
+          const avBronze = r.avsNiveis[0] || { qtdFaltando: 1, somaFaltaPp: 100, oQueFaltaCurto: '' };
+          return {
+            ...r,
+            qtdFaltando: Math.max(1, avBronze.qtdFaltando),
+            somaFaltaPp: avBronze.somaFaltaPp,
+            oQueFaltaCurto: avBronze.oQueFaltaCurto
+          };
+        })
+        .sort((a, b) => {
+          if (a.qtdFaltando !== b.qtdFaltando) return a.qtdFaltando - b.qtdFaltando;
+          if (Math.abs(a.somaFaltaPp - b.somaFaltaPp) > 1e-6) return a.somaFaltaPp - b.somaFaltaPp;
+          return compararRankingPalco(a, b);
+        });
+
+      return {
+        palcoNome: palco.nome,
+        totalEjs: resultadosPorEj.length,
+        niveis: niveisApurados,
+        semPalcoList,
+        resultadosPorEj
+      };
+    }
+
+    function assignCompetitionPositions(sortedArr) {
+      return sortedArr.map((item, idx, arr) => {
+        let posicao = idx + 1;
+        if (idx > 0) {
+          const prev = arr[idx - 1];
+          if (
+            Math.abs(prev.pctFat - item.pctFat) <= 1e-6 &&
+            Math.abs(prev.pctColab - item.pctColab) <= 1e-6 &&
+            Math.abs(prev.csatColeta - item.csatColeta) <= 1e-6
+          ) {
+            posicao = prev._pos || idx;
+          }
+        }
+        item._pos = posicao;
+        return { ...item, posicao };
+      });
+    }
+
+    function formatarResumoRegras(conds) {
+      return (conds || []).map(c => {
+        if (c.metrica === 'fa_pct_meta') return Number(c.valor) > 0 ? `Fat ≥ ${fmtNumCurto(c.valor)}%` : `Fat: não exige`;
+        if (c.metrica === 'ecm_meta_batida') return (c.valor === true || String(c.valor) === 'true') ? `ECM: meta batida` : `ECM: não exige`;
+        if (c.metrica === 'cs_coleta') return Number(c.valor) > 0 ? `CSAT Coleta ≥ ${fmtNumCurto(c.valor)}%` : `CSAT Coleta: não exige`;
+        if (c.metrica === 'co_pct_meta') return Number(c.valor) > 0 ? `Colab ≥ ${fmtNumCurto(c.valor)}%` : `Colab: não exige (0%)`;
+        return `${c.metrica} ${c.operador} ${c.valor}`;
+      }).join(' · ');
+    }
+
+    function formatarMedalhaPos(pos) {
+      if (pos === 1) return '🥇 1º';
+      if (pos === 2) return '🥈 2º';
+      if (pos === 3) return '🥉 3º';
+      return `${pos}º`;
+    }
+
+    function renderBadgePalco(nomePalco) {
+      const s = String(nomePalco || 'Sem palco');
+      const sl = s.toLowerCase();
+      if (sl.includes('ouro')) return `<span class="tag tag-gold">🥇 ${esc(s)}</span>`;
+      if (sl.includes('prata')) return `<span class="tag tag-silver">🥈 ${esc(s)}</span>`;
+      if (sl.includes('bronze')) return `<span class="tag tag-bronze">🥉 ${esc(s)}</span>`;
+      return `<span class="tag tag-n">Sem palco</span>`;
+    }
+
+    function passaFiltroBuscaECluster(ej) {
+      if (STATE.filterCluster && String(ej.cl) !== String(STATE.filterCluster)) return false;
+      if (STATE.search) {
+        const q = STATE.search.toLowerCase().trim();
+        const matchNome = String(ej.nome || '').toLowerCase().includes(q);
+        const matchCod = String(ej.cod || '').toLowerCase().includes(q);
+        if (!matchNome && !matchCod) return false;
+      }
+      return true;
+    }
+
+    // ============================================================================
+    // RENDERIZAÇÃO DA INTERFACE
+    // ============================================================================
+    function obterEventoAtivo() {
+      const map = STATE.eventos || {};
+      if (STATE.activeEventoId && map[STATE.activeEventoId]) return map[STATE.activeEventoId];
+      const pertencer = Object.values(map).find(e => e && (e.id === ID_EVENTO_PERTENCER_PADRAO || String(e.nome || '').toUpperCase().includes('PERTENCER')));
+      if (pertencer) return pertencer;
+      const first = Object.values(map)[0];
+      return first || criarEventoPertencerPadrao();
+    }
+
+    function renderAll() {
+      const ev = obterEventoAtivo();
+      const apuracao = apurarPalcosEvento(ev, STATE.ejs || []);
+
+      // Header & Hero
+      $('heroEventoNome').textContent = ev.nome || 'PERTENCER (RR Vertentes)';
+      $('heroStatusBadge').textContent = ev.status === 'encerrado' ? '🔒 Resultado Congelado' : '⚡ Apuração Ao Vivo';
+      if (ev.descricao) {
+        $('heroEventoDesc').textContent = ev.descricao.split('\n')[0];
+      }
+      const dataFmt = ev.data ? ev.data.split('-').reverse().join('/') : 'A definir';
+      $('heroDataEvento').textContent = `Data do evento: ${dataFmt}${ev.prazoFechamento ? ` · Fechamento: ${ev.prazoFechamento}` : ''}`;
+      $('heroTotalEjsBadge').textContent = `${apuracao.totalEjs} EJs avaliadas`;
+
+      // Seletor de eventos (caso haja mais de 1)
+      const listaEventos = Object.values(STATE.eventos || {});
+      const selEv = $('selectEvento');
+      if (listaEventos.length > 1) {
+        selEv.style.display = 'inline-block';
+        selEv.innerHTML = listaEventos.map(e =>
+          `<option value="${esc(e.id)}" ${e.id === ev.id ? 'selected' : ''}>${esc(e.nome)}</option>`
+        ).join('');
+      } else {
+        selEv.style.display = 'none';
+      }
+
+      // 4 KPI Cards no topo (Ouro, Prata, Bronze, Com Palco / Quase lá)
+      const nvOuro = apuracao.niveis.find(n => n.nome.toLowerCase().includes('ouro')) || apuracao.niveis[2];
+      const nvPrata = apuracao.niveis.find(n => n.nome.toLowerCase().includes('prata')) || apuracao.niveis[1];
+      const nvBronze = apuracao.niveis.find(n => n.nome.toLowerCase().includes('bronze')) || apuracao.niveis[0];
+
+      const isExclusivo = STATE.viewMode === 'palco_mais_alto';
+      const qtdOuro = nvOuro ? (isExclusivo ? nvOuro.exclusivasMaisAlto.length : nvOuro.rankingBateram.length) : 0;
+      const qtdPrata = nvPrata ? (isExclusivo ? nvPrata.exclusivasMaisAlto.length : nvPrata.rankingBateram.length) : 0;
+      const qtdBronze = nvBronze ? (isExclusivo ? nvBronze.exclusivasMaisAlto.length : nvBronze.rankingBateram.length) : 0;
+      const qtdSemPalco = apuracao.semPalcoList.length;
+      const qtdEmAlgumPalco = apuracao.totalEjs - qtdSemPalco;
+
+      $('stageKpisGrid').innerHTML = `
+        <div class="stage-kpi-card gold ${STATE.filterStage === 'Ouro' ? 'active-filter' : ''}" data-click-stage="Ouro">
+          <div class="stage-kpi-top">
+            <span class="stage-kpi-name">🥇 Palco Ouro</span>
+            <span class="tag tag-gold">${isExclusivo ? 'Palco mais alto' : 'Bateram Ouro'}</span>
+          </div>
+          <div class="stage-kpi-val">${qtdOuro} <span style="font-size:15px;font-weight:600;color:var(--text-secondary);">de ${apuracao.totalEjs} EJs</span></div>
+          <div class="stage-kpi-rules">${esc(nvOuro ? nvOuro.resumoRegras : 'Fat ≥ 100% · ECM · CSAT ≥ 100% · Colab ≥ 100%')}</div>
+        </div>
+
+        <div class="stage-kpi-card silver ${STATE.filterStage === 'Prata' ? 'active-filter' : ''}" data-click-stage="Prata">
+          <div class="stage-kpi-top">
+            <span class="stage-kpi-name">🥈 Palco Prata</span>
+            <span class="tag tag-silver">${isExclusivo ? 'Palco mais alto' : 'Bateram Prata'}</span>
+          </div>
+          <div class="stage-kpi-val">${qtdPrata} <span style="font-size:15px;font-weight:600;color:var(--text-secondary);">de ${apuracao.totalEjs} EJs</span></div>
+          <div class="stage-kpi-rules">${esc(nvPrata ? nvPrata.resumoRegras : 'Fat ≥ 92% · ECM · CSAT ≥ 92% · Colab ≥ 66%')}</div>
+        </div>
+
+        <div class="stage-kpi-card bronze ${STATE.filterStage === 'Bronze' ? 'active-filter' : ''}" data-click-stage="Bronze">
+          <div class="stage-kpi-top">
+            <span class="stage-kpi-name">🥉 Palco Bronze</span>
+            <span class="tag tag-bronze">${isExclusivo ? 'Palco mais alto' : 'Bateram Bronze'}</span>
+          </div>
+          <div class="stage-kpi-val">${qtdBronze} <span style="font-size:15px;font-weight:600;color:var(--text-secondary);">de ${apuracao.totalEjs} EJs</span></div>
+          <div class="stage-kpi-rules">${esc(nvBronze ? nvBronze.resumoRegras : 'Fat ≥ 70% · ECM · CSAT ≥ 60% · Colab: não exige')}</div>
+        </div>
+
+        <div class="stage-kpi-card ${STATE.filterStage === 'sem_palco' ? 'active-filter' : ''}" data-click-stage="sem_palco">
+          <div class="stage-kpi-top">
+            <span class="stage-kpi-name">🚀 Quase lá (Sem palco)</span>
+            <span class="tag tag-g">${qtdEmAlgumPalco} já têm palco</span>
+          </div>
+          <div class="stage-kpi-val">${qtdSemPalco} <span style="font-size:15px;font-weight:600;color:var(--text-secondary);">EJs em busca do Bronze</span></div>
+          <div class="stage-kpi-rules">Clique para ver exatamente o que falta para cada EJ subir ao palco</div>
+        </div>
+      `;
+
+      document.querySelectorAll('[data-click-stage]').forEach(card => {
+        card.addEventListener('click', () => {
+          const target = card.dataset.clickStage;
+          STATE.filterStage = STATE.filterStage === target ? 'todos' : target;
+          $('filterStageSelect').value = STATE.filterStage;
+          renderAll();
+        });
+      });
+
+      const container = $('stagesMainContent');
+      if (apuracao.totalEjs === 0) {
+        container.innerHTML = `
+          <div class="stage-section" style="text-align:center;padding:48px 24px;">
+            <p style="font-size:16px;font-weight:700;margin-bottom:6px;">Aguardando sincronização da base de EJs…</p>
+            <p style="font-size:13px;color:var(--text-muted);">Conectando ao banco de dados do Monitor Vertentes ou aguardando importação da planilha.</p>
+          </div>
+        `;
+        return;
+      }
+
+      if (STATE.viewMode === 'matriz_geral') {
+        container.innerHTML = renderMatrizGeralHtml(apuracao);
+      } else {
+        container.innerHTML = renderSecoesPalcosHtml(apuracao);
+      }
+
+      container.querySelectorAll('[data-ej-cod]').forEach(el => {
+        el.addEventListener('click', () => {
+          abrirModalEj(el.dataset.ejCod, apuracao);
+        });
+      });
+    }
+
+    function renderSecoesPalcosHtml(apuracao) {
+      const isExclusivo = STATE.viewMode === 'palco_mais_alto';
+      // Exibe na ordem Ouro -> Prata -> Bronze para destacar o topo, ou todos conforme filtro
+      const niveisDesc = [...apuracao.niveis].sort((a, b) => b.ordem - a.ordem);
+      const blocos = [];
+
+      niveisDesc.forEach(nv => {
+        if (STATE.filterStage !== 'todos' && STATE.filterStage !== nv.nome) return;
+
+        const sl = nv.nome.toLowerCase();
+        const secClass = sl.includes('ouro') ? 'gold-sec' : (sl.includes('prata') ? 'silver-sec' : 'bronze-sec');
+        const icone = sl.includes('ouro') ? '🥇' : (sl.includes('prata') ? '🥈' : '🥉');
+
+        const baseLista = isExclusivo ? nv.exclusivasMaisAlto : nv.rankingBateram;
+        const listaFiltrada = baseLista.filter(passaFiltroBuscaECluster);
+        const quaseLaFiltrada = nv.quaseLa.filter(passaFiltroBuscaECluster);
+
+        const corpoHtml = STATE.displayStyle === 'cards'
+          ? renderCardsEjNoPalco(listaFiltrada, nv.nome)
+          : renderTabelaEjNoPalco(listaFiltrada, nv.nome);
+
+        const quaseLaHtml = !isExclusivo ? `
+          <details style="margin-top:16px;border-top:1px solid var(--border-subtle);padding-top:12px;">
+            <summary style="cursor:pointer;font-size:13px;font-weight:700;color:var(--primary);user-select:none;">
+              🚀 Quase lá no Palco ${esc(nv.nome)} — ${quaseLaFiltrada.length} ${quaseLaFiltrada.length === 1 ? 'EJ que ainda não bateu' : 'EJs que ainda não bateram'} (ordenadas por menos critérios faltando)
+            </summary>
+            <div class="table-wrap" style="margin-top:10px;max-height:360px;">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>EJ</th>
+                    <th>Cluster</th>
+                    <th>Palco Atual</th>
+                    <th>Critérios Faltando</th>
+                    <th>O que falta exatamente para bater ${esc(nv.nome)}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${quaseLaFiltrada.length === 0
+                    ? `<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:16px;">Nenhuma EJ pendente neste filtro.</td></tr>`
+                    : quaseLaFiltrada.map(q => `
+                        <tr style="cursor:pointer;" data-ej-cod="${esc(q.cod)}">
+                          <td style="font-weight:700;">${esc(q.nome)}</td>
+                          <td>Cluster ${esc(q.cl || '-')}</td>
+                          <td>${renderBadgePalco(q.palcoMaisAlto)}</td>
+                          <td><span class="tag ${q.qtdFaltando === 1 ? 'tag-y' : 'tag-r'}">${q.qtdFaltando} ${q.qtdFaltando === 1 ? 'critério' : 'critérios'}</span></td>
+                          <td style="color:var(--danger);font-weight:600;font-size:12.5px;">${esc(q.oQueFaltaCurto)}</td>
+                        </tr>
+                      `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </details>
+        ` : '';
+
+        blocos.push(`
+          <section class="stage-section ${secClass}">
+            <div class="stage-section-header">
+              <div>
+                <div class="stage-section-title">
+                  <span>${icone} Palco ${esc(nv.nome)}</span>
+                  <span class="tag tag-g">${listaFiltrada.length} ${listaFiltrada.length === 1 ? 'EJ' : 'EJs'}</span>
+                </div>
+                <div style="font-size:12.5px;color:var(--text-muted);margin-top:4px;">
+                  <strong>Critérios ativos:</strong> ${esc(nv.resumoRegras)} · <em>Ordenado por % da meta de faturamento (desempate: % Colab e % Coleta CSAT)</em>
+                </div>
+              </div>
+              <span style="font-size:12px;color:var(--text-muted);">
+                ${isExclusivo ? 'Exibindo EJs cujo maior palco atual é ' + esc(nv.nome) : 'Exibindo todas as EJs que bateram ' + esc(nv.nome)}
+              </span>
+            </div>
+
+            ${corpoHtml}
+            ${quaseLaHtml}
+          </section>
+        `);
+      });
+
+      // Seção "Quase lá / Sem palco" quando estiver em modo "Por Palco Mais Alto" ou quando filtrado por "sem_palco"
+      if (isExclusivo || STATE.filterStage === 'sem_palco') {
+        if (STATE.filterStage === 'todos' || STATE.filterStage === 'sem_palco') {
+          const semPalcoFiltradas = apuracao.semPalcoList.filter(passaFiltroBuscaECluster);
+          blocos.push(`
+            <section class="stage-section">
+              <div class="stage-section-header">
+                <div>
+                  <div class="stage-section-title">
+                    <span>🚀 Quase lá — Em busca do Palco Bronze</span>
+                    <span class="tag tag-y">${semPalcoFiltradas.length} ${semPalcoFiltradas.length === 1 ? 'EJ' : 'EJs'}</span>
+                  </div>
+                  <div style="font-size:12.5px;color:var(--text-muted);margin-top:4px;">
+                    EJs que ainda não atingiram todos os critérios ativos do Palco Bronze, ordenadas pelas que estão mais próximas (menos critérios faltando).
+                  </div>
+                </div>
+              </div>
+
+              <div class="table-wrap">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>EJ</th>
+                      <th>Cluster</th>
+                      <th>% Faturamento</th>
+                      <th>ECM</th>
+                      <th>% Coleta CSAT</th>
+                      <th>% Colab</th>
+                      <th>Faltam p/ Bronze</th>
+                      <th>Diagnóstico do que falta para o Bronze</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${semPalcoFiltradas.length === 0
+                      ? `<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:20px;">Todas as EJs deste filtro já conquistaram pelo menos um palco! 🎉</td></tr>`
+                      : semPalcoFiltradas.map(q => `
+                          <tr style="cursor:pointer;" data-ej-cod="${esc(q.cod)}">
+                            <td style="font-weight:700;">${esc(q.nome)}</td>
+                            <td>Cluster ${esc(q.cl || '-')}</td>
+                            <td style="font-weight:600;">${fmtNumCurto(q.pctFat)}%</td>
+                            <td><span class="tag ${q.ecmBatida ? 'tag-g' : 'tag-r'}">${q.ecmBatida ? 'Sim' : 'Não'} (${fmtNumCurto(q.pctEcm)}%)</span></td>
+                            <td>${fmtNumCurto(q.csatColeta)}%</td>
+                            <td>${fmtNumCurto(q.pctColab)}%</td>
+                            <td><span class="tag ${q.qtdFaltando === 1 ? 'tag-y' : 'tag-r'}">${q.qtdFaltando} ${q.qtdFaltando === 1 ? 'critério' : 'critérios'}</span></td>
+                            <td style="color:var(--danger);font-weight:600;font-size:12.5px;">${esc(q.oQueFaltaCurto)}</td>
+                          </tr>
+                        `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          `);
+        }
+      }
+
+      return blocos.join('');
+    }
+
+    function renderCardsEjNoPalco(lista, nomeNivel) {
+      if (lista.length === 0) {
+        return `<div style="padding:28px;text-align:center;color:var(--text-muted);border:1px dashed var(--border);border-radius:var(--radius-md);">Nenhuma EJ encontrada no Palco <strong>${esc(nomeNivel)}</strong> com os filtros atuais.</div>`;
+      }
+      return `
+        <div class="ej-stage-grid">
+          ${lista.map(r => `
+            <div class="ej-stage-card" data-ej-cod="${esc(r.cod)}">
+              <div class="ej-card-head">
+                <div>
+                  <div class="ej-name">${esc(r.nome)}</div>
+                  <div class="ej-sub">Cluster ${esc(r.cl || '-')} · #${esc(r.cod)}</div>
+                </div>
+                <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+                  <span class="ej-rank-badge">${formatarMedalhaPos(r.posicao)}</span>
+                  ${renderBadgePalco(r.palcoMaisAlto)}
+                </div>
+              </div>
+              <div class="ej-metrics-mini">
+                <div class="metric-box">
+                  <span class="metric-box-lbl">% Faturamento</span>
+                  <span class="metric-box-val">${fmtNumCurto(r.pctFat)}%</span>
+                </div>
+                <div class="metric-box">
+                  <span class="metric-box-lbl">ECM (Engajamento)</span>
+                  <span class="metric-box-val" style="color:${r.ecmBatida ? 'var(--good)' : 'var(--danger)'};">
+                    ${r.ecmBatida ? '✓ Batida' : 'Pendente'} (${fmtNumCurto(r.pctEcm)}%)
+                  </span>
+                </div>
+                <div class="metric-box">
+                  <span class="metric-box-lbl">% Coleta CSAT</span>
+                  <span class="metric-box-val">${fmtNumCurto(r.csatColeta)}%</span>
+                </div>
+                <div class="metric-box">
+                  <span class="metric-box-lbl">% Colaborativo</span>
+                  <span class="metric-box-val">${r.semMetaColab ? '100% (s/ meta)' : `${fmtNumCurto(r.pctColab)}%`}</span>
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function renderTabelaEjNoPalco(lista, nomeNivel) {
+      if (lista.length === 0) {
+        return `<div style="padding:28px;text-align:center;color:var(--text-muted);border:1px dashed var(--border);border-radius:var(--radius-md);">Nenhuma EJ encontrada no Palco <strong>${esc(nomeNivel)}</strong> com os filtros atuais.</div>`;
+      }
+      return `
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width:80px;">Posição</th>
+                <th>EJ</th>
+                <th>Cluster</th>
+                <th>% Faturamento</th>
+                <th>ECM</th>
+                <th>% Coleta CSAT</th>
+                <th>% Colab</th>
+                <th>Palco Mais Alto</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${lista.map(r => `
+                <tr style="cursor:pointer;" data-ej-cod="${esc(r.cod)}">
+                  <td style="font-weight:800;">${formatarMedalhaPos(r.posicao)}</td>
+                  <td style="font-weight:700;">${esc(r.nome)}</td>
+                  <td>Cluster ${esc(r.cl || '-')}</td>
+                  <td style="font-weight:700;">${fmtNumCurto(r.pctFat)}%</td>
+                  <td><span class="tag ${r.ecmBatida ? 'tag-g' : 'tag-r'}">${r.ecmBatida ? 'Sim' : 'Não'} (${fmtNumCurto(r.pctEcm)}%)</span></td>
+                  <td>${fmtNumCurto(r.csatColeta)}%</td>
+                  <td>${r.semMetaColab ? '100% (sem meta · atendido)' : `${fmtNumCurto(r.pctColab)}%`}</td>
+                  <td>${renderBadgePalco(r.palcoMaisAlto)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function renderMatrizGeralHtml(apuracao) {
+      const filtradas = apuracao.resultadosPorEj.filter(ej => {
+        if (!passaFiltroBuscaECluster(ej)) return false;
+        if (STATE.filterStage === 'todos') return true;
+        if (STATE.filterStage === 'sem_palco') return ej.palcoMaisAlto === 'Sem palco';
+        return ej.palcoMaisAlto === STATE.filterStage || (ej.niveisMap[STATE.filterStage] && ej.niveisMap[STATE.filterStage].bateu);
+      }).sort((a, b) => {
+        if (b.ordemMaisAlto !== a.ordemMaisAlto) return b.ordemMaisAlto - a.ordemMaisAlto;
+        return compararRankingPalco(a, b);
+      });
+
+      return `
+        <section class="stage-section">
+          <div class="stage-section-header">
+            <div>
+              <div class="stage-section-title">
+                <span>📋 Quadro Geral das EJs nos Palcos (${filtradas.length} de ${apuracao.totalEjs} EJs)</span>
+              </div>
+              <div style="font-size:12.5px;color:var(--text-muted);margin-top:4px;">
+                Visão consolidada de todas as EJs da base, ordenada pelo maior palco atingido e % da meta de faturamento.
+              </div>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>EJ</th>
+                  <th>Cluster</th>
+                  <th>Palco Mais Alto</th>
+                  <th>🥉 Bronze</th>
+                  <th>🥈 Prata</th>
+                  <th>🥇 Ouro</th>
+                  <th>% Fat</th>
+                  <th>ECM</th>
+                  <th>% Coleta CSAT</th>
+                  <th>% Colab</th>
+                  <th>Próximo Passo / Diagnóstico</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${filtradas.map(r => {
+                  const bBronze = r.niveisMap['Bronze']?.bateu;
+                  const bPrata = r.niveisMap['Prata']?.bateu;
+                  const bOuro = r.niveisMap['Ouro']?.bateu;
+                  return `
+                    <tr style="cursor:pointer;" data-ej-cod="${esc(r.cod)}">
+                      <td style="font-weight:700;">${esc(r.nome)}</td>
+                      <td>Cluster ${esc(r.cl || '-')}</td>
+                      <td>${renderBadgePalco(r.palcoMaisAlto)}</td>
+                      <td><span class="tag ${bBronze ? 'tag-g' : 'tag-n'}">${bBronze ? '✓ Bateu' : 'Pendente'}</span></td>
+                      <td><span class="tag ${bPrata ? 'tag-g' : 'tag-n'}">${bPrata ? '✓ Bateu' : 'Pendente'}</span></td>
+                      <td><span class="tag ${bOuro ? 'tag-g' : 'tag-n'}">${bOuro ? '✓ Bateu' : 'Pendente'}</span></td>
+                      <td style="font-weight:600;">${fmtNumCurto(r.pctFat)}%</td>
+                      <td><span class="tag ${r.ecmBatida ? 'tag-g' : 'tag-r'}">${r.ecmBatida ? 'Sim' : 'Não'}</span></td>
+                      <td>${fmtNumCurto(r.csatColeta)}%</td>
+                      <td>${fmtNumCurto(r.pctColab)}%</td>
+                      <td style="font-size:12px;color:${r.proximoPalcoNome ? 'var(--text-secondary)' : 'var(--good)'};">
+                        ${r.proximoPalcoNome
+                          ? `<strong>Para ${esc(r.proximoPalcoNome)}:</strong> ${esc(r.oQueFaltaProximo)}`
+                          : '🏆 Todos os palcos atingidos!'}
+                      </td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      `;
+    }
+
+    function abrirModalEj(cod, apuracao) {
+      const ej = (apuracao.resultadosPorEj || []).find(x => String(x.cod) === String(cod));
+      if (!ej) return;
+
+      const niveisHtml = (ej.avsNiveis || []).map(nv => `
+        <div style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:10px;background:var(--surface);">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;">
+            <strong style="font-size:14px;">Palco ${esc(nv.nome)}</strong>
+            <span class="tag ${nv.bateu ? 'tag-g' : 'tag-r'}">${nv.bateu ? '✓ Palco Garantido' : `Faltam ${nv.qtdFaltando} critério(s)`}</span>
+          </div>
+          <div style="font-size:12.5px;color:${nv.bateu ? 'var(--good)' : 'var(--danger)'};font-weight:500;">
+            ${nv.bateu ? 'Todos os critérios ativos deste palco foram atendidos!' : esc(nv.oQueFaltaCurto)}
+          </div>
+        </div>
+      `).join('');
+
+      $('ejModalContent').innerHTML = `
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px;">
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
+              <h3 style="font-size:19px;font-weight:800;">${esc(ej.nome)}</h3>
+              ${renderBadgePalco(ej.palcoMaisAlto)}
+            </div>
+            <div style="font-size:12.5px;color:var(--text-muted);">Código #${esc(ej.cod)} · Cluster ${esc(ej.cl || '-')}</div>
+          </div>
+          <button type="button" class="btn btn-sm" id="btnCloseEjModal">✕ Fechar</button>
+        </div>
+
+        <div class="ej-metrics-mini" style="grid-template-columns:repeat(auto-fit, minmax(145px, 1fr));margin-bottom:18px;">
+          <div class="metric-box">
+            <span class="metric-box-lbl">Faturamento Anual</span>
+            <span class="metric-box-val">${fmtNumCurto(ej.pctFat)}%</span>
+            <div style="font-size:11px;color:var(--text-muted);">${fmtBRL(ej.fat)} / ${fmtBRL(ej.meta)}</div>
+          </div>
+          <div class="metric-box">
+            <span class="metric-box-lbl">ECM (Engajamento)</span>
+            <span class="metric-box-val" style="color:${ej.ecmBatida ? 'var(--good)' : 'var(--danger)'};">${ej.ecmBatida ? 'Sim (Batida)' : 'Não batida'}</span>
+            <div style="font-size:11px;color:var(--text-muted);">${ej.eng} de ${ej.ealvo} necessários (${ej.mem} membros)</div>
+          </div>
+          <div class="metric-box">
+            <span class="metric-box-lbl">CSAT (% Coleta)</span>
+            <span class="metric-box-val">${fmtNumCurto(ej.csatColeta)}%</span>
+            <div style="font-size:11px;color:var(--text-muted);">${ej.ctr} contrato(s) · Nota ${(Number(ej.nota) || 0).toFixed(2)}</div>
+          </div>
+          <div class="metric-box">
+            <span class="metric-box-lbl">Colaborativo</span>
+            <span class="metric-box-val">${ej.semMetaColab ? '100% (s/ meta)' : `${fmtNumCurto(ej.pctColab)}%`}</span>
+            <div style="font-size:11px;color:var(--text-muted);">${fmtBRL(ej.colab)} / ${fmtBRL(ej.cm)}</div>
+          </div>
+        </div>
+
+        <h4 style="font-size:12px;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);margin-bottom:10px;">Situação em cada Palco (Bronze, Prata e Ouro)</h4>
+        ${niveisHtml}
+      `;
+
+      $('ejModalBackdrop').classList.add('open');
+      $('btnCloseEjModal').addEventListener('click', () => {
+        $('ejModalBackdrop').classList.remove('open');
+      });
+    }
+
+    // ============================================================================
+    // CACHE LOCAL + LISTENERS EM TEMPO REAL (FIREBASE RTDB & FIRESTORE)
+    // ============================================================================
+    function loadFromLocalStorage() {
+      try {
+        const rawMon = localStorage.getItem(STORAGE_KEY_MONITOR);
+        if (rawMon) {
+          const parsed = JSON.parse(rawMon);
+          if (parsed && Array.isArray(parsed.rows) && parsed.rows.length) {
+            STATE.rawRows = unpack(parsed.rows);
+            STATE.updatedAt = parsed.t || Date.now();
+            if (parsed.params) STATE.params = Object.assign({}, STATE.params, parsed.params);
+            $('topUpdatedText').textContent = 'Atualizado em ' + fmtDate(STATE.updatedAt);
+          }
+        }
+      } catch (e) { }
+
+      try {
+        const rawEv = localStorage.getItem(STORAGE_KEY_EVENTOS);
+        if (rawEv) {
+          const evMap = JSON.parse(rawEv);
+          if (evMap && typeof evMap === 'object') {
+            STATE.eventos = evMap;
+          }
+        }
+      } catch (e) { }
+
+      if (!STATE.eventos[ID_EVENTO_PERTENCER_PADRAO]) {
+        STATE.eventos[ID_EVENTO_PERTENCER_PADRAO] = criarEventoPertencerPadrao();
+      }
+    }
+
+    function applyCloudMonitor(docData) {
+      if (!docData || !Array.isArray(docData.rows) || !docData.rows.length) return;
+      STATE.rawRows = unpack(docData.rows);
+      STATE.updatedAt = docData.t || Date.now();
+      if (docData.params) STATE.params = Object.assign({}, STATE.params, docData.params);
+      $('topUpdatedText').textContent = 'Atualizado em ' + fmtDate(STATE.updatedAt);
+      recomputeEjs();
+      renderAll();
+    }
+
+    function applyCloudEventos(evMap) {
+      if (!evMap || typeof evMap !== 'object') return;
+      Object.keys(evMap).forEach(k => {
+        const ev = evMap[k];
+        if (ev && ev.id) {
+          STATE.eventos[ev.id] = ev;
+        }
+      });
+      renderAll();
+    }
+
+    async function initCloudSync() {
+      try {
+        if (!firebase.apps.length) {
+          firebase.initializeApp(firebaseConfig);
+        }
+        const rtdb = firebase.database ? firebase.database() : null;
+        const db = firebase.firestore ? firebase.firestore() : null;
+
+        if (rtdb) {
+          rtdb.ref('monitor/latest').on('value', snap => {
+            $('cloudDot').className = 'cloud-dot online';
+            $('cloudStatusText').textContent = 'Ao vivo';
+            const val = snap.val();
+            if (val) applyCloudMonitor(val);
+          });
+          rtdb.ref('monitor/eventos').on('value', snap => {
+            const val = snap.val();
+            if (val && typeof val === 'object') applyCloudEventos(val);
+          });
+          rtdb.ref('eventos').on('value', snap => {
+            const val = snap.val();
+            if (val && typeof val === 'object') applyCloudEventos(val);
+          });
+        }
+
+        if (db) {
+          db.collection('monitor').doc('latest').onSnapshot(doc => {
+            $('cloudDot').className = 'cloud-dot online';
+            $('cloudStatusText').textContent = 'Ao vivo';
+            if (doc.exists) applyCloudMonitor(doc.data());
+          }, () => {});
+          db.collection('monitor').doc('eventos').onSnapshot(doc => {
+            if (doc.exists && doc.data()) {
+              const d = doc.data();
+              applyCloudEventos(d.eventos && typeof d.eventos === 'object' ? d.eventos : d);
+            }
+          }, () => {});
+          db.collection('eventos').onSnapshot(snap => {
+            const map = {};
+            snap.forEach(d => {
+              const data = d.data();
+              if (data && data.id) map[data.id] = data;
+            });
+            if (Object.keys(map).length > 0) applyCloudEventos(map);
+          }, () => {});
+        }
+      } catch (e) {
+        $('cloudStatusText').textContent = 'Cache local';
+      }
+    }
+
+    // ============================================================================
+    // EVENTOS DE UI E INICIALIZAÇÃO
+    // ============================================================================
+    function bindUiEvents() {
+      // Tema claro / escuro
+      const savedTheme = localStorage.getItem('vert_theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      $('btnToggleTheme').addEventListener('click', () => {
+        const cur = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', cur);
+        localStorage.setItem('vert_theme', cur);
+      });
+
+      // Copiar link
+      $('btnCopyShareLink').addEventListener('click', async () => {
+        const url = window.location.href.split('#')[0];
+        try {
+          await navigator.clipboard.writeText(url);
+          const orig = $('btnCopyShareLink').textContent;
+          $('btnCopyShareLink').textContent = '✓ Link copiado!';
+          setTimeout(() => { $('btnCopyShareLink').textContent = orig; }, 2000);
+        } catch (e) {
+          prompt('Copie o link abaixo:', url);
+        }
+      });
+
+      // Modo de visualização
+      document.querySelectorAll('#viewModeTabs .seg-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('#viewModeTabs .seg-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          STATE.viewMode = btn.dataset.mode;
+          renderAll();
+        });
+      });
+
+      // Estilo Cards vs Tabela
+      document.querySelectorAll('#displayStyleTabs .seg-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('#displayStyleTabs .seg-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          STATE.displayStyle = btn.dataset.style;
+          renderAll();
+        });
+      });
+
+      // Busca e filtros
+      $('searchEjInput').addEventListener('input', e => {
+        STATE.search = e.target.value;
+        renderAll();
+      });
+
+      $('filterStageSelect').addEventListener('change', e => {
+        STATE.filterStage = e.target.value;
+        renderAll();
+      });
+
+      $('filterClusterSelect').addEventListener('change', e => {
+        STATE.filterCluster = e.target.value;
+        renderAll();
+      });
+
+      $('selectEvento').addEventListener('change', e => {
+        STATE.activeEventoId = e.target.value;
+        renderAll();
+      });
+
+      $('ejModalBackdrop').addEventListener('click', e => {
+        if (e.target === $('ejModalBackdrop')) {
+          $('ejModalBackdrop').classList.remove('open');
+        }
+      });
+    }
+
+    loadFromLocalStorage();
+    recomputeEjs();
+    bindUiEvents();
+    renderAll();
+    initCloudSync();
+  </script>
+</body>
+
+</html>

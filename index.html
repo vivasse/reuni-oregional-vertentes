@@ -1854,6 +1854,16 @@
           </svg>
           Eventos
         </button>
+        <div class="sb-sub">
+          <a class="sb-item" href="./palcos.html" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+              <polyline points="15 3 21 3 21 9" />
+              <line x1="10" y1="14" x2="21" y2="3" />
+            </svg>
+            Painel de Palcos ↗
+          </a>
+        </div>
 
         <button class="sb-item" data-nav="upload">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -2276,7 +2286,11 @@
                 <p class="status-sentence" id="eventosStatusSentence" style="margin-bottom:4px;">Eventos e Premiações do Núcleo</p>
                 <span style="font-size:13px;color:var(--text-muted);">Configure palcos das EJs, palcos do Núcleo e premiações apuradas automaticamente.</span>
               </div>
-              <button class="btn btn-primary" id="btnNewEvento">+ Novo evento</button>
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <a class="btn btn-sm" href="./palcos.html" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">🏅 Abrir Plataforma de Palcos ↗</a>
+                <button type="button" class="btn btn-sm" data-copy-palcos-link="1">📋 Copiar Link dos Palcos</button>
+                <button class="btn btn-primary" id="btnNewEvento">+ Novo evento</button>
+              </div>
             </div>
             <div class="cards-grid" id="eventosCardsGrid"></div>
           </div>
@@ -2289,6 +2303,8 @@
                 <span id="evtEditorStatusBadge"></span>
               </div>
               <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <a class="btn btn-sm" href="./palcos.html" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">🏅 Abrir Plataforma de Palcos ↗</a>
+                <button type="button" class="btn btn-sm" data-copy-palcos-link="1">📋 Copiar Link dos Palcos</button>
                 <button class="btn btn-sm" id="btnDuplicateActiveEvento">Duplicar evento</button>
                 <button class="btn btn-sm" id="btnDeleteActiveEvento" style="color:var(--danger);">Excluir</button>
               </div>
@@ -2994,6 +3010,13 @@
               applyCloudEventosMap(val);
             }
           }, err => console.warn('RTDB eventos listener:', err));
+
+          RTDB.ref('monitor/eventos').on('value', snap => {
+            const val = snap.val();
+            if (val && typeof val === 'object') {
+              applyCloudEventosMap(val);
+            }
+          }, err => console.warn('RTDB monitor/eventos listener:', err));
         } catch (e) { }
       }
 
@@ -7562,7 +7585,10 @@
       if (RTDB) {
         try {
           await Promise.race([
-            RTDB.ref('eventos/' + norm.id).set(cleanPayload),
+            Promise.all([
+              RTDB.ref('eventos/' + norm.id).set(cleanPayload),
+              RTDB.ref('monitor/eventos/' + norm.id).set(cleanPayload)
+            ]),
             new Promise(res => setTimeout(res, 3000))
           ]);
         } catch (e) {
@@ -7575,6 +7601,8 @@
           const batch = DB.batch();
           const ref = DB.collection('eventos').doc(norm.id);
           batch.set(ref, cleanPayload);
+          const monRef = DB.collection('monitor').doc('eventos');
+          batch.set(monRef, { [norm.id]: cleanPayload }, { merge: true });
           await Promise.race([
             batch.commit(),
             new Promise(res => setTimeout(res, 3000))
@@ -7607,7 +7635,10 @@
       if (RTDB) {
         try {
           await Promise.race([
-            RTDB.ref('eventos/' + id).remove(),
+            Promise.all([
+              RTDB.ref('eventos/' + id).remove(),
+              RTDB.ref('monitor/eventos/' + id).remove()
+            ]),
             new Promise(res => setTimeout(res, 3000))
           ]);
         } catch (e) { }
@@ -8580,7 +8611,8 @@
             <h3 class="section-title" style="margin-bottom:2px;">Palcos das EJs (Parâmetros e Ranking Ao Vivo)</h3>
             <span style="font-size:12.5px;color:var(--text-muted);">Edite os parâmetros de Bronze, Prata e Ouro abaixo; o ranking e a seção "Quase lá" são recalculados na hora e salvos automaticamente.</span>
           </div>
-          <div style="display:flex;gap:8px;">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <a class="btn btn-sm" href="./palcos.html" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">🏅 Abrir Plataforma de Palcos ↗</a>
             ${!bloqueado ? `<button type="button" class="btn" data-add-palco-ej="1">+ Novo palco das EJs</button>` : ''}
             ${!bloqueado ? `<button type="button" class="btn btn-primary" id="btnSavePalcosEjNow">Salvar alterações</button>` : ''}
           </div>
@@ -9378,6 +9410,7 @@
             </div>
           </div>
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <a class="btn" href="./palcos.html" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">🏅 Abrir Plataforma de Palcos ↗</a>
             <button type="button" class="btn" id="btnExportarResultadoCsv">📥 Exportar resultado (CSV)</button>
             ${ev.status !== 'encerrado'
               ? `<button type="button" class="btn btn-primary" id="btnCongelarResultadoEvento">🔒 Encerrar e congelar</button>`
@@ -10216,7 +10249,41 @@
     window.gerarCsvResultadoEvento = gerarCsvResultadoEvento;
     window.exportarResultadoEventoCSV = exportarResultadoEventoCSV;
 
+    function obterUrlPlataformaPalcos() {
+      try {
+        if (window.location && window.location.protocol && window.location.protocol.startsWith('http')) {
+          return new URL('./palcos.html', window.location.href).href;
+        }
+      } catch (e) { }
+      return 'https://vivasse.github.io/reuni-oregional-vertentes/palcos.html';
+    }
+
+    function copiarLinkPlataformaPalcos(btnEl) {
+      const url = obterUrlPlataformaPalcos();
+      const origText = btnEl ? btnEl.textContent : '';
+      const feedback = () => {
+        if (btnEl) {
+          btnEl.textContent = '✓ Link copiado!';
+          setTimeout(() => { btnEl.textContent = origText; }, 2200);
+        }
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(feedback).catch(() => {
+          window.prompt('Copie o link da Plataforma de Palcos:', url);
+        });
+      } else {
+        window.prompt('Copie o link da Plataforma de Palcos:', url);
+      }
+    }
+
+    window.obterUrlPlataformaPalcos = obterUrlPlataformaPalcos;
+    window.copiarLinkPlataformaPalcos = copiarLinkPlataformaPalcos;
+
     function bindEventosModuleEvents() {
+      document.querySelectorAll('[data-copy-palcos-link]').forEach(btn => {
+        btn.addEventListener('click', () => copiarLinkPlataformaPalcos(btn));
+      });
+
       const btnNew = $('btnNewEvento');
       if (btnNew) btnNew.addEventListener('click', criarNovoEvento);
 
@@ -10285,6 +10352,14 @@
         });
       }
     }
+
+    // Redireciona ?view=palcos diretamente para a plataforma dedicada de visualização de palcos
+    try {
+      const urlParams = new URLSearchParams(window.location.search || '');
+      if (urlParams.get('view') === 'palcos' || urlParams.get('plataforma') === 'palcos') {
+        window.location.replace('./palcos.html');
+      }
+    } catch (e) { }
 
     // Inicialização: restaura planilha salva imediatamente antes mesmo da rede responder
     initParamsSelects();

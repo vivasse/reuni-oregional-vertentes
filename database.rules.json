@@ -7,6 +7,10 @@
     "guardioes_mod": {
       ".read": true,
       ".write": "auth != null"
+    },
+    "eventos": {
+      ".read": true,
+      ".write": "auth != null"
     }
   }
 }
